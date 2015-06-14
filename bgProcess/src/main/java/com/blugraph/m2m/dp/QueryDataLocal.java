@@ -28,7 +28,7 @@ public class QueryDataLocal {
     private ResultSet rs = null;
 
     String sqlurl = "jdbc:mysql://localhost/bg";
-    String user = "bg";
+    String user = "bg1";
     String password = "bg%user$1";
 
     public List<DataSample> getDataForStation(StationInfo stationInfo, SensorTypes vType, long qStartTimestamp, long qEndTimestamp) {
@@ -40,6 +40,7 @@ public class QueryDataLocal {
             case SoundNoise:
                 sensorSqlName = "noise";
                 break;
+/*
             case WaterLevel:
                 sensorSqlName = "waterlevel";
                 break;
@@ -49,6 +50,7 @@ public class QueryDataLocal {
             case Video:
                 sensorSqlName = "video";
                 break;
+*/
             default:
                 System.out.println("Unknown Sensor Type.");
         }
@@ -59,7 +61,7 @@ public class QueryDataLocal {
             int qStationId = stationInfo.getStationid();
             int qSensorId = stationInfo.getSensorid();
 
-            String query = "SELECT * FROM bg.vs_" + sensorSqlName + " WHERE sensorid=" + qSensorId
+            String query = "SELECT * FROM " + sensorSqlName + " WHERE sensorid=" + qSensorId
                     + " AND  timestamp BETWEEN " +  qStartTimestamp + " AND " + qEndTimestamp;
 /*
                     + " AND timestamp > " + qStartTimestamp
@@ -69,9 +71,10 @@ public class QueryDataLocal {
             rs = st.executeQuery(query);
             while (rs.next()) {
                 long timestamp = rs.getLong("timestamp");
-                float sensorVal = rs.getFloat(sensorSqlName);
+                double sensorVal = rs.getDouble("value");
                 int userId = rs.getInt("userid");
                 int sensorId = rs.getInt("sensorid");
+                // int stationid = ?
                 String stationName = rs.getString("username");
                 DataSample sensorData = new DataSample(timestamp, sensorVal, userId, sensorId);
                 sensorDataList.add(sensorData);
@@ -99,7 +102,7 @@ public class QueryDataLocal {
             int qStationId = stationInfo.getStationid();
             int qSensorId = stationInfo.getSensorid();
 
-            String query = "SELECT * FROM bg.vs_" + leqSqlName + " WHERE sensorid=" + qSensorId
+            String query = "SELECT * FROM " + leqSqlName + " WHERE sensorid=" + qSensorId
                     + " AND  timestamp BETWEEN " +  qStartTimestamp + " AND " + qEndTimestamp;
 /*
                     + " AND timestamp > " + qStartTimestamp
@@ -109,7 +112,7 @@ public class QueryDataLocal {
             rs = st.executeQuery(query);
             while (rs.next()) {
                 long timestamp = rs.getLong("timestamp");
-                float dataVal = rs.getFloat(leqSqlName);
+                double dataVal = rs.getDouble("leq1hr");
                 int userId = rs.getInt("userid");
                 int sensorId = rs.getInt("sensorid");
                 String stationName = rs.getString("username");
@@ -135,18 +138,18 @@ public class QueryDataLocal {
         List<StationInfo> stationInfoList = new ArrayList<StationInfo>();
         try {
             connect = DriverManager.getConnection(sqlurl, user, password);
-            String query = "SELECT * FROM bg.active_stations";
+            String query = "SELECT * FROM active_stations";
             Statement st = connect.createStatement();
             rs = st.executeQuery(query);
             // Each row represents one station.
             while (rs.next()) {
                 int userid = rs.getInt("userid");
                 //String username = rs.getString("username");
-                int sessionid = rs.getInt("stationid");
+                int stationid = rs.getInt("stationid");
                 int sensorid = rs.getInt("sensorid");
-                StationInfo stationInfo = new StationInfo(userid, sessionid, sensorid);
+                StationInfo stationInfo = new StationInfo(userid, stationid, sensorid);
                 stationInfoList.add(stationInfo);
-                System.out.format("%s, %s, %s\n", userid, sessionid, sensorid);
+                System.out.format("%s, %s, %s\n", userid, stationid, sensorid);
             }
             st.close();
             connect.close();
@@ -174,6 +177,7 @@ public class QueryDataLocal {
 
     public void updateResultsToDb(StationInfo stationInfo, SensorTypes vType, List<Double> resultVals) {
         int userid = stationInfo.getUserid();
+        String username = "test";
         //String username = stationInfo.getUserName();
         int stationid = stationInfo.getStationid();
         int sensorid = stationInfo.getSensorid();
@@ -182,10 +186,10 @@ public class QueryDataLocal {
         long serverTime = cal.getTimeInMillis(); // System.currentTimeMillis()
 
         // Default table.
-        String leqTable = "bg.leq1hr";
+        String leqTable = "leq1hr";
         switch (vType.values()[vType.ordinal()]) {
             case SoundNoise:
-                leqTable = "bg.leq1hr";
+                leqTable = "leq1hr";
                 break;
 /*
             case WaterLevel:
@@ -216,21 +220,21 @@ public class QueryDataLocal {
             dosePercentage = resultVals.get(4);
         }
 
-
         try{
             connect = DriverManager.getConnection(sqlurl, user, password);
 
             preparedStatement = null;
-            preparedStatement = connect.prepareStatement("insert into " + leqTable + " values (?, ?, ?, ?, ?, ?, ?, ?)");
+            preparedStatement = connect.prepareStatement("insert into " + leqTable + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             // Parameters start with 1
-            preparedStatement.setLong(1, serverTime);
-            preparedStatement.setInt(2, sensorid);
-            preparedStatement.setInt(3, userid);
-            preparedStatement.setDouble(4, leq1hr);
-            preparedStatement.setDouble(5, leq12hr);
-            preparedStatement.setDouble(6, predLeq12hrs);
-            preparedStatement.setDouble(7, predLeq5mtsVal);
-            preparedStatement.setDouble(8, dosePercentage);
+            preparedStatement.setLong(1, userid);
+            preparedStatement.setString(2, username);
+            preparedStatement.setInt(3, sensorid);
+            preparedStatement.setLong(4, serverTime);
+            preparedStatement.setDouble(5, leq1hr);
+            preparedStatement.setDouble(6, leq12hr);
+            preparedStatement.setDouble(7, predLeq12hrs);
+            preparedStatement.setDouble(8, predLeq5mtsVal);
+            preparedStatement.setDouble(9, dosePercentage);
 
             preparedStatement.executeUpdate();
 

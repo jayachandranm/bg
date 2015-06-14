@@ -23,7 +23,7 @@ public class ProcessData {
         double Leq12hr = 0.0;
         resLeq1hr.clear();
 
-        double Leq1hr = getLeq1hr(startTime, dataSample1Hr);
+        double Leq1hr = getLeq1hr(dataSample1Hr);
         System.out.println("ProcessData: Leq1hr=" +Leq1hr);
 
         int hoursRemaining = 19 - (hourNow+1);
@@ -55,25 +55,38 @@ public class ProcessData {
         return resLeq1hr;
     }
 
-    public double getLeq1hr(long startTime, List<DataSample> dataSample1Hr) {
+    public double getLeq1hr(List<DataSample> dataSample1Hr) {
         //
         double Leq1hr = 0.0;
-        long lastSampleTime = startTime;
 
         double partialSum = 0.0f;
         long sampleTime = 0;
+        long lastSampleTime = 0;
+        //double totalDurationMillis = 0.0;
+        double totalDurationHrs = 0.0;
+
+        // We expect at least 2 elements for processing.
+        if(dataSample1Hr.size() < 2)
+            return -1;
 
         for(DataSample sample : dataSample1Hr) {
             sampleTime = sample.getTimestamp();
+            // Skip processing the first value.
+            // TODO: handle processing of first value. Use historic value from prev 1hr window?
+            if(lastSampleTime == 0) {
+                lastSampleTime = sampleTime;
+                continue;
+            }
             long durationMillis = sampleTime - lastSampleTime;
-            double durationHr = durationMillis/(1000*60*60);
-            durationHr = 5/60; // assuming sensor update is every 5mts.
+            double durationHr = (double)durationMillis/(1000.0*60.0*60.0);
+            durationHr = 5.0/60.0; // assuming sensor update is every 5mts.
+            totalDurationHrs += durationHr;
             lastSampleTime = sampleTime;
             double sampleValdB = sample.getVal();
 
             if(sampleValdB > LEQ5MTS_LIMIT) {
                 String message = "-";
-                SendSMS.INSTANCE.sendMessage(message);
+                //SendSMS.INSTANCE.sendMessage(message);
             }
 
             partialSum += durationHr * Math.pow(10, sampleValdB/10);
@@ -81,9 +94,9 @@ public class ProcessData {
         }
 
         // timestamp for last sample to first sample.
-        long totalDurationHrs = (sampleTime - startTime)/(1000*60*60);
+        //long totalDurationHrs = (sampleTime - startTime)/(1000*60*60);
         System.out.println("ProcessData: getLeq1hr -> totalDurationHrs=" +totalDurationHrs);
-        totalDurationHrs = 1; // Expected to be close to 1hr.
+        totalDurationHrs = 1.0; // Expected to be close to 1hr.
 
         Leq1hr = 10 * Math.log10(partialSum)/totalDurationHrs;
 

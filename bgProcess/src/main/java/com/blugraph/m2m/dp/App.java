@@ -3,6 +3,7 @@ package com.blugraph.m2m.dp;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 
 
 /**
@@ -10,7 +11,8 @@ import java.util.List;
  */
 public class App {
 
-    private static int WAIT_TIME = 5*60*1000; // 5mts
+    //private static int WAIT_TIME = 5*60*1000; // 5mts
+    private static int WAIT_TIME = 10; // 5mts
     private static long last_processing_time = 0;
     private volatile boolean continueDp = true;
 
@@ -34,8 +36,9 @@ public class App {
                 //throw ex;
             }
 
-            Calendar cal = new GregorianCalendar();
+            Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
             long currentServerTime = cal.getTimeInMillis(); // System.currentTimeMillis()
+            System.out.println(currentServerTime);
             int hourNow = cal.HOUR;
             int minuteNow = Calendar.MINUTE;
 
@@ -91,7 +94,7 @@ public class App {
                     System.out.println("App: Send SMS, update DB.");
                     // Send SMS message, if some threshold exceeded. Runs in separate thread.
                     // TODO: handle result.
-                    SendSMS.INSTANCE.sendMessage(leq1hrResult);
+                    //SendSMS.INSTANCE.sendMessage(leq1hrResult);
                     queryIf.updateResultsToDb(station, SensorTypes.SoundNoise, leq1hrResult);
                 }
 

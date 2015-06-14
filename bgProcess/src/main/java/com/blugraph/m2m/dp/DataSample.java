@@ -7,15 +7,21 @@ public class DataSample {
  
     //private int id;
     private long timestamp;
-    private float val;
+    private double val;
     //private String username;
     private int userid;
     private int stationid;
     private int sensorid;
 
-    public DataSample() {}
+    public DataSample() {
+        this.timestamp = 0;
+        this.val = 0.0f;
+        this.userid = 0;
+        this.stationid = 0;
+        this.sensorid = 0;
+    }
 
-    public DataSample(long timestamp, float value, int userid, int sensorid) {
+    public DataSample(long timestamp, double value, int userid, int sensorid) {
         this.timestamp = timestamp;
         this.val = value;
         //this.username = stationname;
@@ -31,11 +37,11 @@ public class DataSample {
         this.timestamp = timestamp;
     }
 
-    public float getVal() {
+    public double getVal() {
         return val;
     }
 
-    public void setVal(float val) {
+    public void setVal(double val) {
         this.val = val;
     }
 
