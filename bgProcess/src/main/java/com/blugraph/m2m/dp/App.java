@@ -11,8 +11,8 @@ import java.util.TimeZone;
  */
 public class App {
 
-    //private static int WAIT_TIME = 5*60*1000; // 5mts
-    private static int WAIT_TIME = 10; // 5mts
+    private static int WAIT_TIME = 5*60*1000; // 5mts
+    //private static int WAIT_TIME = 10; // 5mts
     private static long last_processing_time = 0;
     private volatile boolean continueDp = true;
 
@@ -38,7 +38,7 @@ public class App {
 
             Calendar now = new GregorianCalendar();
             long currentServerTime = now.getTimeInMillis(); // System.currentTimeMillis() 1434095700.000
-            System.out.println(currentServerTime);
+            //System.out.println(currentServerTime);
             int hourNow = now.get(Calendar.HOUR_OF_DAY);
             int minuteNow = now.get(Calendar.MINUTE);
 
