@@ -36,11 +36,11 @@ public class App {
                 //throw ex;
             }
 
-            Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-            long currentServerTime = cal.getTimeInMillis(); // System.currentTimeMillis()
+            Calendar now = new GregorianCalendar();
+            long currentServerTime = now.getTimeInMillis(); // System.currentTimeMillis() 1434095700.000
             System.out.println(currentServerTime);
-            int hourNow = cal.HOUR;
-            int minuteNow = Calendar.MINUTE;
+            int hourNow = now.get(Calendar.HOUR_OF_DAY);
+            int minuteNow = now.get(Calendar.MINUTE);
 
             // TODO: No processing required after 7pm, till 7am.
 
@@ -78,7 +78,7 @@ public class App {
                     workStartTime.add(Calendar.HOUR, 1);
                 }
 */
-                long workStartTimeMillis =  workStartTime.getTimeInMillis();
+                long workStartTimeMillis =  workStartTime.getTimeInMillis(); //1434092400
 
                 System.out.println("App: Current time in millis =" + endTime);
 
@@ -86,7 +86,7 @@ public class App {
 
                 // process the new list of 1hr data.
                 //boolean result = processData.process4Station(startTime, hourNow, dataSample1Hr, dataHourlySample);
-                List<Double> leq1hrResult = processData.process4Station(startTime, hourNow, dataSample1Hr, dataHourlySample);
+                List<Double> leq1hrResult = processData.process4Station(hourNow, dataSample1Hr, dataHourlySample);
                 //boolean result = processData.processAllStations(dataSample1Hr);
                 //List<Double> leq1hrResult = processData.getResult(SensorTypes.SoundNoise);
 

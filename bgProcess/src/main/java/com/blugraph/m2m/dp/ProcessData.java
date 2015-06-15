@@ -18,12 +18,13 @@ public class ProcessData {
     }
 
     //public boolean process4Station(long startTime, int hourNow, List<DataSample> dataSample1Hr, List<DataSample> dataHourlySample) {
-    public List<Double> process4Station(long startTime, int hourNow, List<DataSample> dataSample1Hr, List<DataSample> dataHourlySample) {
+    public List<Double> process4Station(int hourNow, List<DataSample> dataSample1Hr, List<DataSample> dataHourlySample) {
         //
         double Leq12hr = 0.0;
+        double predLeq5mtsMax = 0.0;
         resLeq1hr.clear();
 
-        double Leq1hr = getLeq1hr(dataSample1Hr);
+        double Leq1hr = calcLeq1hr(dataSample1Hr);
         System.out.println("ProcessData: Leq1hr=" +Leq1hr);
 
         int hoursRemaining = 19 - (hourNow+1);
@@ -34,12 +35,13 @@ public class ProcessData {
         if(hoursRemaining ==0) {
             //
             Leq12hr = predLeq12hrs;
+            predLeq5mtsMax = -1; // Not relevant anymore.
             System.out.println("ProcessData: Leq12hr=" +Leq12hr);
         } else {
             Leq12hr = -1;
+            predLeq5mtsMax= getMaxLeq5mts(hoursRemaining, Leq1hr, dataHourlySample);
         }
 
-        double predLeq5mtsMax= getMaxLeq5mts(hoursRemaining, Leq1hr, dataHourlySample);
         System.out.println("ProcessData: predLeq5mtsMax=" +predLeq5mtsMax);
 
         double dosePercentage = getDosePercentage(Leq1hr, dataHourlySample);
@@ -55,7 +57,7 @@ public class ProcessData {
         return resLeq1hr;
     }
 
-    public double getLeq1hr(List<DataSample> dataSample1Hr) {
+    public double calcLeq1hr(List<DataSample> dataSample1Hr) {
         //
         double Leq1hr = 0.0;
 
@@ -71,14 +73,20 @@ public class ProcessData {
 
         for(DataSample sample : dataSample1Hr) {
             sampleTime = sample.getTimestamp();
+            // Assume regular data, and the first sample to correspond to just prev 5mts interval.
+/*
             // Skip processing the first value.
             // TODO: handle processing of first value. Use historic value from prev 1hr window?
             if(lastSampleTime == 0) {
                 lastSampleTime = sampleTime;
                 continue;
             }
+*/
+            double durationHr = 0.0;
+/*
             long durationMillis = sampleTime - lastSampleTime;
-            double durationHr = (double)durationMillis/(1000.0*60.0*60.0);
+            durationHr = (double)durationMillis/(1000.0*60.0*60.0);
+*/
             durationHr = 5.0/60.0; // assuming sensor update is every 5mts.
             totalDurationHrs += durationHr;
             lastSampleTime = sampleTime;
@@ -98,7 +106,7 @@ public class ProcessData {
         System.out.println("ProcessData: getLeq1hr -> totalDurationHrs=" +totalDurationHrs);
         totalDurationHrs = 1.0; // Expected to be close to 1hr.
 
-        Leq1hr = 10 * Math.log10(partialSum)/totalDurationHrs;
+        Leq1hr = 10 * Math.log10(partialSum/totalDurationHrs);
 
         return Leq1hr;
     }
@@ -122,7 +130,7 @@ public class ProcessData {
         // If value continues till end of day based on current hour.
         partialSum += hoursRemaining * Math.pow(10, currLeq1hr/10);
 
-        predLeq12hrs = 10 * Math.log10(partialSum)/WORK_HRS_LIMIT;
+        predLeq12hrs = 10 * Math.log10(partialSum/WORK_HRS_LIMIT);
 
         return predLeq12hrs;
     }
@@ -131,7 +139,7 @@ public class ProcessData {
         double maxLeq5mts = 0.0;
         double partialSum = 0.0;
 
-        double partialComA = Math.pow(10, (LEQ12HR_LIMIT*WORK_HRS_LIMIT)/10);
+        partialSum = WORK_HRS_LIMIT * Math.pow(10, LEQ12HR_LIMIT/10);
 
         for(DataSample sample : dataHourlySample) {
             double sampleValdB = sample.getVal();
@@ -140,7 +148,10 @@ public class ProcessData {
             partialSum = partialSum - Math.pow(10, sampleValdB/10); // t1, t2, etc =1hr.
             //System.out.println("ProcessData: getMaxLeq5mts -> partialSum=" +partialSum);
         }
-        maxLeq5mts = 10 * Math.log10( (partialComA + partialSum)/hoursRemaining);
+
+        // Update for this hour, using the recently calculated value.
+        partialSum = partialSum - Math.pow(10, currLeq1hr/10);
+        maxLeq5mts = 10 * Math.log10(partialSum/hoursRemaining);
 
         return maxLeq5mts;
     }
@@ -148,18 +159,22 @@ public class ProcessData {
     public double getDosePercentage(double currLeq1hr, List<DataSample> dataHourlySample) {
         double dosePercentage = 0.0;
         double partialSum = 0.0;
+        double powerRatio2Limit = 1.0;
+        int durationHrs = 1;
 
         for(DataSample sample : dataHourlySample) {
             double sampleValdB = sample.getVal();
-
-            double powerRatio2Limit = Math.pow(10, (sampleValdB-LEQ12HR_LIMIT)/10);
-
-            int durationHrs = 1; // Assumed every hour for now.
+            powerRatio2Limit = Math.pow(10, (sampleValdB-LEQ12HR_LIMIT)/10);
+            durationHrs = 1; // Assumed every hour for now.
 
             // C1/T1+C2/T2+.., Tn = WORK_HRS_LIMIT/powerRation2Limit, C1,C2,..=durationHrs.
             partialSum = partialSum + (powerRatio2Limit*durationHrs/WORK_HRS_LIMIT);
             //System.out.println("ProcessData: getDosePercentage -> partialSum=" +partialSum);
         }
+
+        // Update for this hour, based on recently calculated value.
+        powerRatio2Limit = Math.pow(10, (currLeq1hr-LEQ12HR_LIMIT)/10);
+        partialSum = partialSum + (powerRatio2Limit*durationHrs/WORK_HRS_LIMIT);
 
         dosePercentage = partialSum * 100;
         return dosePercentage;
