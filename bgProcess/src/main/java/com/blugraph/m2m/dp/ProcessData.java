@@ -9,7 +9,7 @@ public class ProcessData {
     private static final double LEQ12HR_LIMIT = 75.0;
     private static final double LEQ5MTS_LIMIT = 90.0;
     private static final int WORK_HRS_LIMIT = 12;
-    private static final int WORK_HRS_END_HR = 12;
+    private static final int WORK_HRS_END_HR = 19;
 
     /*
     * Constructor. 
@@ -39,7 +39,6 @@ public class ProcessData {
             predLeq12hrs =  getPredLeq12hr(hoursRemaining, Leq1hr, dataHourlySample);
             predLeq5mtsMax= getMaxLeq5mts(hoursRemaining, Leq1hr, dataHourlySample);
             dosePercentage = getDosePercentage(Leq1hr, dataHourlySample);
-            System.out.println("ProcessData: predLeq12hrs=" +predLeq12hrs);
             // TODO: validate LEQ 12 HR result.
         }
         // for the last slot, hoursRemaining=0
@@ -60,8 +59,9 @@ public class ProcessData {
             Leq12hr = -1;
         }
 
+            
+        System.out.println("ProcessData: predLeq12hrs=" +predLeq12hrs);
         System.out.println("ProcessData: predLeq5mtsMax=" +predLeq5mtsMax);
-
         System.out.println("ProcessData: dosePercentage=" +dosePercentage);
 
         resLeq1hr.add(Leq1hr);
@@ -169,6 +169,9 @@ public class ProcessData {
         // Update for this hour, using the recently calculated value.
         partialSum = partialSum - Math.pow(10, currLeq1hr/10);
         maxLeq5mts = 10 * Math.log10(partialSum/hoursRemaining);
+        if(Double.isNaN(maxLeq5mts)) {
+            maxLeq5mts = -2.0;
+        }
 
         return maxLeq5mts;
     }

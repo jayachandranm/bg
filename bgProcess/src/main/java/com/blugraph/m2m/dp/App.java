@@ -81,7 +81,7 @@ public class App {
                 workStartTime.set(Calendar.MILLISECOND, 0);
                 workStartTime.set(Calendar.SECOND, 0);
                 workStartTime.set(Calendar.MINUTE, 0);
-                workStartTime.set(Calendar.HOUR, 7);  // Today, 7am.
+                workStartTime.set(Calendar.HOUR_OF_DAY, WORK_HRS_START_HR);  // Today, 7am.
 /*
                 if (workStartTime.before(Calendar.getInstance())) {
                     workStartTime.add(Calendar.HOUR, 1);
