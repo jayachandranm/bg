@@ -9,6 +9,7 @@ public class ProcessData {
     private static final double LEQ12HR_LIMIT = 75.0;
     private static final double LEQ5MTS_LIMIT = 90.0;
     private static final int WORK_HRS_LIMIT = 12;
+    private static final int WORK_HRS_END_HR = 12;
 
     /*
     * Constructor. 
@@ -16,35 +17,51 @@ public class ProcessData {
     public ProcessData() {
         resLeq1hr = new ArrayList<Double>();
     }
+   
+    // TODO: Check conditions for overnight. Time changes from 23Hr to 0Hr.
 
     //public boolean process4Station(long startTime, int hourNow, List<DataSample> dataSample1Hr, List<DataSample> dataHourlySample) {
     public List<Double> process4Station(int hourNow, List<DataSample> dataSample1Hr, List<DataSample> dataHourlySample) {
         //
         double Leq12hr = 0.0;
         double predLeq5mtsMax = 0.0;
+        double predLeq12hrs = -1.0;
+        double dosePercentage = -1.0;
         resLeq1hr.clear();
 
         double Leq1hr = calcLeq1hr(dataSample1Hr);
         System.out.println("ProcessData: Leq1hr=" +Leq1hr);
+        // TODO: validate LEQ 1 HR result.
+        int hoursRemaining = WORK_HRS_END_HR - (hourNow+1);
 
-        int hoursRemaining = 19 - (hourNow+1);
-
-        double predLeq12hrs =  getPredLeq12hr(hoursRemaining, Leq1hr, dataHourlySample);
-        System.out.println("ProcessData: predLeq12hrs=" +predLeq12hrs);
+        if (hoursRemaining > 0) {
+            // When dataHourlySample is empty, values will be calculated based on current value.
+            predLeq12hrs =  getPredLeq12hr(hoursRemaining, Leq1hr, dataHourlySample);
+            predLeq5mtsMax= getMaxLeq5mts(hoursRemaining, Leq1hr, dataHourlySample);
+            dosePercentage = getDosePercentage(Leq1hr, dataHourlySample);
+            System.out.println("ProcessData: predLeq12hrs=" +predLeq12hrs);
+            // TODO: validate LEQ 12 HR result.
+        }
         // for the last slot, hoursRemaining=0
-        if(hoursRemaining ==0) {
+        if(hoursRemaining == 0) {
+            predLeq12hrs =  getPredLeq12hr(hoursRemaining, Leq1hr, dataHourlySample);
+            Leq12hr = predLeq12hrs;
+            dosePercentage = getDosePercentage(Leq1hr, dataHourlySample);
+            predLeq5mtsMax = -1; // Not relevant anymore.
+        }
+        if(hoursRemaining < 0) {
             //
+            // TODO: If the code enters here after the WORK_END time is over, 
+            // predicted value continues to remain same as 12hr value (default INVALID)).
             Leq12hr = predLeq12hrs;
             predLeq5mtsMax = -1; // Not relevant anymore.
             System.out.println("ProcessData: Leq12hr=" +Leq12hr);
         } else {
             Leq12hr = -1;
-            predLeq5mtsMax= getMaxLeq5mts(hoursRemaining, Leq1hr, dataHourlySample);
         }
 
         System.out.println("ProcessData: predLeq5mtsMax=" +predLeq5mtsMax);
 
-        double dosePercentage = getDosePercentage(Leq1hr, dataHourlySample);
         System.out.println("ProcessData: dosePercentage=" +dosePercentage);
 
         resLeq1hr.add(Leq1hr);

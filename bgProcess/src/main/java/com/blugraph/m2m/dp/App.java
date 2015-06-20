@@ -12,12 +12,17 @@ import java.util.TimeZone;
 public class App {
 
     private static int WAIT_TIME = 5*60*1000; // 5mts
+    private static final int WORK_HRS_START_HR = 7;
     //private static int WAIT_TIME = 10; // 5mts
     private static long last_processing_time = 0;
     private volatile boolean continueDp = true;
 
     public static void main(String[] args) {
         System.out.println("Inside App!");
+            
+        // At the start of program, set a limit to fetch history sensor data.
+        Calendar now = new GregorianCalendar();
+        long last_processing_time = now.getTimeInMillis() - (30*60*1000); 
         App localApp = new App();
     }
 
@@ -67,6 +72,10 @@ public class App {
 
                 // Get data for approximate window of one hour.
                 List<DataSample> dataSample1Hr = queryIf.getDataForStation(station, SensorTypes.SoundNoise, startTime, endTime);
+                // If no samples for the hour, don't update any values.
+                // TODO: review this condition.
+                if(dataSample1Hr.size() == 0) 
+                    continue;
                 // start time is 7am of the day.
                 Calendar workStartTime = Calendar.getInstance();
                 workStartTime.set(Calendar.MILLISECOND, 0);

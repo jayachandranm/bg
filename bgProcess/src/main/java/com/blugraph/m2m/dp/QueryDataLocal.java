@@ -61,7 +61,7 @@ public class QueryDataLocal {
             int qStationId = stationInfo.getStationid();
             int qSensorId = stationInfo.getSensorid();
 
-            String query = "SELECT * FROM " + sensorSqlName + " WHERE sensor_id=" + qSensorId
+            String query = "SELECT * FROM " + sensorSqlName + " WHERE sender_id=" + qSensorId
                     + " AND  currentdatetime BETWEEN " +  qStartTimestamp + " AND " + qEndTimestamp;
 /*
                     + " AND timestamp > " + qStartTimestamp
@@ -77,7 +77,7 @@ public class QueryDataLocal {
                 // TODO:
                 //int userId = rs.getInt("user_id");
                 int userId = 1;
-                int sensorId = rs.getInt("sensor_id");
+                int sensorId = rs.getInt("sender_id");
                 // int stationid = ?
                 // TODO:
                 //String stationName = rs.getString("username");
