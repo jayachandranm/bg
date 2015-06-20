@@ -27,18 +27,18 @@ public class QueryDataLocal {
     private Connection connect = null;
     private ResultSet rs = null;
 
-    String sqlurl = "jdbc:mysql://localhost/bg";
-    String user = "bg1";
-    String password = "bg%user$1";
+    String sqlurl = "jdbc:mysql://localhost/blunoise";
+    String user = "root";
+    String password = "root123";
 
     public List<DataSample> getDataForStation(StationInfo stationInfo, SensorTypes vType, long qStartTimestamp, long qEndTimestamp) {
         List<DataSample> sensorDataList = new ArrayList<DataSample>();
 
         // Default table.
-        String sensorSqlName = "noise";
+        String sensorSqlName = "tbnoisesensor";
         switch (vType.values()[vType.ordinal()]) {
             case SoundNoise:
-                sensorSqlName = "noise";
+                sensorSqlName = "tbnoisesensor";
                 break;
 /*
             case WaterLevel:
@@ -61,8 +61,8 @@ public class QueryDataLocal {
             int qStationId = stationInfo.getStationid();
             int qSensorId = stationInfo.getSensorid();
 
-            String query = "SELECT * FROM " + sensorSqlName + " WHERE sensorid=" + qSensorId
-                    + " AND  timestamp BETWEEN " +  qStartTimestamp + " AND " + qEndTimestamp;
+            String query = "SELECT * FROM " + sensorSqlName + " WHERE sensor_id=" + qSensorId
+                    + " AND  currentdatetime BETWEEN " +  qStartTimestamp + " AND " + qEndTimestamp;
 /*
                     + " AND timestamp > " + qStartTimestamp
                     + " AND timestamp < " + qEndTimestamp ;
@@ -70,12 +70,17 @@ public class QueryDataLocal {
             Statement st = connect.createStatement();
             rs = st.executeQuery(query);
             while (rs.next()) {
-                long timestamp = rs.getLong("timestamp");
-                double sensorVal = rs.getDouble("value");
-                int userId = rs.getInt("userid");
-                int sensorId = rs.getInt("sensorid");
+                // TODO:
+                //long timestamp = rs.getLong("timestamp");
+                long timestamp = rs.getLong("currentdatetime");
+                double sensorVal = rs.getDouble("noise_data");
+                // TODO:
+                //int userId = rs.getInt("user_id");
+                int userId = 1;
+                int sensorId = rs.getInt("sensor_id");
                 // int stationid = ?
-                String stationName = rs.getString("username");
+                // TODO:
+                //String stationName = rs.getString("username");
                 DataSample sensorData = new DataSample(timestamp, sensorVal, userId, sensorId);
                 sensorDataList.add(sensorData);
                 //System.out.format("%s, %s, %s\n", timestamp, sensorVal, name);
@@ -94,7 +99,7 @@ public class QueryDataLocal {
         List<DataSample> leq1hrDataList = new ArrayList<DataSample>();
 
         // Default table.
-        String leqSqlName = "leq1hr";
+        String leqSqlName = "tblleq1hr";
 
         try {
             connect = DriverManager.getConnection(sqlurl, user, password);
@@ -103,7 +108,7 @@ public class QueryDataLocal {
             int qSensorId = stationInfo.getSensorid();
 
             String query = "SELECT * FROM " + leqSqlName + " WHERE sensorid=" + qSensorId
-                    + " AND  timestamp BETWEEN " +  qStartTimestamp + " AND " + qEndTimestamp;
+                    + " AND  serverTime BETWEEN " +  qStartTimestamp + " AND " + qEndTimestamp;
 /*
                     + " AND timestamp > " + qStartTimestamp
                     + " AND timestamp < " + qEndTimestamp ;
@@ -111,11 +116,13 @@ public class QueryDataLocal {
             Statement st = connect.createStatement();
             rs = st.executeQuery(query);
             while (rs.next()) {
-                long timestamp = rs.getLong("timestamp");
+                //long timestamp = rs.getLong("timestamp");
+                long timestamp = rs.getLong("serverTime");
                 double dataVal = rs.getDouble("leq1hr");
                 int userId = rs.getInt("userid");
                 int sensorId = rs.getInt("sensorid");
-                String stationName = rs.getString("username");
+                // TODO:
+                //String stationName = rs.getString("username");
                 DataSample sensorData = new DataSample(timestamp, dataVal, userId, sensorId);
                 leq1hrDataList.add(sensorData);
                 //System.out.format("%s, %s, %s\n", timestamp, sensorVal, name);
@@ -136,6 +143,7 @@ public class QueryDataLocal {
      */
     public List<StationInfo> getCurrentStations() {
         List<StationInfo> stationInfoList = new ArrayList<StationInfo>();
+/*
         try {
             connect = DriverManager.getConnection(sqlurl, user, password);
             String query = "SELECT * FROM active_stations";
@@ -143,10 +151,10 @@ public class QueryDataLocal {
             rs = st.executeQuery(query);
             // Each row represents one station.
             while (rs.next()) {
-                int userid = rs.getInt("userid");
+                int userid = rs.getInt("user_id");
                 //String username = rs.getString("username");
-                int stationid = rs.getInt("stationid");
-                int sensorid = rs.getInt("sensorid");
+                int stationid = rs.getInt("station_id");
+                int sensorid = rs.getInt("sensor_id");
                 StationInfo stationInfo = new StationInfo(userid, stationid, sensorid);
                 stationInfoList.add(stationInfo);
                 System.out.format("%s, %s, %s\n", userid, stationid, sensorid);
@@ -169,6 +177,15 @@ public class QueryDataLocal {
                 System.out.println("Error: " + ex.toString());
             }
         }
+*/
+        // TODO: for testing.
+        int userid = 1;
+        //String username = rs.getString("username");
+        int stationid = 1;
+        int sensorid = 1;
+        StationInfo stationInfo = new StationInfo(userid, stationid, sensorid);
+        stationInfoList.add(stationInfo);
+
         return stationInfoList;
     }
 
@@ -186,10 +203,10 @@ public class QueryDataLocal {
         long serverTime = cal.getTimeInMillis(); // System.currentTimeMillis()
 
         // Default table.
-        String leqTable = "leq1hr";
+        String leqTable = "tblleq1hr";
         switch (vType.values()[vType.ordinal()]) {
             case SoundNoise:
-                leqTable = "leq1hr";
+                leqTable = "tblleq1hr";
                 break;
 /*
             case WaterLevel:
