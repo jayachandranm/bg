@@ -16,6 +16,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 */
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -27,9 +29,15 @@ public class QueryDataLocal {
     private Connection connect = null;
     private ResultSet rs = null;
 
+    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+/*
     String sqlurl = "jdbc:mysql://localhost/blunoise";
     String user = "root";
     String password = "root123";
+*/
+    String sqlurl = "jdbc:mysql://localhost/bg";
+    String user = "bg1";
+    String password = "bg%user$1";
 
     public List<DataSample> getDataForStation(StationInfo stationInfo, SensorTypes vType, long qStartTimestamp, long qEndTimestamp) {
         List<DataSample> sensorDataList = new ArrayList<DataSample>();
@@ -241,17 +249,18 @@ public class QueryDataLocal {
             connect = DriverManager.getConnection(sqlurl, user, password);
 
             preparedStatement = null;
-            preparedStatement = connect.prepareStatement("insert into " + leqTable + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            preparedStatement = connect.prepareStatement("insert into " + leqTable + " values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             // Parameters start with 1
             preparedStatement.setLong(1, userid);
             preparedStatement.setString(2, username);
             preparedStatement.setInt(3, sensorid);
             preparedStatement.setLong(4, serverTime);
-            preparedStatement.setDouble(5, leq1hr);
-            preparedStatement.setDouble(6, leq12hr);
-            preparedStatement.setDouble(7, predLeq12hrs);
-            preparedStatement.setDouble(8, predLeq5mtsVal);
-            preparedStatement.setDouble(9, dosePercentage);
+            preparedStatement.setString(5, dateFormat.format(serverTime));
+            preparedStatement.setDouble(6, leq1hr);
+            preparedStatement.setDouble(7, leq12hr);
+            preparedStatement.setDouble(8, predLeq12hrs);
+            preparedStatement.setDouble(9, predLeq5mtsVal);
+            preparedStatement.setDouble(10, dosePercentage);
 
             preparedStatement.executeUpdate();
 

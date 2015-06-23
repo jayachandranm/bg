@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 public class ProcessData {
     List<Double> resLeq1hr;
+    private static final double SENSOR_UPDATE_FREQ = 5.0*60; // in seconds
     private static final double LEQ12HR_LIMIT = 75.0;
     private static final double LEQ5MTS_LIMIT = 90.0;
     private static final int WORK_HRS_LIMIT = 12;
@@ -31,6 +32,10 @@ public class ProcessData {
 
         double Leq1hr = calcLeq1hr(dataSample1Hr);
         System.out.println("ProcessData: Leq1hr=" +Leq1hr);
+        if(Leq1hr == -1) {
+            // If an invalid Leq1hr, do not calculcate anything, just return an empty result object.
+            return resLeq1hr;
+        }
         // TODO: validate LEQ 1 HR result.
         int hoursRemaining = WORK_HRS_END_HR - (hourNow+1);
 
@@ -42,6 +47,7 @@ public class ProcessData {
             // TODO: validate LEQ 12 HR result.
         }
         // for the last slot, hoursRemaining=0
+        // TODO: If this condition is missed, Leq12hr will never be updated.
         if(hoursRemaining == 0) {
             predLeq12hrs =  getPredLeq12hr(hoursRemaining, Leq1hr, dataHourlySample);
             Leq12hr = predLeq12hrs;
@@ -54,12 +60,10 @@ public class ProcessData {
             // predicted value continues to remain same as 12hr value (default INVALID)).
             Leq12hr = predLeq12hrs;
             predLeq5mtsMax = -1; // Not relevant anymore.
-            System.out.println("ProcessData: Leq12hr=" +Leq12hr);
-        } else {
-            Leq12hr = -1;
         }
 
-            
+
+        System.out.println("ProcessData: Leq12hr=" +Leq12hr);
         System.out.println("ProcessData: predLeq12hrs=" +predLeq12hrs);
         System.out.println("ProcessData: predLeq5mtsMax=" +predLeq5mtsMax);
         System.out.println("ProcessData: dosePercentage=" +dosePercentage);
@@ -80,7 +84,6 @@ public class ProcessData {
 
         double partialSum = 0.0f;
         long sampleTime = 0;
-        long lastSampleTime = 0;
         //double totalDurationMillis = 0.0;
         double totalDurationHrs = 0.0;
 
@@ -104,13 +107,14 @@ public class ProcessData {
             long durationMillis = sampleTime - lastSampleTime;
             durationHr = (double)durationMillis/(1000.0*60.0*60.0);
 */
-            durationHr = 5.0/60.0; // assuming sensor update is every 5mts.
+            // TODO: To keep it independent of rate, use time duration between samples.
+            durationHr = SENSOR_UPDATE_FREQ/(60.0*60.0);
             totalDurationHrs += durationHr;
-            lastSampleTime = sampleTime;
+
             double sampleValdB = sample.getVal();
 
             if(sampleValdB > LEQ5MTS_LIMIT) {
-                String message = "-";
+                String message = "LEQ 5mts value is above limit.";
                 //SendSMS.INSTANCE.sendMessage(message);
             }
 

@@ -11,9 +11,9 @@ import java.util.TimeZone;
  */
 public class App {
 
-    private static int WAIT_TIME = 5*60*1000; // 5mts
     private static final int WORK_HRS_START_HR = 7;
-    //private static int WAIT_TIME = 10; // 5mts
+    //private static int WAIT_TIME = 5*60*1000; // 5mts
+    private static int WAIT_TIME = 10; // 5mts
     private static long last_processing_time = 0;
     private volatile boolean continueDp = true;
 
@@ -22,7 +22,7 @@ public class App {
             
         // At the start of program, set a limit to fetch history sensor data.
         Calendar now = new GregorianCalendar();
-        long last_processing_time = now.getTimeInMillis() - (30*60*1000); 
+        last_processing_time = now.getTimeInMillis() - (30*60*1000);
         App localApp = new App();
     }
 
@@ -50,7 +50,7 @@ public class App {
             // TODO: No processing required after 7pm, till 7am.
 
             // Consider only the 10 minute window just before the start of an hour.
-            if(minuteNow < 50) {
+                if(minuteNow < 50) {
                 continue;
             }
 
@@ -67,11 +67,13 @@ public class App {
 
             for (StationInfo station : stationInfoList) {
 
-                long startTime = last_processing_time;
-                long endTime = currentServerTime;
+                long lastPtime = last_processing_time;
+                long currTime = currentServerTime;
+                System.out.println("App: Current time =" + currTime + ", Last process time =" + lastPtime);
 
                 // Get data for approximate window of one hour.
-                List<DataSample> dataSample1Hr = queryIf.getDataForStation(station, SensorTypes.SoundNoise, startTime, endTime);
+                List<DataSample> dataSample1Hr = queryIf.getDataForStation(station, SensorTypes.SoundNoise, lastPtime, currTime);
+                System.out.println("App: Size of sensor data received within 1hr =" + dataSample1Hr.size());
                 // If no samples for the hour, don't update any values.
                 // TODO: review this condition.
                 if(dataSample1Hr.size() == 0) 
@@ -88,10 +90,11 @@ public class App {
                 }
 */
                 long workStartTimeMillis =  workStartTime.getTimeInMillis(); //1434092400
+                System.out.println("App: Work start time =" + workStartTimeMillis);
 
-                System.out.println("App: Current time in millis =" + endTime);
-
-                List<DataSample> dataHourlySample = queryIf.getHourlyDataForStation(station, SensorTypes.SoundNoise, workStartTimeMillis, endTime);
+                // TODO: Fetch only incremental data. Currently fetching data from WORK_HRS_START_HR with every query.
+                List<DataSample> dataHourlySample = queryIf.getHourlyDataForStation(station, SensorTypes.SoundNoise, workStartTimeMillis, currTime);
+                System.out.println("App: Size of Leq1hr data received =" + dataHourlySample.size());
 
                 // process the new list of 1hr data.
                 //boolean result = processData.process4Station(startTime, hourNow, dataSample1Hr, dataHourlySample);
@@ -99,7 +102,7 @@ public class App {
                 //boolean result = processData.processAllStations(dataSample1Hr);
                 //List<Double> leq1hrResult = processData.getResult(SensorTypes.SoundNoise);
 
-                if(leq1hrResult != null) {
+                if( (leq1hrResult != null) && (leq1hrResult.size() > 0) ) {
                     System.out.println("App: Send SMS, update DB.");
                     // Send SMS message, if some threshold exceeded. Runs in separate thread.
                     // TODO: handle result.
