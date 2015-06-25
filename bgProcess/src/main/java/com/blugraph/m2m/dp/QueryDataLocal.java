@@ -30,14 +30,15 @@ public class QueryDataLocal {
     private ResultSet rs = null;
 
     private static final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-/*
+
     String sqlurl = "jdbc:mysql://localhost/blunoise";
     String user = "root";
     String password = "root123";
-*/
+/*
     String sqlurl = "jdbc:mysql://localhost/bg";
     String user = "bg1";
     String password = "bg%user$1";
+*/
 
     public List<DataSample> getDataForStation(StationInfo stationInfo, SensorTypes vType, long qStartTimestamp, long qEndTimestamp) {
         List<DataSample> sensorDataList = new ArrayList<DataSample>();

@@ -82,6 +82,8 @@ public class App {
             // No processing outside the Active work hrs.
             // Give additional few hrs towards the end, just as a buffer.
             // For the first window, process data one hour before the start point.
+            // The values calculated for the start hour is not included in any of the algorithms.
+            // Used only to indicate conditions at the start of work.
             if( ( (millisFromWorkStart+millisInHr) < 0)
                     || (millisFromWorkStart > (AppGlobals.INSTANCE.WORK_HRS_LIMIT+2)*millisInHr)) {
                 // Time before work start time for the day.

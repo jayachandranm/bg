@@ -15,9 +15,9 @@ public class ProcessData {
     }
    
     public List<Double> process4Station(double hoursFromStart, List<DataSample> dataSample1Hr, List<DataSample> dataHourlySample) {
-        //
-        double Leq12hr = 0.0;
-        double predLeq5mtsMax = 0.0;
+        // Initialize to invalid values.
+        double Leq12hr = -1.0;
+        double predLeq5mtsMax = -1.0;
         double predLeq12hrs = -1.0;
         double dosePercentage = -1.0;
         resLeq1hr.clear();
@@ -91,7 +91,7 @@ public class ProcessData {
                 continue;
             }
 */
-            double durationHr = 0.0;
+            double durationHr = 1.0;
 /*
             long durationMillis = sampleTime - lastSampleTime;
             durationHr = (double)durationMillis/(1000.0*60.0*60.0);
