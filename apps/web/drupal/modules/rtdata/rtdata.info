@@ -1,0 +1,5 @@
+name = Realtime Data Fetch
+description = Get real time data from custom db table and display on node.
+core = 7.x
+; NEW LINE
+configure = admin/config/content/rtdata

@@ -1,0 +1,277 @@
+<?php
+/**
+ * @file
+ * A module that fetches real time data from sensors.
+ */
+
+
+/**
+ * Implements hook_help().
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+function rtdata_help($path, $arg) {
+  switch ($path) {
+    case "admin/help#rtdata":
+      return '<p>' . t("Fetches selected data in real time") . '</p>';
+      break;
+  }
+} 
+
+/**
+ * Implements hook_block_info().
+ */
+function rtdata_block_info() {
+  $blocks = array();
+  $blocks['rtdata'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Real Time data table'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  $blocks['leqres'] = array(
+    // The name that will appear in the block list.
+    'info' => t('LEQ Results table'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Custom content function. 
+ * 
+ * Set beginning and end dates, retrieve posts from database
+ * saved in that time period.
+ * 
+ * @return 
+ *   A result set of the targeted posts.
+ */
+function rtdata_contents($display){
+  //Get today's date.
+  $today = getdate();
+  //Calculate the date a week ago.
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 7), $today['year']);
+  //Get all posts from one week ago to the present.
+  $end_time = time();
+
+  //NEW LINE 
+  $max_num = variable_get('rtdata_max', 3);
+
+  $bg_db = array(
+      'database' => 'bg',
+      'username' => 'bg1', // assuming this is necessary
+      'password' => 'bg%user$1', // assuming this is necessary
+      'host' => 'localhost', // assumes localhost
+      'driver' => 'mysql', // replace with your database driver
+  );
+  // replace 'YourDatabaseKey' with something that's unique to your module
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  $start_time = 1434092400000;
+  $end_time = 1434132000000;
+
+  // execute queries here
+  $query = db_select('leq1hr', 'n')
+    ->fields('n', array('timestamp', 'leq1hr', 'leq12hr', 'predLeq12hrs', 'predLeq5mtsVal', 'dosePercentage'))
+    ->condition('userid', 1) //Published.
+    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('timestamp', 'ASC'); //Most recent first.
+  if ($display == 'block'){ 
+  // Restrict the range if called with 'block' argument.
+    $query->range(0, $max_num);
+  } //Now proceeds to execute().
+    //->range(0, $max_num) //NEW LINE
+    //->execute(); 
+  //drupal_set_message((string) $query);
+  $result = $query->execute(); 
+  db_set_active(); // without the paramater means set back to the default for the site
+  //drupal_set_message(t('The queries have been made.'));
+
+/*
+   while($record = $result->fetchAssoc()) {
+        print_r($record);
+   }
+*/
+
+  return $result; 
+}
+
+/**
+ * Implements hook_block_view().
+ * 
+ * Prepares the contents of the block.
+ */
+function rtdata_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'rtdata':
+      $block['subject'] = t('Real Time Data');
+      if (user_access('access content')) {
+        // Use our custom function to retrieve data.
+        $result = rtdata_contents('block');
+        // Array to contain items for the block to render.
+        $items2 = array();
+        // Iterate over the resultset and format as links.
+        foreach ($result as $row) {
+          date_default_timezone_set('Asia/Singapore');
+          $date = new DateTime();
+          //$timeHr = date('g:i a',($row->timestamp)/1000);
+          $date->setTimestamp(($row->timestamp)/1000);
+          $timeHr = $date->format('g:i a');
+
+          $leq12hr = round($row->leq12hr, 2);
+          if($leq12hr == -1)
+             $leq12hr = '-';
+
+          $items2[] = array($timeHr, $row->leq1hr, $leq12hr, round($row->predLeq12hrs, 2), round($row->predLeq5mtsVal, 2), round($row->dosePercentage, 2));
+        }
+
+        $header = array(
+          //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+          array('data' => t('Time')),
+          //array('data' => t('Address'), 'colspan' => 3),
+          array('data' => t('Leq-1hr')),
+          array('data' => t('Leq-12hr')),
+          array('data' => t('Pred-12hr')),
+          array('data' => t('Pred-5mts')),
+          array('data' => t('Dose%')),
+        );
+
+        // No content in the last week.
+        if (empty($items2)) {
+          $block['content'] = t('No data available.');  
+        } 
+        else {
+          // Pass data through theme function.
+/*
+          $block['content'] = theme('item_list', array(
+            'items' => $items));
+*/
+          $block['content'] = theme('table', array('header' => $header, 'rows' => $items2, 'attributes' => array('id' => 'sort-table')));
+        }
+      } // if user_access
+      break;
+    case 'leqres':
+      $block['subject'] = t('LEQ Results');
+      if (user_access('access content')) {
+        $result = rtdata_contents('block');
+        // Array to contain items for the block to render.
+        $items2 = array();
+        // Iterate over the resultset and format as links.
+        foreach ($result as $row) {
+          date_default_timezone_set('Asia/Singapore');
+          $date = new DateTime();
+          //$timeHr = date('g:i a',($row->timestamp)/1000);
+          $date->setTimestamp(($row->timestamp)/1000);
+          $timeHr = $date->format('g:i a');
+
+          $leq12hr = round($row->leq12hr, 2);
+          if($leq12hr == -1)
+             $leq12hr = '-';
+
+          $items2[] = array($timeHr, $row->leq1hr, $leq12hr, round($row->predLeq12hrs, 2), round($row->predLeq5mtsVal, 2), round($row->dosePercentage, 2));
+        }
+
+        $header = array(
+          //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+          array('data' => t('Time')),
+          //array('data' => t('Address'), 'colspan' => 3),
+          array('data' => t('Leq-1hr')),
+          array('data' => t('Leq-12hr')),
+          array('data' => t('Pred-12hr')),
+          array('data' => t('Pred-5mts')),
+          array('data' => t('Dose%')),
+        );
+
+        // No content in the last week.
+        if (empty($items2)) {
+          $block['content'] = t('No data available.');  
+        } 
+        else {
+          // Pass data through theme function.
+/*
+          $block['content'] = theme('item_list', array(
+            'items' => $items));
+*/
+          $block['content'] = theme('table', array('header' => $header, 'rows' => $items2, 'attributes' => array('id' => 'sort-table')));
+        }
+      }
+       break;
+  } // switch
+  return $block;
+}
+
+function _get_table_array($data) {
+  $header = array(
+    array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+    //array('data' => t('Leq 1hr'), 'colspan' => 3),
+    array('data' => t('Leq 1hr')),
+    array('data' => t('Leq 12hr')),
+    array('data' => t('pred-12hr')),
+    array('data' => t('dose'), 'colspan' => 3),
+  );
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function rtdata_menu() {
+  $items = array();
+
+  $items['admin/config/content/rtdata'] = array(
+    'title' => 'Real time data',
+    'description' => 'Configuration for Real time data module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('rtdata_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+    $items['rtdata'] = array(
+        'title' => 'Real time data',
+        'page callback' => '_rtdata_page',
+        'access arguments' => array('access rtdata content'),
+        'type' => MENU_NORMAL_ITEM, //Will appear in Navigation menu.
+      );
+
+  return $items;
+}
+
+/**
+ * Page callback: Current posts settings
+ *
+ * @see current_posts_menu()
+ */
+function rtdata_form($form, &$form_state) {
+  $form['rtdata_max'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum number of entries in the table'),
+    '#default_value' => variable_get('rtdata_max', 3),
+    '#size' => 2,
+    '#maxlength' => 2,
+    '#description' => t('The maximum number of entries to display in the block.'),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_permission().
+ */
+function rtdata_permission() {
+  return array(
+    'access rtdata content' => array(
+      'title' => t('Access content for the Real data module'),
+    )
+  );
+}
