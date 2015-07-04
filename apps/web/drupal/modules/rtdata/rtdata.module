@@ -54,6 +54,11 @@ function rtdata_block_info() {
  *   A result set of the targeted posts.
  */
 function rtdata_contents($display){
+
+  $node = menu_get_object();
+  $sensor_id=$node->field_station_id['und'][0]['value'];
+  //print_r($node->field_station_id);
+
   //Get today's date.
   $today = getdate();
   //Calculate the date a week ago.
@@ -75,21 +80,32 @@ function rtdata_contents($display){
   Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
   db_set_active('BLUGRAPHTECH');
 
-  $start_time = 1434092400000;
-  $end_time = 1434132000000;
-
   // execute queries here
-  $query = db_select('leq1hr', 'n')
-    ->fields('n', array('timestamp', 'leq1hr', 'leq12hr', 'predLeq12hrs', 'predLeq5mtsVal', 'dosePercentage'))
-    ->condition('userid', 1) //Published.
-    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('timestamp', 'ASC'); //Most recent first.
+  $query = array();
   if ($display == 'block'){ 
-  // Restrict the range if called with 'block' argument.
-    $query->range(0, $max_num);
+  $start_time = 1434840612210;
+  $end_time = 1434891015360;
+  $query = db_select('tblleq1hr', 'n')
+    ->fields('n', array('serverTime', 'leq1hr', 'leq12hr', 'predLeq12hrs', 'predLeq5mtsVal', 'dosePercentage'))
+    ->condition('userid', 1) //Published.
+    ->condition('userid', $sensor_id) //Published.
+    //->condition('serverTime', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('serverTime', 'ASC'); //Most recent first.
+  // TODO: Can be conditional, different for block and page.
+  $query->range(0, $max_num);
   } //Now proceeds to execute().
-    //->range(0, $max_num) //NEW LINE
-    //->execute(); 
+  if ($display == 'block2'){ 
+  $start_time = 1434254042000;
+  $end_time = 1434254311000;
+  $query = db_select('tbnoisesensor', 'tbnoisesensor')
+    ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
+    ->condition('sender_id', 1) //Published.
+    ->condition('currentdatetime', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('currentdatetime', 'DESC'); //Most recent first.
+  // TODO: Can be conditional, different for block and page.
+  $query->range(0, 12);
+  //$query->range(0, $max_num);
+  } //Now proceeds to execute().
   //drupal_set_message((string) $query);
   $result = $query->execute(); 
   db_set_active(); // without the paramater means set back to the default for the site
@@ -124,14 +140,14 @@ function rtdata_block_view($delta = '') {
           date_default_timezone_set('Asia/Singapore');
           $date = new DateTime();
           //$timeHr = date('g:i a',($row->timestamp)/1000);
-          $date->setTimestamp(($row->timestamp)/1000);
+          $date->setTimestamp(($row->serverTime)/1000);
           $timeHr = $date->format('g:i a');
 
           $leq12hr = round($row->leq12hr, 2);
           if($leq12hr == -1)
              $leq12hr = '-';
 
-          $items2[] = array($timeHr, $row->leq1hr, $leq12hr, round($row->predLeq12hrs, 2), round($row->predLeq5mtsVal, 2), round($row->dosePercentage, 2));
+          $items2[] = array($timeHr, round($row->leq1hr, 2), $leq12hr, round($row->predLeq12hrs, 2), round($row->predLeq5mtsVal, 2), round($row->dosePercentage, 2));
         }
 
         $header = array(
@@ -162,7 +178,7 @@ function rtdata_block_view($delta = '') {
     case 'leqres':
       $block['subject'] = t('LEQ Results');
       if (user_access('access content')) {
-        $result = rtdata_contents('block');
+        $result = rtdata_contents('block2');
         // Array to contain items for the block to render.
         $items2 = array();
         // Iterate over the resultset and format as links.
@@ -170,15 +186,15 @@ function rtdata_block_view($delta = '') {
           date_default_timezone_set('Asia/Singapore');
           $date = new DateTime();
           //$timeHr = date('g:i a',($row->timestamp)/1000);
-          $date->setTimestamp(($row->timestamp)/1000);
+          $date->setTimestamp(($row->currentdatetime)/1000);
           $timeHr = $date->format('g:i a');
 
-          $leq12hr = round($row->leq12hr, 2);
-          if($leq12hr == -1)
-             $leq12hr = '-';
+          $noise = round($row->noise_data, 2);
+          if($noise == -1)
+             $noise = '-';
 
-          $items2[] = array($timeHr, $row->leq1hr, $leq12hr, round($row->predLeq12hrs, 2), round($row->predLeq5mtsVal, 2), round($row->dosePercentage, 2));
-        }
+          $items2[] = array($timeHr, $noise);
+        } // foreach
 
         $header = array(
           //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
@@ -197,11 +213,11 @@ function rtdata_block_view($delta = '') {
         } 
         else {
           // Pass data through theme function.
-/*
           $block['content'] = theme('item_list', array(
-            'items' => $items));
-*/
+            'items' => $items2));
+/*
           $block['content'] = theme('table', array('header' => $header, 'rows' => $items2, 'attributes' => array('id' => 'sort-table')));
+*/
         }
       }
        break;
