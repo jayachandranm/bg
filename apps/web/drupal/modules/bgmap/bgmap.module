@@ -1,0 +1,316 @@
+<?php
+/**
+ * @file
+ * A module that displays real time data from sensors.
+ */
+
+
+/**
+ * Implements hook_help().
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+function bgmap_help($path, $arg) {
+  switch ($path) {
+    case "admin/help#bgmap":
+      return '<p>' . t("Displays real time data in a map") . '</p>';
+      break;
+  }
+} 
+
+/**
+ * Implements hook_block_info().
+ */
+function bgmap_block_info() {
+  $blocks = array();
+  $blocks['bgmap'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Real Time Leaflet map'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+
+  return $blocks;
+}
+
+function bgmap_init() {
+  libraries_load('leaflet');
+  // TODO: drupal_add_library does not work.
+  //drupal_add_library('bgmap', 'highcharts');
+  //drupal_add_js(drupal_get_path('module', 'bgmap') . '/highcharts.js');
+  drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
+
+  if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
+    // The library is installed. Awesome!
+  }
+  else {
+    // Something went wrong. :(
+    // This contains a short status code of what went wrong, such as 'not found'.
+    $error = $library['error'];
+    // This contains a detailed (localized) error message.
+    $error_message = $library['error message'];
+  }
+}
+
+
+/**
+ * Custom content function. 
+ * 
+ * Set beginning and end dates, retrieve posts from database
+ * saved in that time period.
+ * 
+ * @return 
+ *   A result set of the targeted posts.
+ */
+function bgmap_contents($display, $sid){
+/*
+  $node = menu_get_object();
+  $sensor_id=$node->field_station_id['und'][0]['value'];
+  print_r($node->field_station_id);
+*/
+  //Get today's date.
+  $today = getdate();
+  //Calculate the date a week ago.
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 7), $today['year']);
+  //Get all posts from one week ago to the present.
+  $end_time = time();
+
+  //NEW LINE 
+  $max_num = variable_get('bgmap_max', 3);
+
+  $bg_db = array(
+      'database' => 'bg',
+      'username' => 'bg1', // assuming this is necessary
+      'password' => 'bg%user$1', // assuming this is necessary
+      'host' => 'localhost', // assumes localhost
+      'driver' => 'mysql', // replace with your database driver
+  );
+  // replace 'YourDatabaseKey' with something that's unique to your module
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  // execute queries here
+  $query = array();
+  if ($display == 'block'){ 
+    $start_time = 1434254042000;
+    $end_time = 1434254311000;
+    $query = db_select('tbnoisesensor', 'tbnoisesensor')
+      ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
+      //->condition('sender_id', 1) //Published.
+      ->condition('sender_id', $sid) //Published.
+      ->condition('currentdatetime', array($start_time, $end_time), 'BETWEEN')
+      ->orderBy('currentdatetime', 'DESC'); //Most recent first.
+    // TODO: Can be conditional, different for block and page.
+    $query->range(0, 12);
+    //$query->range(0, $max_num);
+  } //Now proceeds to execute().
+  //drupal_set_message((string) $query);
+  $result = $query->execute(); 
+  db_set_active(); // without the paramater means set back to the default for the site
+  //drupal_set_message(t('The queries have been made.'));
+
+/*
+   while($record = $result->fetchAssoc()) {
+        print_r($record);
+   }
+*/
+
+  return $result; 
+}
+
+
+/**
+ * Implements hook_libraries_info().
+ */
+function bgmap_libraries_info() {
+  $libraries = array();
+  $libraries['leaflet'] = array(
+    //'title' => 'Vertical Tabs',
+    //'website' => 'http://drupal.org/node/323112',
+    'name' => 'Leaflet',
+    'vendor url' => 'http://www.leaflet.com/',
+    'download url' => 'http://www.leaflet.com/download',
+/*
+    'version arguments' => array(
+      'file' => 'highcharts.js',
+      // jQuery FlexSlider v2.1
+      'pattern' => '/Highcharts v(\d+\.+\d+)/',
+      'lines' => 2,
+    ),
+*/
+    'version callback' => 'bgmap_short_circuit_version',
+    'files' => array(
+      'js' => array(
+        'leaflet.js',
+      ),
+      'css' => array(
+        'leaflet.css' => array(),
+      ),
+    ),
+  );
+ 
+  return $libraries;
+}
+
+/**
+* Short-circuit the version argument.
+*/
+function bgmap_short_circuit_version() { 
+  return TRUE;
+}
+
+
+/**
+ * Implements hook_block_view().
+ * 
+ * Prepares the contents of the block.
+ */
+function bgmap_block_view($delta = '') {
+  $node = menu_get_object();
+  // TODO: check whether exists.
+  if(isset($node->field_station_id)) {
+    $sensor_id=$node->field_station_id['und'][0]['value'];
+    // nothing to do with sensors, just return.
+  }
+  else {
+    // Invalid sensor_id. 
+    $sensor_id = -1;
+  }
+  //print_r($node->field_station_id);
+
+  drupal_add_js(array('bgmap' => array('sid' => $sensor_id)), 'setting'); 
+
+  $block = array();
+  switch ($delta) {
+    case 'aob':
+      if (user_access('access content')) {
+      } // if user_access
+      break;
+    case 'bgmap':
+      $block['subject'] = t('Real Time Leaflet Map');
+      if (user_access('access content')) {
+        //$result = bgmap_contents('block');
+        // Array to contain items for the block to render.
+        $items2 = array();
+        // Iterate over the resultset and format as links.
+/*
+        foreach ($result as $row) {
+          date_default_timezone_set('Asia/Singapore');
+          $date = new DateTime();
+          //$timeHr = date('g:i a',($row->timestamp)/1000);
+          $date->setTimestamp(($row->currentdatetime)/1000);
+          $timeHr = $date->format('g:i a');
+
+          $noise = round($row->noise_data, 2);
+          if($noise == -1)
+             $noise = '-';
+
+          $items2[] = array($timeHr, $noise);
+        } // foreach
+*/
+        $items2[] = array('Test', '2');
+        //$items2[] = array('8am', '3');
+        // No content in the last week.
+        if (empty($items2)) {
+          $block['content']['#markup'] = t('No data available.');  
+          //$block['content'] = t('No data available.');  
+        } 
+        else {
+          // Pass data through theme function.
+          $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          //$block['content'] = theme('item_list', array('items' => $items2));
+        }
+      }
+      //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
+      //$block['content']['#attached']['libraries_load'][] = array('highcharts');
+      //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
+      //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
+      break;
+  } // switch
+  return $block;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function bgmap_menu() {
+  $items = array();
+
+  $items['admin/config/content/bgmap'] = array(
+    'title' => 'Real time Leaflet Map',
+    'description' => 'Configuration for Real time map module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bgmap_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['bgmap'] = array(
+        'title' => 'Real time map',
+        'page callback' => '_bgmap_page',
+        'access arguments' => array('access bgmap content'),
+        'type' => MENU_NORMAL_ITEM, //Will appear in Navigation menu.
+  );
+  $items['bgmap/get'] = array(
+    'title' => 'Real time map',
+    'page callback' => 'bgmap_get_json',
+    //'page arguments' => array(1), //get param from URL.
+    'access arguments' => array('access bgmap content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function bgmap_get_json($sid) {
+        $result = bgmap_contents('block', $sid);
+        $items2 = array();
+        // Iterate over the resultset and format as links.
+        foreach ($result as $row) {
+          date_default_timezone_set('Asia/Singapore');
+          //$date = new DateTime();
+          //$timeHr = date('g:i a',($row->timestamp)/1000);
+          //$date->setTimestamp(($row->currentdatetime)/1000);
+          $time = ($row->currentdatetime);
+
+          $noise = round($row->noise_data, 2);
+
+          $items2[] = array('x' => $time, 'y' => $noise);
+        } // foreach
+        return drupal_json_output($items2);
+}
+
+/**
+ * Page callback: Current posts settings
+ *
+ * @see current_posts_menu()
+ */
+function bgmap_form($form, &$form_state) {
+  $form['bgmap_max'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum number of entries in the chart'),
+    '#default_value' => variable_get('bgmap_max', 3),
+    '#size' => 2,
+    '#maxlength' => 2,
+    '#description' => t('The maximum number of entries to display in the chart.'),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_permission().
+ */
+function bgmap_permission() {
+  return array(
+    'access bgmap content' => array(
+      'title' => t('Access content for the bg charts module'),
+    )
+  );
+}
