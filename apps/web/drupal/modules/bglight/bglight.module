@@ -1,0 +1,116 @@
+<?php
+/**
+ * @file
+ * A module that fetches real time data from sensors.
+ */
+
+function bglight_help($path, $arg) {
+  switch ($path) {
+    case "admin/help#bglight":
+      return '<p>' . t("Act on a station page modification") . '</p>';
+      break;
+  }
+} 
+
+
+/**
+ * Implements hook_node_insert().
+ *
+ * As a new node is being inserted into the database, we need to do our own
+ * database inserts.
+ */
+function bglight_node_insert($node) {
+  print_r($node);
+/*
+  if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
+    // Notice that we are ignoring any revision information using $node->nid
+    db_insert('nodeapi_example')
+    ->fields(array(
+        'nid' => $node->nid,
+        'vid' => $node->vid,
+        'rating' => $node->nodeapi_example_rating,
+    ))
+    ->execute();
+  }
+*/
+}
+
+/**
+ * Implements hook_node_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ *
+ * This hook is called when an existing node has been changed. We can't simply
+ * update, since the node may not have a rating saved, thus no
+ * database field. So we first check the database for a rating. If there is one,
+ * we update it. Otherwise, we call nodeapi_example_node_insert() to create one.
+ */
+function bglight_node_update($node) {
+
+  print_r($node);
+  //echo $node;
+
+//if ($node->type == 'stations' && !isset($node->nid)) {
+if ($node->type == 'stations') {
+  dpm($node);
+  $sid = $node->field_station_id['und'][0]['value'];
+  $lon = $node->field_location_lat_lon['und'][0]['lon'];
+  $lat = $node->field_location_lat_lon['und'][0]['lat'];
+  update_ext_db($sid, $lon, $lat);
+  print_r($node->field_station_id);
+}
+
+/*
+  if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
+    // Check first if this node has a saved rating.
+    $rating = db_select('nodeapi_example', 'e')
+      ->fields('e', array(
+        'rating',
+      ))
+      ->where('e.vid = (:vid)', array(':vid' => $node->vid))
+      ->execute()->fetchField();
+
+    if ($rating) {
+      // Node has been rated before.
+      db_update('nodeapi_example')
+        ->fields(array('rating' => $node->nodeapi_example_rating))
+        ->condition('vid', $node->vid)
+        ->execute();
+    }
+    else {
+      // Node was not previously rated, so insert a new rating in database.
+      nodeapi_example_node_insert($node);
+    }
+  }
+*/
+}
+
+function update_ext_db($sid, $lon, $lat) {
+  $bg_db = array(
+      'database' => 'bg',
+      'username' => 'root', // assuming this is necessary
+      'password' => 'root123', // assuming this is necessary
+      'host' => 'localhost', // assumes localhost
+      'driver' => 'mysql', // replace with your database driver
+  );
+  // replace 'YourDatabaseKey' with something that's unique to your module
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  $query = array();
+  db_insert('location')
+    ->fields(array(
+      'sid' => $sid,
+      'lng' => $lon,
+      'lat' => $lat,
+))->execute();
+  db_set_active(); // without the paramater means set back to the default for the site
+/*
+  $query = db_select('tbnoisesensor', 'tbnoisesensor')
+    ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
+    ->condition('sender_id', 1) //Published.
+    ->condition('currentdatetime', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('currentdatetime', 'DESC'); //Most recent first.
+*/
+}

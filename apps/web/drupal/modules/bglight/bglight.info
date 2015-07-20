@@ -1,0 +1,5 @@
+name = Save BG station data
+description = Save BG station data entered from the page to custom db table.
+core = 7.x
+; NEW LINE
+;configure = admin/config/content/bglight
