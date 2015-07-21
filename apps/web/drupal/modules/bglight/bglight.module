@@ -20,7 +20,17 @@ function bglight_help($path, $arg) {
  * database inserts.
  */
 function bglight_node_insert($node) {
-  print_r($node);
+  //print_r($node);
+if ($node->type == 'stations') {
+  dpm($node);
+  $sid = 9; // $node->field_station_id['und'][0]['value'];
+  $lon = $node->field_location_lat_lon['und'][0]['lon'];
+  $lat = $node->field_location_lat_lon['und'][0]['lat'];
+  $mlist = $node->field_mobile_list['und'][0]['value'];
+  update_ext_db($sid, $lon, $lat, $mlist);
+  //update_ext_db($sid, $lon, $lat);
+  //print_r($node->field_station_id);
+}
 /*
   if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
     // Notice that we are ignoring any revision information using $node->nid
@@ -57,7 +67,8 @@ if ($node->type == 'stations') {
   $sid = $node->field_station_id['und'][0]['value'];
   $lon = $node->field_location_lat_lon['und'][0]['lon'];
   $lat = $node->field_location_lat_lon['und'][0]['lat'];
-  update_ext_db($sid, $lon, $lat);
+  $mlist = $node->field_mobile_list['und'][0]['value'];
+  update_ext_db($sid, $lon, $lat, $mlist);
   print_r($node->field_station_id);
 }
 
@@ -86,7 +97,7 @@ if ($node->type == 'stations') {
 */
 }
 
-function update_ext_db($sid, $lon, $lat) {
+function update_ext_db($sid, $lon, $lat, $mlist) {
   $bg_db = array(
       'database' => 'bg',
       'username' => 'root', // assuming this is necessary
@@ -98,13 +109,20 @@ function update_ext_db($sid, $lon, $lat) {
   Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
   db_set_active('BLUGRAPHTECH');
 
-  $query = array();
+  //$query = array();
   db_insert('location')
     ->fields(array(
       'sid' => $sid,
       'lng' => $lon,
       'lat' => $lat,
 ))->execute();
+//
+  db_insert('mobilelist')
+    ->fields(array(
+      'sid' => $sid,
+      'mlist' => $mlist,
+))->execute();
+//
   db_set_active(); // without the paramater means set back to the default for the site
 /*
   $query = db_select('tbnoisesensor', 'tbnoisesensor')
