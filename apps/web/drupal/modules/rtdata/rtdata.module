@@ -70,9 +70,9 @@ function rtdata_contents($display){
   $max_num = variable_get('rtdata_max', 3);
 
   $bg_db = array(
-      'database' => 'bg',
-      'username' => 'bg1', // assuming this is necessary
-      'password' => 'bg%user$1', // assuming this is necessary
+      'database' => 'blunoise',
+      'username' => 'root', // assuming this is necessary
+      'password' => 'root123', // assuming this is necessary
       'host' => 'localhost', // assumes localhost
       'driver' => 'mysql', // replace with your database driver
   );
@@ -83,11 +83,13 @@ function rtdata_contents($display){
   // execute queries here
   $query = array();
   if ($display == 'block'){ 
-  $start_time = 1434840612210;
-  $end_time = 1434891015360;
+  //$start_time = 1434840612210;
+  //$end_time = 1434891015360;
+  $start_time = 1436097069574;
+  $end_time = 1436183489674;
   $query = db_select('tblleq1hr', 'n')
     ->fields('n', array('serverTime', 'leq1hr', 'leq12hr', 'predLeq12hrs', 'predLeq5mtsVal', 'dosePercentage'))
-    ->condition('userid', 1) //Published.
+    //->condition('userid', 1) //Published.
     ->condition('userid', $sensor_id) //Published.
     //->condition('serverTime', array($start_time, $end_time), 'BETWEEN')
     ->orderBy('serverTime', 'ASC'); //Most recent first.
@@ -95,8 +97,10 @@ function rtdata_contents($display){
   $query->range(0, $max_num);
   } //Now proceeds to execute().
   if ($display == 'block2'){ 
-  $start_time = 1434254042000;
-  $end_time = 1434254311000;
+  //$start_time = 1434254042000;
+  //$end_time = 1434254311000;
+  $start_time = 1436255112000;
+  $end_time = 1436255736000
   $query = db_select('tbnoisesensor', 'tbnoisesensor')
     ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
     ->condition('sender_id', 1) //Published.

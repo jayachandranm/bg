@@ -84,9 +84,9 @@ function bgchart_contents($display, $sid){
   $max_num = variable_get('bgchart_max', 3);
 
   $bg_db = array(
-      'database' => 'bg',
-      'username' => 'bg1', // assuming this is necessary
-      'password' => 'bg%user$1', // assuming this is necessary
+      'database' => 'blunoise',
+      'username' => 'root', // assuming this is necessary
+      'password' => 'root123', // assuming this is necessary
       'host' => 'localhost', // assumes localhost
       'driver' => 'mysql', // replace with your database driver
   );
@@ -97,8 +97,10 @@ function bgchart_contents($display, $sid){
   // execute queries here
   $query = array();
   if ($display == 'block'){ 
-    $start_time = 1434254042000;
-    $end_time = 1434254311000;
+    //$start_time = 1434254042000;
+    //$end_time = 1434254311000;
+    $start_time = 1436255112000;
+    $end_time = 1436255736000;
     $query = db_select('tbnoisesensor', 'tbnoisesensor')
       ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
       //->condition('sender_id', 1) //Published.
