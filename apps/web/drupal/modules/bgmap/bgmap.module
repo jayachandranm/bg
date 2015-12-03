@@ -84,9 +84,9 @@ function bgmap_contents($display, $sid){
   $max_num = variable_get('bgmap_max', 3);
 
   $bg_db = array(
-      'database' => 'bg',
-      'username' => 'bg1', // assuming this is necessary
-      'password' => 'bg%user$1', // assuming this is necessary
+      'database' => 'blunoise',
+      'username' => 'root', // assuming this is necessary
+      'password' => 'root123', // assuming this is necessary
       'host' => 'localhost', // assumes localhost
       'driver' => 'mysql', // replace with your database driver
   );

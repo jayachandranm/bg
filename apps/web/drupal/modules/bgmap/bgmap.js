@@ -19,8 +19,8 @@
            data_url = basepath + '?q=bgchart/get/' + sid;
            // leaflet
            //var map = L.map('show_report').setView([51.505, -0.09], 13);
-           var lng = 1.421;
-           var lat = 103.829;
+           var lng = 1.421;//-104.05; // 1.421;
+           var lat = 103.829;//48.99; //103.829;
            //center: [51.505, -0.09], zoom: 13
            var map = L.map('show_report').setView([lng, lat], 13);
 
@@ -28,10 +28,77 @@
                 attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
+/*
+var states = [{
+    "type": "Feature",
+    "properties": {"party": "Republican"},
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+            [-104.05, 48.99],
+            [-97.22,  48.98],
+            [-96.58,  45.94],
+            [-104.03, 45.94],
+            [-104.05, 48.99]
+        ]]
+    }
+}, {
+    "type": "Feature",
+    "properties": {"party": "Democrat"},
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+            [-109.05, 41.00],
+            [-102.06, 40.99],
+            [-102.03, 36.99],
+            [-109.04, 36.99],
+            [-109.05, 41.00]
+        ]]
+    }
+}];
+
+L.geoJson(states, {
+    style: function(feature) {
+        switch (feature.properties.party) {
+            case 'Republican': return {color: "#ff0000"};
+            case 'Democrat':   return {color: "#0000ff"};
+        }
+    }
+}).addTo(map);
+*/
+
+
            // add a marker in the given location, attach some popup content to it and open the popup
-           var marker1 = L.marker([lng, lat]).addTo(map)
-               .bindPopup('A pretty CSS3 popup. <br> Easily customizable.')
-               .openPopup();
+           var markers = new Array();
+
+var carIcon_b = L.icon({
+    iconUrl: 'sites/default/files/car_blue.png',
+    //shadowUrl: 'sites/default/car.png',
+
+    iconSize:     [32, 37], // size of the icon
+    //shadowSize:   [50, 64], // size of the shadow
+    iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
+    shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+});
+
+var carIcon_r = L.icon({
+    iconUrl: 'sites/default/files/car_red.png',
+    //shadowUrl: 'sites/default/car.png',
+
+    iconSize:     [32, 37], // size of the icon
+    //shadowSize:   [50, 64], // size of the shadow
+    iconAnchor:   [22, 94], // point of the icon which will correspond to marker's location
+    shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+});
+
+           markers[0] = L.marker([lng, lat], {icon: carIcon_b}).addTo(map)
+               .bindPopup('vId=1. <br> Test.');
+               //.openPopup();
+           markers[1] = L.marker([lng-0.02, lat+0.02], {icon: carIcon_r}).addTo(map)
+               .bindPopup('vId=2. <br> Test.');
+               //.openPopup();
 
            var requestData = (function() { 
             console.log('helloo3333');
@@ -43,7 +110,9 @@
                 test_rand = Math.random()/100; 
                 var newlng = lng + test_rand;
                 var newlat = lat + test_rand;
-                marker1.setLatLng([newlng, newlat]);
+                markers[0].setLatLng([newlng, newlat]);
+                test_rand = Math.random()/100; 
+                markers[1].setLatLng([newlng-test_rand, newlat+test_rand]);
               },
               complete: function() {
                  setTimeout(requestData, 2000);
