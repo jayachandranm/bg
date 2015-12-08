@@ -1,6 +1,6 @@
 (function($){
-//Drupal.behaviors.maps = {
-Drupal.behaviors.bgmap = {
+  //Drupal.behaviors.maps = {
+  Drupal.behaviors.bgmap = {
     attach:function (context, settings) {
 
       // Add legends to each leaflet map instance in Drupal's settings array
@@ -14,7 +14,7 @@ Drupal.behaviors.bgmap = {
         $.getJSON(geoJsonFile, function(data) {
           console.log('DATA!!!', data);
           var geojson = L.geoJson(data, {
-            style: function (feature) { 
+            style: function (feature) {
               return {color: feature.properties.color};
             },
             onEachFeature: function (feature, layer) {
@@ -29,11 +29,11 @@ Drupal.behaviors.bgmap = {
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           //attribution: 'Test Overlay'
-        }).addTo(map);  
+        }).addTo(map);
 
         // turn off scrollWheel zooming
         map.scrollWheelZoom.disable();
-        
+
       }); //$(settings.leaflet).each(function()
     }//attach:function (context, settings)
   };//Drupal.behaviors.maps
