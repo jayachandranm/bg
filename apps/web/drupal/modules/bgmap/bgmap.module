@@ -59,6 +59,116 @@ function bgmap_init() {
 
 
 /**
+ * Implements hook_node_insert().
+ *
+ * As a new node is being inserted into the database, we need to do our own
+ * database inserts.
+ */
+function bgmap_node_insert($node) {
+  //print_r($node);
+if ($node->type == 'stations') {
+  dpm($node);
+  $nid = $node->nid;
+  //print_r($node->field_station_id);
+  $sid = $node->field_sensor_id['und'][0]['value'];
+  //$lon = $node->field_location_lat_lon['und'][0]['lon'];
+  //$lat = $node->field_location_lat_lon['und'][0]['lat'];
+  //$mlist = $node->field_mobile_list['und'][0]['value'];
+  $vnum = $node->field_vehicle_num['und'][0]['value'];
+  $vgroup = 'car';
+  //$vgroup = $node->field_vehicle_group['und'][0]['value'];
+  //update_ext_db($sid, $lon, $lat, $mlist);
+  update_ext_db($nid, $sid, $vnum, $vgroup);
+}
+/*
+  if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
+    // Notice that we are ignoring any revision information using $node->nid
+    db_insert('nodeapi_example')
+    ->fields(array(
+        'nid' => $node->nid,
+        'vid' => $node->vid,
+        'rating' => $node->nodeapi_example_rating,
+    ))
+    ->execute();
+  }
+*/
+}
+
+/**
+ * Implements hook_node_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ *
+ * This hook is called when an existing node has been changed. We can't simply
+ * update, since the node may not have a rating saved, thus no
+ * database field. So we first check the database for a rating. If there is one,
+ * we update it. Otherwise, we call nodeapi_example_node_insert() to create one.
+ */
+function bgmap_node_update($node) {
+
+  print_r($node);
+  //echo $node;
+
+//if ($node->type == 'stations' && !isset($node->nid)) {
+if ($node->type == 'stations') {
+  dpm($node);
+  //print_r($node->field_station_id);
+/*
+  $sid = $node->field_station_id['und'][0]['value'];
+  $lon = $node->field_location_lat_lon['und'][0]['lon'];
+  $lat = $node->field_location_lat_lon['und'][0]['lat'];
+*/
+  $nid = $node->nid;
+  $sid = $node->field_sensor_id['und'][0]['value'];
+  $vnum = $node->field_vehicle_num['und'][0]['value'];
+  $vgroup = 'car';
+  //$mlist = $node->field_mobile_list['und'][0]['value'];
+  //update_ext_db($sid, $lon, $lat, $mlist);
+  update_ext_db($nid, $sid, $vnum, $vgroup);
+}
+}
+
+function update_ext_db($nid, $sid, $vnum, $vgroup) {
+  $bg_db = array(
+      'database' => 'bgmap',
+      'username' => 'bgmap', // assuming this is necessary
+      'password' => 'bgmap%user$1', // assuming this is necessary
+      'host' => 'localhost', // assumes localhost
+      'driver' => 'mysql', // replace with your database driver
+  );
+  // replace 'YourDatabaseKey' with something that's unique to your module
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  //$query = array();
+  db_insert('bgmap_obd_node_map')
+    ->fields(array(
+      'nid' => $nid,
+      'sid' => $sid,
+      'veh_num' => $vnum,
+      'veh_type' => $vgroup,
+))->execute();
+//
+/*
+  db_insert('mobilelist')
+    ->fields(array(
+      'sid' => $sid,
+      'mlist' => $mlist,
+))->execute();
+*/
+//
+  db_set_active(); // without the paramater means set back to the default for the site
+/*
+  $query = db_select('tbnoisesensor', 'tbnoisesensor')
+    ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
+    ->condition('sender_id', 1) //Published.
+    ->condition('currentdatetime', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('currentdatetime', 'DESC'); //Most recent first.
+*/
+}
+
+/**
  * Custom content function. 
  * 
  * Set beginning and end dates, retrieve posts from database
@@ -171,6 +281,7 @@ function bgmap_short_circuit_version() {
  * Prepares the contents of the block.
  */
 function bgmap_block_view($delta = '') {
+  // if ($node = menu_get_object()) {... }
   $node = menu_get_object();
   // TODO: check whether exists.
   if(isset($node->field_station_id)) {
@@ -267,6 +378,8 @@ function bgmap_menu() {
   return $items;
 }
 
+
+// Menu callback. Used by browser JS to retrieve data in real time.
 function bgmap_get_json($sid) {
         $result = bgmap_contents('block', $sid);
         $items2 = array();

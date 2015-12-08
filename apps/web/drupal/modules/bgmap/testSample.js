@@ -1,5 +1,6 @@
 (function($){
-Drupal.behaviors.maps = {
+//Drupal.behaviors.maps = {
+Drupal.behaviors.bgmap = {
     attach:function (context, settings) {
 
       // Add legends to each leaflet map instance in Drupal's settings array

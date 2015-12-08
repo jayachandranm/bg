@@ -9,7 +9,7 @@
             var basepath = Drupal.settings.basePath;
             var sid = Drupal.settings.bgmap.sid;
             //var chart1;
-            console.log('helloi222');
+            console.log('helloi222', sid);
             var title = 'map Real Time';
             // Place a div name correcly.
             $("#block-bgmap-bgmap").append("<div id='show_report'>Graph will display here.....</div>");
@@ -93,11 +93,17 @@ var carIcon_r = L.icon({
     popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
 });
 
+           var sid = 1;
+           var nid=2;
+           var nodeurl = basepath + '?q=node/' + nid;
+	   var popContent = "vId=" + sid + ", <br> veh1.";
            markers[0] = L.marker([lng, lat], {icon: carIcon_b}).addTo(map)
-               .bindPopup('vId=1. <br> Test.');
+               .bindPopup(popContent);
                //.openPopup();
+           sid=2;
+	   popContent = "vId=" + sid + ", <br> <a href=" + nodeurl + ">veh2</a>";
            markers[1] = L.marker([lng-0.02, lat+0.02], {icon: carIcon_r}).addTo(map)
-               .bindPopup('vId=2. <br> Test.');
+               .bindPopup(popContent);
                //.openPopup();
 
            var requestData = (function() { 
@@ -115,7 +121,7 @@ var carIcon_r = L.icon({
                 markers[1].setLatLng([newlng-test_rand, newlat+test_rand]);
               },
               complete: function() {
-                 setTimeout(requestData, 2000);
+                 //setTimeout(requestData, 2000);
               },
               //error: function(xhr, status, error) {
               error: function() {
