@@ -1,21 +1,21 @@
 (function ($) {
   Drupal.behaviors.bgmap = {
     attach: function(context, settings) {
-      console.log('hello');
+      console.log('JS attach, initialization.');
       if (Drupal.settings.bgmap)  {
         //if (true)  {
         //var data = Drupal.settings.bgchart.data.data;
         //var title = Drupal.settings.bgchart.data.title;
         var basepath = Drupal.settings.basePath;
+        console.log('Retrieving settings.');
         //
         // No context parameters are required for displaying all.
         //var sid = Drupal.settings.bgmap.sid;
         //
         //var chart1;
-        console.log('helloi222', sid);
         var title = 'map Real Time';
         // Place a div name correcly.
-        $("#block-bgmap-bgmap").append("<div id='show_report'>Graph will display here.....</div>");
+        $("#block-bgmap-bgmap").append("<div id='show_report'>Map will display here.....</div>");
         $("#block-bgmap-bgmap").height(500);
         $("#show_report").height(400);
 
@@ -111,18 +111,33 @@ markers[1] = L.marker([lng-0.02, lat+0.02], {icon: carIcon_r}).addTo(map)
 //.openPopup();
 
 var requestData = (function() {
-  console.log('helloo3333');
-  data_url = basepath + '?q=bgmap/get/' + sid;
+  console.log('Ajax call.');
+  data_url = basepath + '?q=bgmap/get/' + 'car';
   $.ajax({
     url: data_url,
     success: function(jsonData) {
-      console.log(jsonData);
+      //console.log('Received JSON=', jsonData);
+      for(var i=0; i<jsonData.length; i++) {
+/*
       test_rand = Math.random()/100; 
       var newlng = lng + test_rand;
       var newlat = lat + test_rand;
-      markers[0].setLatLng([newlng, newlat]);
-      test_rand = Math.random()/100;
-      markers[1].setLatLng([newlng-test_rand, newlat+test_rand]);
+*/
+      var newlg = jsonData[i].lg;
+      var newlt = jsonData[i].lt;
+      var nid = jsonData[i].nid;
+      var vnum = jsonData[i].vnum;
+      console.log(newlg, newlt, nid, vnum);
+      markers[i].setLatLng([newlg, newlt]);
+      
+      var nodeurl = basepath + '?q=node/' + nid;
+      //var popContent = "vId=" + sid + ", <br> veh1.";
+      var popContent = "vId=" + vnum + ", <br> <a href=" + nodeurl + ">veh</a>";
+      //markers[0] = L.marker([lng, lat], {icon: carIcon_b}).addTo(map)
+      markers[i].bindPopup(popContent);
+      //test_rand = Math.random()/100;
+      //markers[1].setLatLng([newlng-test_rand, newlat+test_rand]);
+      }
     },
     complete: function() {
       //setTimeout(requestData, 2000);

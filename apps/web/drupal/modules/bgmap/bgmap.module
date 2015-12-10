@@ -230,6 +230,7 @@ function bgmap_block_view($delta = '') {
 
   drupal_add_js(array('bgmap' => array('sid' => $sensor_id)), 'setting');
 */
+  drupal_add_js(array('bgmap' => array('vtype' => 'car')), 'setting');
 
   $block = array();
   switch ($delta) {
