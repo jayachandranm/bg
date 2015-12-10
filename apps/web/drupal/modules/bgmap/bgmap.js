@@ -73,7 +73,8 @@ case 'Democrat':   return {color: "#0000ff"};
 
 
 // add a marker in the given location, attach some popup content to it and open the popup
-var markers = new Array();
+var markerList = {};
+//var markers = new Array();
 
 var carIcon_b = L.icon({
   iconUrl: 'sites/default/files/car_blue.png',
@@ -97,6 +98,7 @@ var carIcon_r = L.icon({
   popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
 });
 
+/*
 var sid = 1;
 var nid=2;
 var nodeurl = basepath + '?q=node/' + nid;
@@ -109,6 +111,7 @@ popContent = "vId=" + sid + ", <br> <a href=" + nodeurl + ">veh2</a>";
 markers[1] = L.marker([lng-0.02, lat+0.02], {icon: carIcon_r}).addTo(map)
 .bindPopup(popContent);
 //.openPopup();
+*/
 
 var requestData = (function() {
   console.log('Ajax call.');
@@ -127,20 +130,29 @@ var requestData = (function() {
       var newlt = jsonData[i].lt;
       var nid = jsonData[i].nid;
       var vnum = jsonData[i].vnum;
+      var mymarker;
       console.log(newlg, newlt, nid, vnum);
-      markers[i].setLatLng([newlg, newlt]);
-      
+      if(!(vnum in markerList)) {
+          console.log('marker not found in the list.');
+          mymarker = L.marker([newlg, newlt], {icon: carIcon_r}).addTo(map);
+          markerList[vnum] =  mymarker;
+      } else {
+          console.log('marker found, update.');
+          mymarker = markerList[vnum];
+          //markers[i].setLatLng([newlg, newlt]);
+          mymarker.setLatLng([newlg, newlt]);
+      }
       var nodeurl = basepath + '?q=node/' + nid;
       //var popContent = "vId=" + sid + ", <br> veh1.";
-      var popContent = "vId=" + vnum + ", <br> <a href=" + nodeurl + ">veh</a>";
+      var popContent = "<a href=" + nodeurl + ">" + vnum +"</a>";
       //markers[0] = L.marker([lng, lat], {icon: carIcon_b}).addTo(map)
-      markers[i].bindPopup(popContent);
+      mymarker.bindPopup(popContent);
       //test_rand = Math.random()/100;
       //markers[1].setLatLng([newlng-test_rand, newlat+test_rand]);
       }
     },
     complete: function() {
-      //setTimeout(requestData, 2000);
+      setTimeout(requestData, 2000);
     },
     //error: function(xhr, status, error) {
     error: function() {

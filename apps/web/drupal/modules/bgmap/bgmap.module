@@ -66,8 +66,8 @@ function bgmap_init() {
 */
 function bgmap_node_insert($node) {
   //print_r($node);
-  if ($node->type == 'stations') {
-    dpm($node);
+  //dpm($node);
+  if ($node->type == 'vehicles') {
     $nid = $node->nid;
     //print_r($node->field_station_id);
     $sid = $node->field_sensor_id['und'][0]['value'];
@@ -76,9 +76,11 @@ function bgmap_node_insert($node) {
     //$mlist = $node->field_mobile_list['und'][0]['value'];
     $vnum = $node->field_vehicle_num['und'][0]['value'];
     $vgroup = 'car';
+    $flag = true;
     //$vgroup = $node->field_vehicle_group['und'][0]['value'];
     //update_ext_db($sid, $lon, $lat, $mlist);
-    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup);
+    //bgmap_update_ext_db($nid, $sid, $vnum, $vgroup);
+    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
   }
   /*
   if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
@@ -106,11 +108,12 @@ function bgmap_node_insert($node) {
 * we update it. Otherwise, we call nodeapi_example_node_insert() to create one.
 */
 function bgmap_node_update($node) {
-  print_r($node);
+  //print_r($node);
   //echo $node;
   //if ($node->type == 'stations' && !isset($node->nid)) {
-  if ($node->type == 'stations') {
-    dpm($node);
+  if ($node->type == 'vehicles') {
+  //if ($node->type == 'stations') {
+    //dpm($node);
     //print_r($node->field_station_id);
     /*
     $sid = $node->field_station_id['und'][0]['value'];
@@ -121,13 +124,14 @@ function bgmap_node_update($node) {
     $sid = $node->field_sensor_id['und'][0]['value'];
     $vnum = $node->field_vehicle_num['und'][0]['value'];
     $vgroup = 'car';
+    $flag = false;
     //$mlist = $node->field_mobile_list['und'][0]['value'];
     //update_ext_db($sid, $lon, $lat, $mlist);
-    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup);
+    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
   }
 }
 
-function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup) {
+function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
   $bg_db = array(
     'database' => 'bgmap',
     'username' => 'bgmap', // assuming this is necessary
@@ -140,6 +144,7 @@ function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup) {
   db_set_active('BLUGRAPHTECH');
 
   //$query = array();
+  if($flag) {
   db_insert('bgmap_obd_node_map')
   ->fields(array(
     'nid' => $nid,
@@ -147,6 +152,18 @@ function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup) {
     'veh_num' => $vnum,
     'veh_type' => $vgroup,
   ))->execute();
+  }
+  else {
+  db_update('bgmap_obd_node_map')
+  ->fields(array(
+    'nid' => $nid,
+    'sid' => $sid,
+    'veh_num' => $vnum,
+    'veh_type' => $vgroup,
+  ))
+  ->condition('nid', $nid)
+  ->execute();
+  }
   //
   /*
   db_insert('mobilelist')
