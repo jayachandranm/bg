@@ -7,7 +7,10 @@
         //var data = Drupal.settings.bgchart.data.data;
         //var title = Drupal.settings.bgchart.data.title;
         var basepath = Drupal.settings.basePath;
-        var sid = Drupal.settings.bgmap.sid;
+        //
+        // No context parameters are required for displaying all.
+        //var sid = Drupal.settings.bgmap.sid;
+        //
         //var chart1;
         console.log('helloi222', sid);
         var title = 'map Real Time';
@@ -16,7 +19,8 @@
         $("#block-bgmap-bgmap").height(500);
         $("#show_report").height(400);
 
-        data_url = basepath + '?q=bgchart/get/' + sid;
+        //data_url = basepath + '?q=bgchart/get/' + sid;
+        data_url = basepath + '?q=bgchart/get/' + 'car';
         // leaflet
         //var map = L.map('show_report').setView([51.505, -0.09], 13);
         var lng = 1.421;//-104.05; // 1.421;

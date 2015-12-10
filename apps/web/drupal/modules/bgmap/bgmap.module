@@ -78,7 +78,7 @@ function bgmap_node_insert($node) {
     $vgroup = 'car';
     //$vgroup = $node->field_vehicle_group['und'][0]['value'];
     //update_ext_db($sid, $lon, $lat, $mlist);
-    update_ext_db($nid, $sid, $vnum, $vgroup);
+    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup);
   }
   /*
   if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
@@ -123,11 +123,11 @@ function bgmap_node_update($node) {
     $vgroup = 'car';
     //$mlist = $node->field_mobile_list['und'][0]['value'];
     //update_ext_db($sid, $lon, $lat, $mlist);
-    update_ext_db($nid, $sid, $vnum, $vgroup);
+    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup);
   }
 }
 
-function update_ext_db($nid, $sid, $vnum, $vgroup) {
+function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup) {
   $bg_db = array(
     'database' => 'bgmap',
     'username' => 'bgmap', // assuming this is necessary
@@ -165,72 +165,6 @@ function update_ext_db($nid, $sid, $vnum, $vgroup) {
   ->orderBy('currentdatetime', 'DESC'); //Most recent first.
   */
 }
-
-/**
-* Custom content function.
-*
-* Set beginning and end dates, retrieve posts from database
-* saved in that time period.
-*
-* @return
-*   A result set of the targeted posts.
-*/
-function bgmap_contents($display, $sid){
-  /*
-  $node = menu_get_object();
-  $sensor_id=$node->field_station_id['und'][0]['value'];
-  print_r($node->field_station_id);
-  */
-  //Get today's date.
-  $today = getdate();
-  //Calculate the date a week ago.
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 7), $today['year']);
-  //Get all posts from one week ago to the present.
-  $end_time = time();
-
-  //NEW LINE
-  $max_num = variable_get('bgmap_max', 3);
-
-  $bg_db = array(
-    'database' => 'blunoise',
-    'username' => 'root', // assuming this is necessary
-    'password' => 'root123', // assuming this is necessary
-    'host' => 'localhost', // assumes localhost
-    'driver' => 'mysql', // replace with your database driver
-  );
-  // replace 'YourDatabaseKey' with something that's unique to your module
-  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
-  db_set_active('BLUGRAPHTECH');
-
-  // execute queries here
-  $query = array();
-  if ($display == 'block'){
-    $start_time = 1434254042000;
-    $end_time = 1434254311000;
-    $query = db_select('tbnoisesensor', 'tbnoisesensor')
-    ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
-    //->condition('sender_id', 1) //Published.
-    ->condition('sender_id', $sid) //Published.
-    ->condition('currentdatetime', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('currentdatetime', 'DESC'); //Most recent first.
-    // TODO: Can be conditional, different for block and page.
-    $query->range(0, 12);
-    //$query->range(0, $max_num);
-  } //Now proceeds to execute().
-  //drupal_set_message((string) $query);
-  $result = $query->execute();
-  db_set_active(); // without the paramater means set back to the default for the site
-  //drupal_set_message(t('The queries have been made.'));
-
-  /*
-  while($record = $result->fetchAssoc()) {
-  print_r($record);
-}
-*/
-
-return $result;
-}
-
 
 /**
 * Implements hook_libraries_info().
@@ -282,8 +216,10 @@ function bgmap_block_view($delta = '') {
   // if ($node = menu_get_object()) {... }
   $node = menu_get_object();
   // TODO: check whether exists.
-  if(isset($node->field_station_id)) {
-    $sensor_id=$node->field_station_id['und'][0]['value'];
+
+/*
+  if(isset($node->field_sensor_id)) {
+    $sensor_id=$node->field_sensor_id['und'][0]['value'];
     // nothing to do with sensors, just return.
   }
   else {
@@ -293,6 +229,7 @@ function bgmap_block_view($delta = '') {
   //print_r($node->field_station_id);
 
   drupal_add_js(array('bgmap' => array('sid' => $sensor_id)), 'setting');
+*/
 
   $block = array();
   switch ($delta) {
@@ -376,10 +313,79 @@ function bgmap_menu() {
   return $items;
 }
 
+function _bgmap_page() {
+  return "Hello There!";
+}
 
 // Menu callback. Used by browser JS to retrieve data in real time.
-function bgmap_get_json($sid) {
-  $result = bgmap_contents('block', $sid);
+function bgmap_get_json($filter) {
+  //$result = bgmap_current_all('block', $filter);
+  $items2 = bgmap_current_all('block', $filter);
+  return drupal_json_output($items2);
+}
+
+/**
+* Custom content function.
+*
+* Set beginning and end dates, retrieve posts from database
+* saved in that time period.
+*
+* @return
+*   A result set of the targeted posts.
+*/
+function bgmap_current_all($display, $filter){
+  /*
+  $node = menu_get_object();
+  $sensor_id=$node->field_station_id['und'][0]['value'];
+  print_r($node->field_station_id);
+  */
+  //Get today's date.
+  $today = getdate();
+  //Calculate the date one day ago.
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
+  //Get all posts from one week ago to the present.
+  $end_time = time();
+
+  //NEW LINE
+  $max_num = variable_get('bgmap_max', 3);
+
+  $bg_db = array(
+    'database' => 'bgmap',
+    'username' => 'bgmap', // assuming this is necessary
+    'password' => 'bgmap%user$1', // assuming this is necessary
+    'host' => 'localhost', // assumes localhost
+    'driver' => 'mysql', // replace with your database driver
+  );
+  // replace 'YourDatabaseKey' with something that's unique to your module
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  // execute queries here
+  $subquery = array();
+  $query = array();
+  if ($display == 'block'){
+    //$start_time = 1434254042000;
+    //$end_time = 1434254311000;
+    $subquery = db_select('bgmap_obd_gps', 'a')
+    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    //->condition('sender_id', 1) //Published.
+    //->condition('sender_id', $sid) //Published.
+    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+    //->orderBy('datetime', 'DESC'); //Most recent first.
+    ->orderBy('datetime', 'DESC')
+    ->groupBy('sid'); 
+    // TODO: Can be conditional, different for block and page.
+    //$subquery->range(0, 10); //offset=0, limit=10.
+/*
+    $query = db_select($subquery, 'g')
+    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    ->groupBy('sid'); 
+*/
+    //$query->range(0, $max_num);
+  } //Now proceeds to execute().
+  //drupal_set_message((string) $query);
+  //print_r($subquery);
+  $result = $subquery->execute();
   $items2 = array();
   // Iterate over the resultset and format as links.
   foreach ($result as $row) {
@@ -387,14 +393,39 @@ function bgmap_get_json($sid) {
     //$date = new DateTime();
     //$timeHr = date('g:i a',($row->timestamp)/1000);
     //$date->setTimestamp(($row->currentdatetime)/1000);
-    $time = ($row->currentdatetime);
+    $time = ($row->timestamp);
+    //$noise = round($row->noise_data, 2);
+    $longitude = $row->longitude;
+    $latitude = $row->latitude;
+    //
+    $sid = $row->sid;
+    $query2 = array();
 
-    $noise = round($row->noise_data, 2);
+    $query2 = db_select('bgmap_obd_node_map', 'm')
+    ->fields('m', array('nid', 'veh_num', 'veh_type'))
+    ->condition('sid', $sid);
+    $result2 = $query2->execute();
+    $row2  = $result2->fetchObject();
+    $nid = $row2->nid;
+    $vnum = $row2->veh_num;
+    //$nid = 2;
+    //$vnum = 'TEST';
 
-    $items2[] = array('x' => $time, 'y' => $noise);
+    $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude, 'nid' => $nid, 'vnum' => $vnum) ;
   } // foreach
-  return drupal_json_output($items2);
+  db_set_active(); // without the paramater means set back to the default for the site
+  //drupal_set_message(t('The queries have been made.'));
+
+  /*
+  while($record = $result->fetchAssoc()) {
+  print_r($record);
 }
+*/
+
+//return $result;
+return $items2;
+}
+
 
 /**
 * Page callback: Current posts settings
