@@ -1,9 +1,8 @@
 <?php
 /**
 * @file
-* A module that displays real time data from sensors.
+* A module that creates Navigation related blocks.
 */
-
 
 /**
 * Implements hook_help().
@@ -34,15 +33,24 @@ function bgmap_block_info() {
     // Default setting.
     'cache' => DRUPAL_CACHE_PER_ROLE,
   );
-
   return $blocks;
+}
+
+/**
+* Implements hook_permission().
+*/
+function bgmap_permission() {
+  return array(
+    'access bgmap content' => array(
+      'title' => t('Access content for the bg charts module'),
+    )
+  );
 }
 
 function bgmap_init() {
   libraries_load('leaflet');
   // TODO: drupal_add_library does not work.
   //drupal_add_library('bgmap', 'highcharts');
-  //drupal_add_js(drupal_get_path('module', 'bgmap') . '/highcharts.js');
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
 
   if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
@@ -55,132 +63,6 @@ function bgmap_init() {
     // This contains a detailed (localized) error message.
     $error_message = $library['error message'];
   }
-}
-
-
-/**
-* Implements hook_node_insert().
-*
-* As a new node is being inserted into the database, we need to do our own
-* database inserts.
-*/
-function bgmap_node_insert($node) {
-  //print_r($node);
-  //dpm($node);
-  if ($node->type == 'vehicles') {
-    $nid = $node->nid;
-    //print_r($node->field_station_id);
-    $sid = $node->field_sensor_id['und'][0]['value'];
-    //$lon = $node->field_location_lat_lon['und'][0]['lon'];
-    //$lat = $node->field_location_lat_lon['und'][0]['lat'];
-    //$mlist = $node->field_mobile_list['und'][0]['value'];
-    $vnum = $node->field_vehicle_num['und'][0]['value'];
-    $vgroup = 'car';
-    $flag = true;
-    //$vgroup = $node->field_vehicle_group['und'][0]['value'];
-    //update_ext_db($sid, $lon, $lat, $mlist);
-    //bgmap_update_ext_db($nid, $sid, $vnum, $vgroup);
-    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
-  }
-  /*
-  if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
-  // Notice that we are ignoring any revision information using $node->nid
-  db_insert('nodeapi_example')
-  ->fields(array(
-  'nid' => $node->nid,
-  'vid' => $node->vid,
-  'rating' => $node->nodeapi_example_rating,
-  ))
-  ->execute();
-}
-*/
-}
-
-/**
-* Implements hook_node_update().
-*
-* As an existing node is being updated in the database, we need to do our own
-* database updates.
-*
-* This hook is called when an existing node has been changed. We can't simply
-* update, since the node may not have a rating saved, thus no
-* database field. So we first check the database for a rating. If there is one,
-* we update it. Otherwise, we call nodeapi_example_node_insert() to create one.
-*/
-function bgmap_node_update($node) {
-  //print_r($node);
-  //echo $node;
-  //if ($node->type == 'stations' && !isset($node->nid)) {
-  if ($node->type == 'vehicles') {
-  //if ($node->type == 'stations') {
-    //dpm($node);
-    //print_r($node->field_station_id);
-    /*
-    $sid = $node->field_station_id['und'][0]['value'];
-    $lon = $node->field_location_lat_lon['und'][0]['lon'];
-    $lat = $node->field_location_lat_lon['und'][0]['lat'];
-    */
-    $nid = $node->nid;
-    $sid = $node->field_sensor_id['und'][0]['value'];
-    $vnum = $node->field_vehicle_num['und'][0]['value'];
-    $vgroup = 'car';
-    $flag = false;
-    //$mlist = $node->field_mobile_list['und'][0]['value'];
-    //update_ext_db($sid, $lon, $lat, $mlist);
-    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
-  }
-}
-
-function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
-  $bg_db = array(
-    'database' => 'bgmap',
-    'username' => 'bgmap', // assuming this is necessary
-    'password' => 'bgmap%user$1', // assuming this is necessary
-    'host' => 'localhost', // assumes localhost
-    'driver' => 'mysql', // replace with your database driver
-  );
-  // replace 'YourDatabaseKey' with something that's unique to your module
-  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
-  db_set_active('BLUGRAPHTECH');
-
-  //$query = array();
-  if($flag) {
-  db_insert('bgmap_obd_node_map')
-  ->fields(array(
-    'nid' => $nid,
-    'sid' => $sid,
-    'veh_num' => $vnum,
-    'veh_type' => $vgroup,
-  ))->execute();
-  }
-  else {
-  db_update('bgmap_obd_node_map')
-  ->fields(array(
-    'nid' => $nid,
-    'sid' => $sid,
-    'veh_num' => $vnum,
-    'veh_type' => $vgroup,
-  ))
-  ->condition('nid', $nid)
-  ->execute();
-  }
-  //
-  /*
-  db_insert('mobilelist')
-  ->fields(array(
-  'sid' => $sid,
-  'mlist' => $mlist,
-  ))->execute();
-  */
-  //
-  db_set_active(); // without the paramater means set back to the default for the site
-  /*
-  $query = db_select('tbnoisesensor', 'tbnoisesensor')
-  ->fields('tbnoisesensor', array('currentdatetime', 'noise_data'))
-  ->condition('sender_id', 1) //Published.
-  ->condition('currentdatetime', array($start_time, $end_time), 'BETWEEN')
-  ->orderBy('currentdatetime', 'DESC'); //Most recent first.
-  */
 }
 
 /**
@@ -212,7 +94,6 @@ function bgmap_libraries_info() {
     ),
   ),
 );
-
 return $libraries;
 }
 
@@ -221,82 +102,6 @@ return $libraries;
 */
 function bgmap_short_circuit_version() {
   return TRUE;
-}
-
-
-/**
-* Implements hook_block_view().
-*
-* Prepares the contents of the block.
-*/
-function bgmap_block_view($delta = '') {
-  // if ($node = menu_get_object()) {... }
-  $node = menu_get_object();
-  // TODO: check whether exists.
-
-/*
-  if(isset($node->field_sensor_id)) {
-    $sensor_id=$node->field_sensor_id['und'][0]['value'];
-    // nothing to do with sensors, just return.
-  }
-  else {
-    // Invalid sensor_id.
-    $sensor_id = -1;
-  }
-  //print_r($node->field_station_id);
-
-  drupal_add_js(array('bgmap' => array('sid' => $sensor_id)), 'setting');
-*/
-  drupal_add_js(array('bgmap' => array('vtype' => 'car')), 'setting');
-
-  $block = array();
-  switch ($delta) {
-    case 'aob':
-    if (user_access('access content')) {
-    } // if user_access
-    break;
-    case 'bgmap':
-    $block['subject'] = t('Real Time Leaflet Map');
-    if (user_access('access content')) {
-      //$result = bgmap_contents('block');
-      // Array to contain items for the block to render.
-      $items2 = array();
-      // Iterate over the resultset and format as links.
-      /*
-      foreach ($result as $row) {
-      date_default_timezone_set('Asia/Singapore');
-      $date = new DateTime();
-      //$timeHr = date('g:i a',($row->timestamp)/1000);
-      $date->setTimestamp(($row->currentdatetime)/1000);
-      $timeHr = $date->format('g:i a');
-
-      $noise = round($row->noise_data, 2);
-      if($noise == -1)
-      $noise = '-';
-
-      $items2[] = array($timeHr, $noise);
-    } // foreach
-    */
-    $items2[] = array('Test', '2');
-    //$items2[] = array('8am', '3');
-    // No content in the last week.
-    if (empty($items2)) {
-      $block['content']['#markup'] = t('No data available.');
-      //$block['content'] = t('No data available.');
-    }
-    else {
-      // Pass data through theme function.
-      $block['content']['#markup'] = theme('item_list', array('items' => $items2));
-      //$block['content'] = theme('item_list', array('items' => $items2));
-    }
-  }
-  //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
-  //$block['content']['#attached']['libraries_load'][] = array('highcharts');
-  //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
-  //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
-  break;
-} // switch
-return $block;
 }
 
 /**
@@ -327,7 +132,6 @@ function bgmap_menu() {
     'access arguments' => array('access bgmap content'),
     'type' => MENU_CALLBACK,
   );
-
   return $items;
 }
 
@@ -335,9 +139,169 @@ function _bgmap_page() {
   return "Hello There!";
 }
 
-// Menu callback. Used by browser JS to retrieve data in real time.
+/**
+* Implements hook_node_insert().
+*
+* As a new node is being inserted into the database, we need to do our own
+* database inserts.
+*/
+function bgmap_node_insert($node) {
+  //print_r($node);
+  //dpm($node);
+  if ($node->type == 'vehicles') {
+    $nid = $node->nid;
+    $sid = $node->field_sensor_id['und'][0]['value'];
+    $vnum = $node->field_vehicle_num['und'][0]['value'];
+    $vgroup = 'car';
+    $flag = true;
+    //$vgroup = $node->field_vehicle_group['und'][0]['value'];
+    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
+  }
+  /*
+  if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
+  // Notice that we are ignoring any revision information using $node->nid
+}
+*/
+}
+
+/**
+* Implements hook_node_update().
+*
+* As an existing node is being updated in the database, we need to do our own
+* database updates.
+*
+* This hook is called when an existing node has been changed.
+*/
+function bgmap_node_update($node) {
+  //print_r($node);
+  //echo $node;
+  //if ($node->type == 'stations' && !isset($node->nid)) {
+  if ($node->type == 'vehicles') {
+    //dpm($node);
+    $nid = $node->nid;
+    $sid = $node->field_sensor_id['und'][0]['value'];
+    $vnum = $node->field_vehicle_num['und'][0]['value'];
+    $vgroup = 'car';
+    $flag = false;
+    bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
+  }
+}
+
+function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
+  $bg_db = array(
+    'database' => 'bgmap',
+    'username' => 'bgmap', // assuming this is necessary
+    'password' => 'bgmap%user$1', // assuming this is necessary
+    'host' => 'localhost', // assumes localhost
+    'driver' => 'mysql', // replace with your database driver
+  );
+
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  //$query = array();
+  if($flag) {
+    db_insert('bgmap_obd_node_map')
+    ->fields(array(
+      'nid' => $nid,
+      'sid' => $sid,
+      'veh_num' => $vnum,
+      'veh_type' => $vgroup,
+    ))->execute();
+  }
+  else {
+    db_update('bgmap_obd_node_map')
+    ->fields(array(
+      'nid' => $nid,
+      'sid' => $sid,
+      'veh_num' => $vnum,
+      'veh_type' => $vgroup,
+    ))
+    ->condition('nid', $nid)
+    ->execute();
+  }
+  // without the paramater means set back to the default for the site
+  db_set_active();
+}
+
+/**
+* Implements hook_block_view().
+*
+* Prepares the contents of the block.
+*/
+function bgmap_block_view($delta = '') {
+  // if ($node = menu_get_object()) {... }
+  $node = menu_get_object();
+  // TODO: check whether exists.
+
+  /*
+  if(isset($node->field_sensor_id)) {
+  // TODO...
+}
+else {
+// Invalid sensor_id.
+}
+*/
+drupal_add_js(array('bgmap' => array('vtype' => 'car')), 'setting');
+
+$block = array();
+switch ($delta) {
+  case 'aob':
+  if (user_access('access content')) {
+  } // if user_access
+  break;
+  case 'bgmap':
+  $block['subject'] = t('Real Time Leaflet Map');
+  if (user_access('access content')) {
+    //$result = bgmap_contents('block');
+    $items2 = array();
+    // Iterate over the resultset and format as links.
+    /*
+    foreach ($result as $row) {
+    date_default_timezone_set('Asia/Singapore');
+    $date = new DateTime();
+    //$timeHr = date('g:i a',($row->timestamp)/1000);
+    $date->setTimestamp(($row->currentdatetime)/1000);
+    $timeHr = $date->format('g:i a');
+
+    $noise = round($row->noise_data, 2);
+    if($noise == -1)
+    $noise = '-';
+
+    $items2[] = array($timeHr, $noise);
+  } // foreach
+  */
+  $items2[] = array('Test', '2');
+  // No content in the last week.
+  if (empty($items2)) {
+    $block['content']['#markup'] = t('No data available.');
+    //$block['content'] = t('No data available.');
+  }
+  else {
+    // Pass data through theme function.
+    $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+    //$block['content'] = theme('item_list', array('items' => $items2));
+  }
+}
+//$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
+//$block['content']['#attached']['libraries_load'][] = array('highcharts');
+//$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
+//drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
+break;
+} // switch
+return $block;
+}
+
+/**
+* Ajax end point function, menu callback.
+*
+* Used by browser JS to retrieve data in real time.
+* saved in that time period.
+*
+* @return
+*   JSON data.
+*/
 function bgmap_get_json($filter) {
-  //$result = bgmap_current_all('block', $filter);
   $items2 = bgmap_current_all('block', $filter);
   return drupal_json_output($items2);
 }
@@ -355,7 +319,6 @@ function bgmap_current_all($display, $filter){
   /*
   $node = menu_get_object();
   $sensor_id=$node->field_station_id['und'][0]['value'];
-  print_r($node->field_station_id);
   */
   //Get today's date.
   $today = getdate();
@@ -364,7 +327,7 @@ function bgmap_current_all($display, $filter){
   //Get all posts from one week ago to the present.
   $end_time = time();
 
-  //NEW LINE
+  // From admin page.
   $max_num = variable_get('bgmap_max', 3);
 
   $bg_db = array(
@@ -374,43 +337,27 @@ function bgmap_current_all($display, $filter){
     'host' => 'localhost', // assumes localhost
     'driver' => 'mysql', // replace with your database driver
   );
-  // replace 'YourDatabaseKey' with something that's unique to your module
+
   Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
   db_set_active('BLUGRAPHTECH');
 
-  // execute queries here
-  $subquery = array();
   $query = array();
   if ($display == 'block'){
     //$start_time = 1434254042000;
     //$end_time = 1434254311000;
-    $subquery = db_select('bgmap_obd_gps', 'a')
+    $query = db_select('bgmap_obd_gps', 'a')
     ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    //->condition('sender_id', 1) //Published.
-    //->condition('sender_id', $sid) //Published.
     ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    //->orderBy('datetime', 'DESC'); //Most recent first.
     ->orderBy('datetime', 'DESC')
-    ->groupBy('sid'); 
+    ->groupBy('sid');
     // TODO: Can be conditional, different for block and page.
-    //$subquery->range(0, 10); //offset=0, limit=10.
-/*
-    $query = db_select($subquery, 'g')
-    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    ->groupBy('sid'); 
-*/
     //$query->range(0, $max_num);
   } //Now proceeds to execute().
   //drupal_set_message((string) $query);
-  //print_r($subquery);
-  $result = $subquery->execute();
+  $result = $query->execute();
   $items2 = array();
-  // Iterate over the resultset and format as links.
   foreach ($result as $row) {
     date_default_timezone_set('Asia/Singapore');
-    //$date = new DateTime();
-    //$timeHr = date('g:i a',($row->timestamp)/1000);
-    //$date->setTimestamp(($row->currentdatetime)/1000);
     $time = ($row->timestamp);
     //$noise = round($row->noise_data, 2);
     $longitude = $row->longitude;
@@ -426,27 +373,21 @@ function bgmap_current_all($display, $filter){
     $row2  = $result2->fetchObject();
     $nid = $row2->nid;
     $vnum = $row2->veh_num;
-    //$nid = 2;
-    //$vnum = 'TEST';
 
     $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude, 'nid' => $nid, 'vnum' => $vnum) ;
   } // foreach
-  db_set_active(); // without the paramater means set back to the default for the site
+  db_set_active();
+  return $items2;
   //drupal_set_message(t('The queries have been made.'));
-
   /*
   while($record = $result->fetchAssoc()) {
-  print_r($record);
-}
+    print_r($record);
+  }
 */
-
-//return $result;
-return $items2;
 }
-
 
 /**
-* Page callback: Current posts settings
+* Page callback: Module admin settings page.
 *
 * @see current_posts_menu()
 */
@@ -460,17 +401,5 @@ function bgmap_form($form, &$form_state) {
     '#description' => t('The maximum number of entries to display in the chart.'),
     '#required' => TRUE,
   );
-
   return system_settings_form($form);
-}
-
-/**
-* Implements hook_permission().
-*/
-function bgmap_permission() {
-  return array(
-    'access bgmap content' => array(
-      'title' => t('Access content for the bg charts module'),
-    )
-  );
 }
