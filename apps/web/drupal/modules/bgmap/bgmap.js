@@ -7,7 +7,7 @@
         //var sid = Drupal.settings.bgmap.sid;
         //var data = Drupal.settings.bgchart.data.data;
         var basepath = Drupal.settings.basePath;
-        console.log('Retrieving settings.');
+        console.log('Retrieving bgmap settings.');
         //
         var title = 'Real Time Map';
         // Place a div name correcly.
@@ -15,8 +15,7 @@
         $("#block-bgmap-bgmap").height(500);
         $("#show_report").height(400);
 
-        //data_url = basepath + '?q=bgchart/get/' + sid;
-        data_url = basepath + '?q=bgchart/get/' + 'car';
+        data_url = basepath + '?q=bgmap/get/' + 'car';
         var lng = 1.421, lat = 103.829;
         //center: [51.505, -0.09], zoom: 13
         var map = L.map('show_report').setView([lng, lat], 13);
@@ -56,7 +55,7 @@
         * Real time updates.
         */
         var requestData = (function() {
-          console.log('Ajax call.');
+          console.log('Bgmap: Ajax call.');
           data_url = basepath + '?q=bgmap/get/' + 'car';
           $.ajax({
             url: data_url,
@@ -69,6 +68,10 @@
                 var vnum = jsonData[i].vnum;
                 var mymarker;
                 console.log(newlg, newlt, nid, vnum);
+                if(nid == -1) {
+                  // delete the entry corresponding to this vnum, that page does not exist.
+                  // TODO:
+                }
                 if(!(vnum in markerList)) {
                   console.log('marker not found in the list.');
                   mymarker = L.marker([newlg, newlt], {icon: carIcon_r}).addTo(map);
@@ -95,7 +98,55 @@
         }); // requestData
 
         requestData();
-      } // attach
-    } // behaviors
-  }
+      } // if settings, bgmap
+      // If trace array is set, happens inside trace block.
+      if (Drupal.settings.trace)  {
+        var sid = Drupal.settings.trace.sid;
+        //var data = Drupal.settings.bgchart.data.data;
+        console.log('Retrieving (trace) settings.');
+        var basepath = Drupal.settings.basePath;
+        //
+        var title = 'GPS Trace on Map';
+        // Place a div name correcly.
+        $("#block-bgmap-trace").append("<div id='show_report'>Map will display here.....</div>");
+        $("#block-bgmap-trace").height(500);
+        $("#show_report").height(400);
+
+        data_url = basepath + '?q=bgmap/getgeoj/' + 'sid';
+        var lng = 1.421, lat = 103.829;
+        //center: [51.505, -0.09], zoom: 13
+        var map = L.map('show_report').setView([lng, lat], 13);
+
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // http://leafletjs.com/examples/geojson.html
+
+       /*
+        * Real time updates.
+        */
+        var requestData = (function() {
+          console.log('Trace: Ajax call.');
+          data_url = basepath + '?q=bgmap/getgeoj/' + sid;
+          $.ajax({
+            url: data_url,
+            success: function(jsonData) {
+                console.log('Received JSON=', jsonData);
+              }
+            },
+            complete: function() {
+              //setTimeout(requestData, 2000);
+            },
+            //error: function(xhr, status, error) {
+            error: function() {
+              alert('Error loading ');
+            }
+          }); // ajax
+        }); // requestData
+
+        requestData();
+      } // if settings, trace.
+    } // attach
+  } // behaviors, bgmap
 })(jQuery);

@@ -33,6 +33,18 @@ function bgmap_block_info() {
     // Default setting.
     'cache' => DRUPAL_CACHE_PER_ROLE,
   );
+  $blocks['trace'] = array(
+    // The name that will appear in the block list.
+    'info' => t('GPS trace on map'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  $blocks['fuel'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Fuel usage table'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
   return $blocks;
 }
 
@@ -42,17 +54,20 @@ function bgmap_block_info() {
 function bgmap_permission() {
   return array(
     'access bgmap content' => array(
-      'title' => t('Access content for the bg charts module'),
+      'title' => t('Access content for the bgmap module'),
     )
   );
 }
 
 function bgmap_init() {
   libraries_load('leaflet');
+  libraries_load('daterange');
   // TODO: drupal_add_library does not work.
   //drupal_add_library('bgmap', 'highcharts');
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
 
+  drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
+  drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
   if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
     // The library is installed. Awesome!
   }
@@ -63,6 +78,15 @@ function bgmap_init() {
     // This contains a detailed (localized) error message.
     $error_message = $library['error message'];
   }
+
+  if (($library = libraries_detect('daterange')) && !empty($library['installed'])) {
+    // The library is installed. Awesome!
+  }
+  else {
+    $error = $library['error'];
+    $error_message = $library['error message'];
+  }
+
 }
 
 /**
@@ -94,6 +118,31 @@ function bgmap_libraries_info() {
     ),
   ),
 );
+
+$libraries['daterange'] = array(
+  'name' => 'Daterange',
+  'vendor url' => 'http://www.daterangepicker.com/',
+  'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
+  /*
+  'version arguments' => array(
+  'file' => 'highcharts.js',
+  // jQuery FlexSlider v2.1
+  'pattern' => '/Highcharts v(\d+\.+\d+)/',
+  'lines' => 2,
+),
+*/
+'version callback' => 'bgmap_short_circuit_version',
+'files' => array(
+  'js' => array(
+    'daterangepicker.js',
+    'moment.js',
+  ),
+  'css' => array(
+    'daterangepicker.css' => array(),
+  ),
+),
+);
+
 return $libraries;
 }
 
@@ -128,6 +177,13 @@ function bgmap_menu() {
   $items['bgmap/get'] = array(
     'title' => 'Real time map',
     'page callback' => 'bgmap_get_json',
+    //'page arguments' => array(1), //get param from URL.
+    'access arguments' => array('access bgmap content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['bgmap/getgeoj'] = array(
+    'title' => 'Real time trace on map',
+    'page callback' => 'bgmap_get_geojson',
     //'page arguments' => array(1), //get param from URL.
     'access arguments' => array('access bgmap content'),
     'type' => MENU_CALLBACK,
@@ -242,54 +298,131 @@ else {
 // Invalid sensor_id.
 }
 */
-drupal_add_js(array('bgmap' => array('vtype' => 'car')), 'setting');
+  // Set sid invalid by default, means to select all.
+  //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
 
-$block = array();
-switch ($delta) {
-  case 'aob':
-  if (user_access('access content')) {
-  } // if user_access
-  break;
-  case 'bgmap':
-  $block['subject'] = t('Real Time Leaflet Map');
-  if (user_access('access content')) {
-    //$result = bgmap_contents('block');
-    $items2 = array();
-    // Iterate over the resultset and format as links.
-    /*
-    foreach ($result as $row) {
-    date_default_timezone_set('Asia/Singapore');
-    $date = new DateTime();
-    //$timeHr = date('g:i a',($row->timestamp)/1000);
-    $date->setTimestamp(($row->currentdatetime)/1000);
-    $timeHr = $date->format('g:i a');
+  $block = array();
+  switch ($delta) {
+    case 'bgmap':
+      drupal_add_js(array('bgmap' => array('vtype' => 'car')), 'setting');
+      $block['subject'] = t('Real Time Leaflet Map');
+      if (user_access('access content')) {
+        //$result = bgmap_contents('block');
+        $items2 = array();
+        // Iterate over the resultset and format as links.
+        /*
+        foreach ($result as $row) {
+        date_default_timezone_set('Asia/Singapore');
+        $date = new DateTime();
+        //$timeHr = date('g:i a',($row->timestamp)/1000);
+        $date->setTimestamp(($row->currentdatetime)/1000);
+        $timeHr = $date->format('g:i a');
 
-    $noise = round($row->noise_data, 2);
-    if($noise == -1)
-    $noise = '-';
+        $noise = round($row->noise_data, 2);
+        if($noise == -1)
+        $noise = '-';
 
-    $items2[] = array($timeHr, $noise);
-  } // foreach
-  */
-  $items2[] = array('Test', '2');
-  // No content in the last week.
-  if (empty($items2)) {
-    $block['content']['#markup'] = t('No data available.');
-    //$block['content'] = t('No data available.');
-  }
-  else {
-    // Pass data through theme function.
-    $block['content']['#markup'] = theme('item_list', array('items' => $items2));
-    //$block['content'] = theme('item_list', array('items' => $items2));
-  }
-}
-//$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
-//$block['content']['#attached']['libraries_load'][] = array('highcharts');
-//$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
-//drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
-break;
-} // switch
-return $block;
+        $items2[] = array($timeHr, $noise);
+      } // foreach
+      */
+        $items2[] = array('Test', '2');
+        // No content in the last week.
+        if (empty($items2)) {
+          $block['content']['#markup'] = t('No data available.');
+          //$block['content'] = t('No data available.');
+        }
+        else {
+          // Pass data through theme function.
+          $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          //$block['content'] = theme('item_list', array('items' => $items2));
+        }
+      }
+      //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
+      //$block['content']['#attached']['libraries_load'][] = array('highcharts');
+      //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
+      //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
+      break;
+    case 'trace':
+    // TODO: If node type is different, don't show the block.
+      if ($node->type == 'vehicles') {
+        //dpm($node);
+        $nid = $node->nid;
+        $sid = $node->field_sensor_id['und'][0]['value'];
+        $vnum = $node->field_vehicle_num['und'][0]['value'];
+        //$vgroup = 'car';
+        drupal_add_js(array('bgmap' => array('sid' => $sid)), 'setting');
+
+        $block['subject'] = t('Real Time Map Trace');
+        if (user_access('access content')) {
+          $items2 = array();
+          $items2[] = array('Test', '2');
+          // No content in the last week.
+          if (empty($items2)) {
+            $block['content']['#markup'] = t('No data available.');
+            //$block['content'] = t('No data available.');
+          }
+          else {
+            // Pass data through theme function.
+            $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+            //$block['content'] = theme('item_list', array('items' => $items2));
+          }
+        } // access.
+      } // if node-type.
+      break;
+    case 'fuel':
+    // TODO: If node type is different, don't show the block.
+      if ($node->type == 'vehicles') {
+        //dpm($node);
+        $nid = $node->nid;
+        $sid = $node->field_sensor_id['und'][0]['value'];
+        $vnum = $node->field_vehicle_num['und'][0]['value'];
+        //$vgroup = 'car';
+        drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
+
+        $block['subject'] = t('Fuel Usage Table');
+        if (user_access('access content')) {
+          $result = bgmap_getdata_exdb('fuel', $sid);
+          $items2 = array();
+          $items2[] = array('Test', '2');
+          // No content in the last week.
+          foreach ($result as $row) {
+             date_default_timezone_set('Asia/Singapore');
+             $date = new DateTime();
+             //$timeHr = date('g:i a',($row->timestamp)/1000);
+             $date->setTimestamp(($row->timestamp)/1000);
+             $timeHr = $date->format('g:i a');
+
+             $fuel = round($row->value, 2);
+             if($fuel == -1)
+                $noise = '-';
+
+             $items2[] = array($timeHr, $noise);
+           } // foreach
+
+           $header = array(
+             array('data' => t('Time')),
+             array('data' => t('Fuel usage')),
+           );
+
+          if (empty($items2)) {
+            $block['content']['#markup'] = t('No data available.');
+            //$block['content'] = t('No data available.');
+          }
+          else {
+            // Pass data through theme function.
+            //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+            $block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $items2, 'attributes' => array('id' => 'sort-table')));
+            //$block['content'] = theme('item_list', array('items' => $items2));
+          }
+        } // access.
+      } // if node-type.
+      break;
+    case 'aob':
+      if (user_access('access content')) {
+      } // if user_access
+      break;
+  } // switch
+  return $block;
 }
 
 /**
@@ -302,9 +435,27 @@ return $block;
 *   JSON data.
 */
 function bgmap_get_json($filter) {
+  $items2 = array();
   $items2 = bgmap_current_all('block', $filter);
   return drupal_json_output($items2);
 }
+
+
+/**
+* Ajax end point function, menu callback.
+*
+* Used by browser JS to retrieve data in real time.
+* saved in that time period.
+*
+* @return
+*   JSON data.
+*/
+function bgmap_get_geojson($filter) {
+  $items2 = array();
+  $items2 = bgmap_current_all('block', $filter);
+  return drupal_json_output($items2);
+}
+
 
 /**
 * Custom content function.
@@ -370,9 +521,17 @@ function bgmap_current_all($display, $filter){
     ->fields('m', array('nid', 'veh_num', 'veh_type'))
     ->condition('sid', $sid);
     $result2 = $query2->execute();
-    $row2  = $result2->fetchObject();
-    $nid = $row2->nid;
-    $vnum = $row2->veh_num;
+    if($result2->rowCount > 0) {
+      $row2  = $result2->fetchObject();
+      $nid = $row2->nid;
+      $vnum = $row2->veh_num;
+    } else {
+      // The entry doesn't exist in the node table, invalid sensor-id.
+      // Inform the JS and update web interface accordingly.
+      $nid = -1;
+      $vnum = 'NA';
+    }
+    // TODO: iF multiple entry match the condition, handle as error?
 
     $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude, 'nid' => $nid, 'vnum' => $vnum) ;
   } // foreach
@@ -381,10 +540,51 @@ function bgmap_current_all($display, $filter){
   //drupal_set_message(t('The queries have been made.'));
   /*
   while($record = $result->fetchAssoc()) {
-    print_r($record);
-  }
+  print_r($record);
+}
 */
 }
+
+
+function bgmap_getdata_exdb($display, $filter){
+  $today = getdate();
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
+  $end_time = time();
+
+  $max_num = variable_get('bgmap_max', 3);
+
+  $bg_db = array(
+    'database' => 'bgmap',
+    'username' => 'bgmap', // assuming this is necessary
+    'password' => 'bgmap%user$1', // assuming this is necessary
+    'host' => 'localhost', // assumes localhost
+    'driver' => 'mysql', // replace with your database driver
+  );
+
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  $query = array();
+  if ($display == 'fuel'){
+    $query = db_select('bgmap_obd_fuel', 'a')
+    ->fields('a', array('sid', 'timestamp', 'value'))
+    ->condition('sid', $sid)
+    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('datetime', 'DESC')
+    ->groupBy('sid');
+  }
+  //drupal_set_message((string) $query);
+  $result = $query->execute();
+  db_set_active();
+  return $result;
+  //drupal_set_message(t('The queries have been made.'));
+  /*
+  while($record = $result->fetchAssoc()) {
+  print_r($record);
+}
+*/
+}
+
 
 /**
 * Page callback: Module admin settings page.
