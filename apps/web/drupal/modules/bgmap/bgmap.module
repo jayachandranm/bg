@@ -287,6 +287,7 @@ function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
 */
 function bgmap_block_view($delta = '') {
   // if ($node = menu_get_object()) {... }
+  // TODO: exit if it is not a node but a view or something else.
   $node = menu_get_object();
   // TODO: check whether exists.
 
@@ -350,7 +351,7 @@ else {
         $sid = $node->field_sensor_id['und'][0]['value'];
         $vnum = $node->field_vehicle_num['und'][0]['value'];
         //$vgroup = 'car';
-        drupal_add_js(array('bgmap' => array('sid' => $sid)), 'setting');
+        drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
 
         $block['subject'] = t('Real Time Map Trace');
         if (user_access('access content')) {
@@ -547,6 +548,7 @@ function bgmap_current_all($display, $filter){
 
 
 function bgmap_getdata_exdb($display, $filter){
+  $sid = $filter;
   $today = getdate();
   $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
   $end_time = time();

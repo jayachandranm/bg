@@ -106,20 +106,21 @@
         console.log('Retrieving (trace) settings.');
         var basepath = Drupal.settings.basePath;
         //
-        var title = 'GPS Trace on Map';
+        var title2 = 'GPS Trace on Map';
         // Place a div name correcly.
-        $("#block-bgmap-trace").append("<div id='show_report'>Map will display here.....</div>");
+        $("#block-bgmap-trace").append("<div id='show_report2'>Map will display here.....</div>");
         $("#block-bgmap-trace").height(500);
-        $("#show_report").height(400);
+        $("#show_report2").height(400);
 
         data_url = basepath + '?q=bgmap/getgeoj/' + 'sid';
         var lng = 1.421, lat = 103.829;
         //center: [51.505, -0.09], zoom: 13
-        var map = L.map('show_report').setView([lng, lat], 13);
+        //var map = L.map('show_report2').setView([lng, lat], 13);
+        var map2 = L.map('show_report2').setView([lng, lat], 13);
 
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        }).addTo(map2);
 
         // http://leafletjs.com/examples/geojson.html
 
@@ -133,7 +134,6 @@
             url: data_url,
             success: function(jsonData) {
                 console.log('Received JSON=', jsonData);
-              }
             },
             complete: function() {
               //setTimeout(requestData, 2000);
