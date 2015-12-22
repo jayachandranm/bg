@@ -101,6 +101,7 @@
       } // if settings, bgmap
       // If trace array is set, happens inside trace block.
       if (Drupal.settings.trace)  {
+        var latlngs = new Array();         
         var sid = Drupal.settings.trace.sid;
         //var data = Drupal.settings.bgchart.data.data;
         console.log('Retrieving (trace) settings.');
@@ -112,7 +113,7 @@
         $("#block-bgmap-trace").height(500);
         $("#show_report2").height(400);
 
-        data_url = basepath + '?q=bgmap/getgeoj/' + 'sid';
+        data_url = basepath + '?q=bgmap/getgeoj/' + sid;
         var lng = 1.421, lat = 103.829;
         //center: [51.505, -0.09], zoom: 13
         //var map = L.map('show_report2').setView([lng, lat], 13);
@@ -134,6 +135,18 @@
             url: data_url,
             success: function(jsonData) {
                 console.log('Received JSON=', jsonData);
+                for(var i=0; i< jsonData.length; i++) {
+                    latlngs.push([parseFloat(jsonData[i].lg), parseFloat(jsonData[i].lt)]); 
+                    //latlngs[i][0] = 111; //jsonData.latitude;
+                    //latlngs[i][1] = 222; //jsonData.longitude;
+                } 
+                console.log(latlngs);
+                //var test = JSON.stringify(latlngs);
+                var test2 = [[103.83,1.46],[103.82,1.45],[103.81,1.43]];
+                //console.log(test);
+                L.polyline(latlngs, {color: 'blue'}).addTo(map2);
+                //map2.fitBounds(latlngs);
+                //var polygon = L.polygon().addTo(map);
             },
             complete: function() {
               //setTimeout(requestData, 2000);

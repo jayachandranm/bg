@@ -288,7 +288,7 @@ function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
 function bgmap_block_view($delta = '') {
   // if ($node = menu_get_object()) {... }
   // TODO: exit if it is not a node but a view or something else.
-  $node = menu_get_object();
+  //$node = menu_get_object();
   // TODO: check whether exists.
 
   /*
@@ -344,7 +344,8 @@ else {
       //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
       break;
     case 'trace':
-    // TODO: If node type is different, don't show the block.
+    // TODO: If not a node or if node type is different, don't show the block.
+      if ($node = menu_get_object()) {
       if ($node->type == 'vehicles') {
         //dpm($node);
         $nid = $node->nid;
@@ -369,9 +370,11 @@ else {
           }
         } // access.
       } // if node-type.
+      } // if node.
       break;
     case 'fuel':
-    // TODO: If node type is different, don't show the block.
+    // TODO: If not a node, or node type is different, don't show the block.
+      if ($node = menu_get_object()) {
       if ($node->type == 'vehicles') {
         //dpm($node);
         $nid = $node->nid;
@@ -417,6 +420,7 @@ else {
           }
         } // access.
       } // if node-type.
+      } // if node.
       break;
     case 'aob':
       if (user_access('access content')) {
@@ -453,7 +457,7 @@ function bgmap_get_json($filter) {
 */
 function bgmap_get_geojson($filter) {
   $items2 = array();
-  $items2 = bgmap_current_all('block', $filter);
+  $items2 = bgmap_current_single('block', $filter);
   return drupal_json_output($items2);
 }
 
@@ -475,11 +479,12 @@ function bgmap_current_all($display, $filter){
   //Get today's date.
   $today = getdate();
   //Calculate the date one day ago.
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
   //Get all posts from one week ago to the present.
   $end_time = time();
 
   // From admin page.
+  //print_r($start_time);
   $max_num = variable_get('bgmap_max', 3);
 
   $bg_db = array(
@@ -522,7 +527,7 @@ function bgmap_current_all($display, $filter){
     ->fields('m', array('nid', 'veh_num', 'veh_type'))
     ->condition('sid', $sid);
     $result2 = $query2->execute();
-    if($result2->rowCount > 0) {
+    if($result2->rowCount() > 0) {
       $row2  = $result2->fetchObject();
       $nid = $row2->nid;
       $vnum = $row2->veh_num;
@@ -535,6 +540,71 @@ function bgmap_current_all($display, $filter){
     // TODO: iF multiple entry match the condition, handle as error?
 
     $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude, 'nid' => $nid, 'vnum' => $vnum) ;
+  } // foreach
+  db_set_active();
+  return $items2;
+  //drupal_set_message(t('The queries have been made.'));
+  /*
+  while($record = $result->fetchAssoc()) {
+  print_r($record);
+}
+*/
+}
+
+function bgmap_current_single($display, $filter){
+  /*
+  $node = menu_get_object();
+  $sensor_id=$node->field_station_id['und'][0]['value'];
+  */
+  //Get today's date.
+  $today = getdate();
+  //Calculate the date one day ago.
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  //Get all posts from one week ago to the present.
+  $end_time = time();
+
+  // From admin page.
+  //print_r($start_time);
+  $max_num = variable_get('bgmap_max', 3);
+
+  $bg_db = array(
+    'database' => 'bgmap',
+    'username' => 'bgmap', // assuming this is necessary
+    'password' => 'bgmap%user$1', // assuming this is necessary
+    'host' => 'localhost', // assumes localhost
+    'driver' => 'mysql', // replace with your database driver
+  );
+
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  if ($display == 'block'){
+    $query = array();
+    //$start_time = 1434254042000;
+    //$end_time = 1434254311000;
+    $query = db_select('bgmap_obd_gps', 'a')
+    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    ->condition('sid', $filter)
+    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('datetime', 'DESC');
+    //->groupBy('sid');
+    // TODO: Can be conditional, different for block and page.
+    //$query->range(0, $max_num);
+  } //Now proceeds to execute().
+  //drupal_set_message((string) $query);
+  $result = $query->execute();
+  $items2 = array();
+  foreach ($result as $row) {
+    date_default_timezone_set('Asia/Singapore');
+    $time = ($row->timestamp);
+    //$noise = round($row->noise_data, 2);
+    $longitude = $row->longitude;
+    $latitude = $row->latitude;
+    //
+    //$sid = $row->sid;
+
+    $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude ) ;
+    //$items2[] = array($longitude, $latitude ) ;
   } // foreach
   db_set_active();
   return $items2;
