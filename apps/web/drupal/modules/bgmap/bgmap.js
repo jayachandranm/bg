@@ -109,8 +109,11 @@
         //
         var title2 = 'GPS Trace on Map';
         // Place a div name correcly.
+        $("#block-bgmap-trace").append("<input class='datepicker' type='text'/>");
+        $("#block-bgmap-trace").append("<input class='timepicker' type='text'/>");
         $("#block-bgmap-trace").append("<div id='show_report2'>Map will display here.....</div>");
-        $("#block-bgmap-trace").height(500);
+        //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
+        $("#block-bgmap-trace").height(600);
         $("#show_report2").height(400);
 
         data_url = basepath + '?q=bgmap/getgeoj/' + sid;
@@ -118,6 +121,40 @@
         //center: [51.505, -0.09], zoom: 13
         //var map = L.map('show_report2').setView([lng, lat], 13);
         var map2 = L.map('show_report2').setView([lng, lat], 13);
+        //$('input[name="date_range_picker2"]').daterangepicker();
+        //$('input[name="daterange"]').daterangepicker();
+        //$('#config-demo').daterangepicker();
+        //$('#dtp1').datetimepicker();
+        var $input = $( '.datepicker' ).pickadate();
+        var picker = $input.pickadate('picker');
+        picker.on({ 
+            open: function() {
+            console.log('Opened up!')
+          },
+          set: function(thingSet) {
+            console.log('Set stuff:', thingSet.select)
+          }
+        })
+        var $input2 = $( '.timepicker' ).pickatime({
+onOpen: function() {
+    console.log('Opened up')
+  },
+onSet: function(context) {
+    console.log('Just set stuff:', context)
+  }
+});
+        //var picker2 = $input.pickatime('picker2');
+/*
+        picker2.on({
+     open: function() {
+    console.log('Opened up time!')
+  },
+set: function(thingSet) {
+    console.log('Set time:', thingSet.select)
+  }
+        })
+*/
+        //console.log('picker', picker, picker2);
 
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'

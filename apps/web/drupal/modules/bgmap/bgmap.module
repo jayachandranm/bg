@@ -61,13 +61,23 @@ function bgmap_permission() {
 
 function bgmap_init() {
   libraries_load('leaflet');
-  libraries_load('daterange');
+  //libraries_load('moment');
+  //drupal_add_library('bgmap', 'moment');
+  //libraries_load('daterangepicker');
+  //drupal_add_library('bgmap', 'daterangepicker');
   // TODO: drupal_add_library does not work.
   //drupal_add_library('bgmap', 'highcharts');
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
+  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.js');
+  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.date.js');
+  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.time.js');
 
-  drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
-  drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
+  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.css');
+  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.date.css');
+  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.time.css');
+
+  //drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
+  //drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
   if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
     // The library is installed. Awesome!
   }
@@ -77,14 +87,29 @@ function bgmap_init() {
     $error = $library['error'];
     // This contains a detailed (localized) error message.
     $error_message = $library['error message'];
+    print_r("Error: Leaflet lib not loaded.");
   }
 
-  if (($library = libraries_detect('daterange')) && !empty($library['installed'])) {
+/*
+  if (($library = libraries_detect('moment')) && !empty($library['installed'])) {
     // The library is installed. Awesome!
+    print_r("Moment lib loaded.");
   }
   else {
     $error = $library['error'];
     $error_message = $library['error message'];
+    print_r("Moment lib not loaded.");
+  }
+*/
+
+  if (($library = libraries_detect('daterangepicker')) && !empty($library['installed'])) {
+    // The library is installed. Awesome!
+    //print_r("Daterange lib loaded.");
+  }
+  else {
+    $error = $library['error'];
+    $error_message = $library['error message'];
+    print_r("Error: Daterange lib not loaded.");
   }
 
 }
@@ -94,6 +119,31 @@ function bgmap_init() {
 */
 function bgmap_libraries_info() {
   $libraries = array();
+
+if (($library_path = libraries_get_path('daterangepicker'))) {
+  //print_r("Daterange lib path OK.");
+
+$libraries['daterangepicker'] = array(
+  'library path' => $library_path,
+  'name' => 'Daterange Picker',
+  'vendor url' => 'http://www.daterangepicker.com/',
+  'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
+'version callback' => 'bgmap_short_circuit_version',
+'files' => array(
+  'js' => array(
+    'daterangepicker.js',
+  ),
+  'css' => array(
+    'daterangepicker.css',
+  ),
+),
+/*
+'dependencies' => array(
+      'moment',
+),
+*/
+);
+}
   $libraries['leaflet'] = array(
     //'title' => 'Vertical Tabs',
     //'website' => 'http://drupal.org/node/323112',
@@ -119,29 +169,19 @@ function bgmap_libraries_info() {
   ),
 );
 
-$libraries['daterange'] = array(
-  'name' => 'Daterange',
+/*
+$libraries['moment'] = array(
+  'name' => 'Moment JS',
   'vendor url' => 'http://www.daterangepicker.com/',
   'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
-  /*
-  'version arguments' => array(
-  'file' => 'highcharts.js',
-  // jQuery FlexSlider v2.1
-  'pattern' => '/Highcharts v(\d+\.+\d+)/',
-  'lines' => 2,
-),
-*/
 'version callback' => 'bgmap_short_circuit_version',
 'files' => array(
   'js' => array(
-    'daterangepicker.js',
     'moment.js',
-  ),
-  'css' => array(
-    'daterangepicker.css' => array(),
   ),
 ),
 );
+*/
 
 return $libraries;
 }
