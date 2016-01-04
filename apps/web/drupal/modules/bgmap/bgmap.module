@@ -374,7 +374,8 @@ else {
         }
         else {
           // Pass data through theme function.
-          $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          $block['content']['#markup'] = theme('table', array('items' => $items2));
           //$block['content'] = theme('item_list', array('items' => $items2));
         }
       }
@@ -405,7 +406,8 @@ else {
           }
           else {
             // Pass data through theme function.
-            $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+            //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+            $block['content']['#markup'] = theme('table', array('items' => $items2));
             //$block['content'] = theme('item_list', array('items' => $items2));
           }
         } // access.

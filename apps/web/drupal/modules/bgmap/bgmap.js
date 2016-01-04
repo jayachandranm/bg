@@ -88,11 +88,12 @@
               }
             },
             complete: function() {
-              setTimeout(requestData, 2000);
+              setTimeout(requestData, 5000);
             },
             //error: function(xhr, status, error) {
             error: function() {
-              alert('Error loading ');
+              //alert('Error loading ');
+              console.log('Error: Ajax response');
             }
           }); // ajax
         }); // requestData
@@ -109,9 +110,11 @@
         //
         var title2 = 'GPS Trace on Map';
         // Place a div name correcly.
-        $("#block-bgmap-trace").append("<input class='datepicker' type='text'/>");
-        $("#block-bgmap-trace").append("<input class='timepicker' type='text'/>");
-        $("#block-bgmap-trace").append("<div id='show_report2'>Map will display here.....</div>");
+        $("#block-bgmap-trace").append("From: <input class='datepicker' type='text'/>");
+        $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker' type='text'/>");
+        $("#block-bgmap-trace").append("To: <input class='datepicker2' type='text'/>");
+        $("#block-bgmap-trace").append("<input class='timepicker2' type='text'/>");
+        $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_report2'>Map will display here.....</div>");
         //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
         $("#block-bgmap-trace").height(600);
         $("#show_report2").height(400);
@@ -125,17 +128,25 @@
         //$('input[name="daterange"]').daterangepicker();
         //$('#config-demo').daterangepicker();
         //$('#dtp1').datetimepicker();
-        var $input = $( '.datepicker' ).pickadate();
+        var $input = $('.datepicker').pickadate();
+        //var picker = $input.pickadate('picker');
         var picker = $input.pickadate('picker');
+        var date = new Date();
+        //picker.set('select', [date.getFullYear(), date.getMonth() + 1, date.getDate()]);
+        picker.set('select', [date.getFullYear(), date.getMonth(), date.getDate()-1]);
         picker.on({ 
-            open: function() {
+          open: function() {
             console.log('Opened up!')
           },
           set: function(thingSet) {
             console.log('Set stuff:', thingSet.select)
           }
         })
-        var $input2 = $( '.timepicker' ).pickatime({
+        var $input2 = $('.timepicker').pickatime({
+onStart: function() {
+    console.log('Started time picker')
+    this.set('select', [1,0])
+  },
 onOpen: function() {
     console.log('Opened up')
   },
