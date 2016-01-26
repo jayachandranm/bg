@@ -61,13 +61,23 @@ function bgmap_permission() {
 
 function bgmap_init() {
   libraries_load('leaflet');
-  libraries_load('daterange');
+  //libraries_load('moment');
+  //drupal_add_library('bgmap', 'moment');
+  //libraries_load('daterangepicker');
+  //drupal_add_library('bgmap', 'daterangepicker');
   // TODO: drupal_add_library does not work.
   //drupal_add_library('bgmap', 'highcharts');
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
+  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.js');
+  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.date.js');
+  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.time.js');
 
-  drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
-  drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
+  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.css');
+  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.date.css');
+  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.time.css');
+
+  //drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
+  //drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
   if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
     // The library is installed. Awesome!
   }
@@ -77,14 +87,29 @@ function bgmap_init() {
     $error = $library['error'];
     // This contains a detailed (localized) error message.
     $error_message = $library['error message'];
+    print_r("Error: Leaflet lib not loaded.");
   }
 
-  if (($library = libraries_detect('daterange')) && !empty($library['installed'])) {
+/*
+  if (($library = libraries_detect('moment')) && !empty($library['installed'])) {
     // The library is installed. Awesome!
+    print_r("Moment lib loaded.");
   }
   else {
     $error = $library['error'];
     $error_message = $library['error message'];
+    print_r("Moment lib not loaded.");
+  }
+*/
+
+  if (($library = libraries_detect('daterangepicker')) && !empty($library['installed'])) {
+    // The library is installed. Awesome!
+    //print_r("Daterange lib loaded.");
+  }
+  else {
+    $error = $library['error'];
+    $error_message = $library['error message'];
+    print_r("Error: Daterange lib not loaded.");
   }
 
 }
@@ -94,6 +119,31 @@ function bgmap_init() {
 */
 function bgmap_libraries_info() {
   $libraries = array();
+
+if (($library_path = libraries_get_path('daterangepicker'))) {
+  //print_r("Daterange lib path OK.");
+
+$libraries['daterangepicker'] = array(
+  'library path' => $library_path,
+  'name' => 'Daterange Picker',
+  'vendor url' => 'http://www.daterangepicker.com/',
+  'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
+'version callback' => 'bgmap_short_circuit_version',
+'files' => array(
+  'js' => array(
+    'daterangepicker.js',
+  ),
+  'css' => array(
+    'daterangepicker.css',
+  ),
+),
+/*
+'dependencies' => array(
+      'moment',
+),
+*/
+);
+}
   $libraries['leaflet'] = array(
     //'title' => 'Vertical Tabs',
     //'website' => 'http://drupal.org/node/323112',
@@ -119,29 +169,19 @@ function bgmap_libraries_info() {
   ),
 );
 
-$libraries['daterange'] = array(
-  'name' => 'Daterange',
+/*
+$libraries['moment'] = array(
+  'name' => 'Moment JS',
   'vendor url' => 'http://www.daterangepicker.com/',
   'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
-  /*
-  'version arguments' => array(
-  'file' => 'highcharts.js',
-  // jQuery FlexSlider v2.1
-  'pattern' => '/Highcharts v(\d+\.+\d+)/',
-  'lines' => 2,
-),
-*/
 'version callback' => 'bgmap_short_circuit_version',
 'files' => array(
   'js' => array(
-    'daterangepicker.js',
     'moment.js',
-  ),
-  'css' => array(
-    'daterangepicker.css' => array(),
   ),
 ),
 );
+*/
 
 return $libraries;
 }
@@ -287,7 +327,8 @@ function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
 */
 function bgmap_block_view($delta = '') {
   // if ($node = menu_get_object()) {... }
-  $node = menu_get_object();
+  // TODO: exit if it is not a node but a view or something else.
+  //$node = menu_get_object();
   // TODO: check whether exists.
 
   /*
@@ -343,14 +384,15 @@ else {
       //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
       break;
     case 'trace':
-    // TODO: If node type is different, don't show the block.
+    // TODO: If not a node or if node type is different, don't show the block.
+      if ($node = menu_get_object()) {
       if ($node->type == 'vehicles') {
         //dpm($node);
         $nid = $node->nid;
         $sid = $node->field_sensor_id['und'][0]['value'];
         $vnum = $node->field_vehicle_num['und'][0]['value'];
         //$vgroup = 'car';
-        drupal_add_js(array('bgmap' => array('sid' => $sid)), 'setting');
+        drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
 
         $block['subject'] = t('Real Time Map Trace');
         if (user_access('access content')) {
@@ -368,9 +410,11 @@ else {
           }
         } // access.
       } // if node-type.
+      } // if node.
       break;
     case 'fuel':
-    // TODO: If node type is different, don't show the block.
+    // TODO: If not a node, or node type is different, don't show the block.
+      if ($node = menu_get_object()) {
       if ($node->type == 'vehicles') {
         //dpm($node);
         $nid = $node->nid;
@@ -416,6 +460,7 @@ else {
           }
         } // access.
       } // if node-type.
+      } // if node.
       break;
     case 'aob':
       if (user_access('access content')) {
@@ -452,7 +497,7 @@ function bgmap_get_json($filter) {
 */
 function bgmap_get_geojson($filter) {
   $items2 = array();
-  $items2 = bgmap_current_all('block', $filter);
+  $items2 = bgmap_current_single('block', $filter);
   return drupal_json_output($items2);
 }
 
@@ -474,11 +519,12 @@ function bgmap_current_all($display, $filter){
   //Get today's date.
   $today = getdate();
   //Calculate the date one day ago.
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
   //Get all posts from one week ago to the present.
   $end_time = time();
 
   // From admin page.
+  //print_r($start_time);
   $max_num = variable_get('bgmap_max', 3);
 
   $bg_db = array(
@@ -521,7 +567,7 @@ function bgmap_current_all($display, $filter){
     ->fields('m', array('nid', 'veh_num', 'veh_type'))
     ->condition('sid', $sid);
     $result2 = $query2->execute();
-    if($result2->rowCount > 0) {
+    if($result2->rowCount() > 0) {
       $row2  = $result2->fetchObject();
       $nid = $row2->nid;
       $vnum = $row2->veh_num;
@@ -545,8 +591,74 @@ function bgmap_current_all($display, $filter){
 */
 }
 
+function bgmap_current_single($display, $filter){
+  /*
+  $node = menu_get_object();
+  $sensor_id=$node->field_station_id['und'][0]['value'];
+  */
+  //Get today's date.
+  $today = getdate();
+  //Calculate the date one day ago.
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  //Get all posts from one week ago to the present.
+  $end_time = time();
+
+  // From admin page.
+  //print_r($start_time);
+  $max_num = variable_get('bgmap_max', 3);
+
+  $bg_db = array(
+    'database' => 'bgmap',
+    'username' => 'bgmap', // assuming this is necessary
+    'password' => 'bgmap%user$1', // assuming this is necessary
+    'host' => 'localhost', // assumes localhost
+    'driver' => 'mysql', // replace with your database driver
+  );
+
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  if ($display == 'block'){
+    $query = array();
+    //$start_time = 1434254042000;
+    //$end_time = 1434254311000;
+    $query = db_select('bgmap_obd_gps', 'a')
+    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    ->condition('sid', $filter)
+    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('datetime', 'DESC');
+    //->groupBy('sid');
+    // TODO: Can be conditional, different for block and page.
+    //$query->range(0, $max_num);
+  } //Now proceeds to execute().
+  //drupal_set_message((string) $query);
+  $result = $query->execute();
+  $items2 = array();
+  foreach ($result as $row) {
+    date_default_timezone_set('Asia/Singapore');
+    $time = ($row->timestamp);
+    //$noise = round($row->noise_data, 2);
+    $longitude = $row->longitude;
+    $latitude = $row->latitude;
+    //
+    //$sid = $row->sid;
+
+    $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude ) ;
+    //$items2[] = array($longitude, $latitude ) ;
+  } // foreach
+  db_set_active();
+  return $items2;
+  //drupal_set_message(t('The queries have been made.'));
+  /*
+  while($record = $result->fetchAssoc()) {
+  print_r($record);
+}
+*/
+}
+
 
 function bgmap_getdata_exdb($display, $filter){
+  $sid = $filter;
   $today = getdate();
   $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
   $end_time = time();

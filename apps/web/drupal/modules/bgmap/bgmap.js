@@ -101,25 +101,64 @@
       } // if settings, bgmap
       // If trace array is set, happens inside trace block.
       if (Drupal.settings.trace)  {
+        var latlngs = new Array();         
         var sid = Drupal.settings.trace.sid;
         //var data = Drupal.settings.bgchart.data.data;
         console.log('Retrieving (trace) settings.');
         var basepath = Drupal.settings.basePath;
         //
-        var title = 'GPS Trace on Map';
+        var title2 = 'GPS Trace on Map';
         // Place a div name correcly.
-        $("#block-bgmap-trace").append("<div id='show_report'>Map will display here.....</div>");
-        $("#block-bgmap-trace").height(500);
-        $("#show_report").height(400);
+        $("#block-bgmap-trace").append("<input class='datepicker' type='text'/>");
+        $("#block-bgmap-trace").append("<input class='timepicker' type='text'/>");
+        $("#block-bgmap-trace").append("<div id='show_report2'>Map will display here.....</div>");
+        //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
+        $("#block-bgmap-trace").height(600);
+        $("#show_report2").height(400);
 
-        data_url = basepath + '?q=bgmap/getgeoj/' + 'sid';
+        data_url = basepath + '?q=bgmap/getgeoj/' + sid;
         var lng = 1.421, lat = 103.829;
         //center: [51.505, -0.09], zoom: 13
-        var map = L.map('show_report').setView([lng, lat], 13);
+        //var map = L.map('show_report2').setView([lng, lat], 13);
+        var map2 = L.map('show_report2').setView([lng, lat], 13);
+        //$('input[name="date_range_picker2"]').daterangepicker();
+        //$('input[name="daterange"]').daterangepicker();
+        //$('#config-demo').daterangepicker();
+        //$('#dtp1').datetimepicker();
+        var $input = $( '.datepicker' ).pickadate();
+        var picker = $input.pickadate('picker');
+        picker.on({ 
+            open: function() {
+            console.log('Opened up!')
+          },
+          set: function(thingSet) {
+            console.log('Set stuff:', thingSet.select)
+          }
+        })
+        var $input2 = $( '.timepicker' ).pickatime({
+onOpen: function() {
+    console.log('Opened up')
+  },
+onSet: function(context) {
+    console.log('Just set stuff:', context)
+  }
+});
+        //var picker2 = $input.pickatime('picker2');
+/*
+        picker2.on({
+     open: function() {
+    console.log('Opened up time!')
+  },
+set: function(thingSet) {
+    console.log('Set time:', thingSet.select)
+  }
+        })
+*/
+        //console.log('picker', picker, picker2);
 
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        }).addTo(map2);
 
         // http://leafletjs.com/examples/geojson.html
 
@@ -133,7 +172,18 @@
             url: data_url,
             success: function(jsonData) {
                 console.log('Received JSON=', jsonData);
-              }
+                for(var i=0; i< jsonData.length; i++) {
+                    latlngs.push([parseFloat(jsonData[i].lg), parseFloat(jsonData[i].lt)]); 
+                    //latlngs[i][0] = 111; //jsonData.latitude;
+                    //latlngs[i][1] = 222; //jsonData.longitude;
+                } 
+                console.log(latlngs);
+                //var test = JSON.stringify(latlngs);
+                var test2 = [[103.83,1.46],[103.82,1.45],[103.81,1.43]];
+                //console.log(test);
+                L.polyline(latlngs, {color: 'blue'}).addTo(map2);
+                //map2.fitBounds(latlngs);
+                //var polygon = L.polygon().addTo(map);
             },
             complete: function() {
               //setTimeout(requestData, 2000);
