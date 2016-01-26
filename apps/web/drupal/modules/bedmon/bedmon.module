@@ -1,0 +1,474 @@
+<?php
+/**
+ * @file
+ * A module that displays real time data from sensors.
+ */
+
+
+/**
+ * Implements hook_help().
+ *
+ * Displays help and module information.
+ *
+ * @param path 
+ *   Which path of the site we're using to display help
+ * @param arg 
+ *   Array that holds the current path as returned from arg() function
+ */
+function bedmon_help($path, $arg) {
+  switch ($path) {
+    case "admin/help#bedmon":
+      return '<p>' . t("Displays selected data in real time") . '</p>';
+      break;
+  }
+} 
+
+/**
+ * Implements hook_permission().
+ */
+function bedmon_permission() {
+  return array(
+    'access bedmon content' => array(
+      'title' => t('Access content for the bg charts module'),
+    )
+  );
+}
+
+function bedmon_init() {
+  libraries_load('highcharts');
+  // TODO: drupal_add_library does not work.
+  //drupal_add_library('bedmon', 'highcharts');
+  //drupal_add_js(drupal_get_path('module', 'bedmon') . '/highcharts.js');
+
+  if (($library = libraries_detect('highcharts')) && !empty($library['installed'])) {
+    // The library is installed. Awesome!
+  }
+  else {
+    // Something went wrong. :(
+    // This contains a short status code of what went wrong, such as 'not found'.
+    $error = $library['error'];
+    // This contains a detailed (localized) error message.
+    $error_message = $library['error message'];
+  }
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function bedmon_libraries_info() {
+  $libraries = array();
+  $libraries['highcharts'] = array(
+    //'title' => 'Vertical Tabs',
+    //'website' => 'http://drupal.org/node/323112',
+    'name' => 'Highcharts',
+    'vendor url' => 'http://www.highcharts.com/',
+    'download url' => 'http://www.highcharts.com/download',
+/*
+    'version arguments' => array(
+      'file' => 'highcharts.js',
+      // jQuery FlexSlider v2.1
+      'pattern' => '/Highcharts v(\d+\.+\d+)/',
+      'lines' => 2,
+    ),
+*/
+    'version callback' => 'short_circuit_version',
+    'files' => array(
+      'js' => array(
+        'highcharts.js',
+      ),
+    ),
+  );
+ 
+  return $libraries;
+}
+
+/**
+* Short-circuit the version argument.
+*/
+function short_circuit_version() { 
+  return TRUE;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function bedmon_block_info() {
+  $blocks = array();
+  $blocks['bedmon'] = array(
+    // The name that will appear in the block list.
+    'info' => t('Real Time charts'),
+    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ * 
+ * Prepares the contents of the block.
+ */
+function bedmon_block_view($delta = '') {
+  $node = menu_get_object();
+  // TODO: check whether exists.
+  if(isset($node->field_user_id)) {
+    $userid=$node->field_user_id['und'][0]['value'];
+    // nothing to do with sensors, just return.
+  }
+  else {
+    // Invalid sensor_id. 
+    $userid = -1;
+  }
+  //print_r($node->field_station_id);
+
+  drupal_add_js(array('bedmon' => array('uid' => $userid)), 'setting'); 
+  drupal_add_js(drupal_get_path('module', 'bedmon') . '/bedmon_chart.js');
+
+  $block = array();
+  switch ($delta) {
+    case 'aob':
+      if (user_access('access content')) {
+      } // if user_access
+      break;
+    case 'bedmon':
+      $block['subject'] = t('Real Time Charts');
+      if (user_access('access content')) {
+        //$result = bedmon_contents('block');
+        // Array to contain items for the block to render.
+        $items2 = array();
+        // Iterate over the resultset and format as links.
+/*
+        foreach ($result as $row) {
+          date_default_timezone_set('Asia/Singapore');
+          $date = new DateTime();
+          //$timeHr = date('g:i a',($row->timestamp)/1000);
+          $date->setTimestamp(($row->currentdatetime)/1000);
+          $timeHr = $date->format('g:i a');
+
+          $value = round($row->value2use, 2);
+          if($noise == -1)
+             $noise = '-';
+
+          $items2[] = array($timeHr, $value);
+        } // foreach
+*/
+        $items2[] = array('Test', '2');
+        //$items2[] = array('8am', '3');
+        // No content in the last week.
+        if (empty($items2)) {
+          $block['content']['#markup'] = t('No data available.');  
+          //$block['content'] = t('No data available.');  
+        } 
+        else {
+          // Pass data through theme function.
+          $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          //$block['content'] = theme('item_list', array('items' => $items2));
+        }
+      }
+      //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
+      //$block['content']['#attached']['libraries_load'][] = array('highcharts');
+      //$block['content']['#attached']['js'] = drupal_get_path('module', 'bedmon') . '/bedmon.js';
+      //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
+      break;
+  } // switch
+  return $block;
+}
+
+/**
+* Implements hook_views_api().
+*/
+/*
+function bedmon_views_api() {
+  return array(
+    'api' => 3,
+    'path' => drupal_get_path('module', 'bedmon') . '/views',
+  );
+}
+*/
+
+
+/*
+* https://www.drupal.org/node/1993228
+*/
+function bedmon_preprocess_views_view(&$vars)
+{
+  //dpm($vars['view']->result);
+  if($vars['view']->name == 'station_list_2' && $vars['view']->current_display == 'page') {
+    $active_nids = array();
+    foreach($vars['view']->result as $cnum => $cell) {
+      //print_r($cell->node_title);
+      $sid_content = $cell->field_field_station_id[0];
+      //$active_nids[] = $sid_content->raw;
+      $active_nids[] = $sid_content['raw']['value'];
+    }
+    //print_r($active_nids);
+    drupal_add_js(array('bedmon2' => array('nid_list' => $active_nids)), 'setting'); 
+    drupal_add_js(drupal_get_path('module', 'bedmon') . '/bedmon_vitals.js');
+    // drupal_add_js(drupal_get_path('theme', 'your-theme') . '/your-js.js');
+    // drupal_add_css(drupal_get_path('theme', 'your-theme') .'/your-css.css');
+/*
+    $vars['view']['#attached']['js'][] = array
+    (
+      'type' => 'file',
+      'data' => drupal_get_path('theme', 'my_theme') . '/my_script.js',
+    );
+*/
+  }
+}
+
+/*
+function bedmon_views_post_execute (&$sourceview) {
+  $nids = '';
+  foreach($sourceview->result as $node) {
+    $nids += $node->nid . ',';  
+  }
+
+  $nids = rtrim($nids, ',');
+  //dpm($nids);  
+}
+*/
+
+/**
+ * Implements hook_menu().
+ */
+function bedmon_menu() {
+  $items = array();
+
+  $items['admin/config/content/bedmon'] = array(
+    'title' => 'Real time vitals',
+    'description' => 'Configuration for Real time charts module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bedmon_form'),
+    'access arguments' => array('access administration pages'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['bedmon'] = array(
+        'title' => 'Real time charts',
+        'page callback' => '_bedmon_page',
+        'access arguments' => array('access bedmon content'),
+        'type' => MENU_NORMAL_ITEM, //Will appear in Navigation menu.
+  );
+  $items['bedmon/get'] = array(
+    'title' => 'Real time charts',
+    'page callback' => 'bedmon_get_json',
+    //'page arguments' => array(1), //get param from URL.
+    'access arguments' => array('access bedmon content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['bedmon/vitals'] = array(
+    'title' => t('Real time vitals'),
+    'page callback' => 'bedmon_vitals_json',
+    //'page arguments' => array(1), //get param from URL.
+    'access arguments' => array('access bedmon content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+function _bedmon_page() {
+  $items = array();
+  return $items;
+}
+
+function bedmon_get_json($uid) {
+        $result = bedmon_contents('block', $uid);
+        $items2 = array();
+        // Iterate over the resultset and format as links.
+        foreach ($result as $row) {
+          date_default_timezone_set('Asia/Singapore');
+          //$date = new DateTime();
+          //$timeHr = date('g:i a',($row->timestamp)/1000);
+          //$date->setTimestamp(($row->currentdatetime)/1000);
+          $time = ($row->timestamp);
+          $value = round($row->value2use, 2);
+          $items2[] = array('x' => $time, 'y' => $value);
+        } // foreach
+        return drupal_json_output($items2);
+}
+
+/**
+ * Custom content function. 
+ * 
+ * Set beginning and end dates, retrieve posts from database
+ * saved in that time period.
+ * 
+ * @return 
+ *   A result set of the targeted posts.
+ */
+function bedmon_contents($display, $uid){
+/*
+  $node = menu_get_object();
+  $userid =$node->field_user_id['und'][0]['value'];
+  print_r($node->field_user_id);
+*/
+  //Get today's date.
+  $today = getdate();
+  //Calculate the date a week ago.
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 7), $today['year']);
+  //Get all posts from one week ago to the present.
+  $end_time = time();
+
+  //NEW LINE 
+  $max_num = variable_get('bedmon_max', 3);
+
+  $bg_db = array(
+      'database' => 'comfort',
+      'username' => 'comfort', // assuming this is necessary
+      'password' => 'comfort%user$1', // assuming this is necessary
+      'host' => 'localhost', // assumes localhost
+      'driver' => 'mysql', // replace with your database driver
+  );
+  // replace 'YourDatabaseKey' with something that's unique to your module
+  Database::addConnectionInfo('COMFORT', 'default', $bg_db);
+  db_set_active('COMFORT');
+
+  // execute queries here
+  $query = array();
+  if ($display == 'block'){ 
+    $start_time = 1434254042000;
+    $end_time = 1434254311000;
+    $query = db_select('pulserate', 'hr')
+      ->fields('hr', array('timestamp', 'value2use'))
+      //->condition('sender_id', 1) //Published.
+      ->condition('userid', $uid) //Published.
+      ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+      ->orderBy('timestamp', 'DESC'); //Most recent first.
+    // TODO: Can be conditional, different for block and page.
+    $query->range(0, 12);
+    //$query->range(0, $max_num);
+  } //Now proceeds to execute().
+  //drupal_set_message((string) $query);
+  $result = $query->execute(); 
+  db_set_active(); // without the paramater means set back to the default for the site
+  //drupal_set_message(t('The queries have been made.'));
+
+/*
+   while($record = $result->fetchAssoc()) {
+        print_r($record);
+   }
+*/
+
+  return $result; 
+}
+
+function bedmon_vitals_json() {
+  //retrieve our post value
+  //$nid_list = $_REQUEST['nidList'];
+  $uid_list = $_POST['nidList'];
+  //dpm($nid_list); // This works, but not print_r.
+  //print_r($nid_list); This print will cause ajax reply error.
+  // do our custom database query
+  $result = bedmon_get_vitals($uid_list);
+  if($result){
+  // Return json
+    return drupal_json_output($result);
+  }else{
+    // Return json
+    return drupal_json_output("fail");
+  }
+}
+
+/**
+ * Retrieve vital data from external db. 
+ * 
+ * @return 
+ *   A result set of vitals and bed status.
+ */
+function bedmon_get_vitals($uid_list){
+  //Get today's date.
+  $today = getdate();
+  //Calculate the date a week ago.
+  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 7), $today['year']);
+  //Get all posts from one week ago to the present.
+  $end_time = time();
+
+  //NEW LINE 
+  $max_num = variable_get('bedmon_max', 3);
+
+  $bg_db = array(
+      'database' => 'comfort',
+      'username' => 'comfort', // assuming this is necessary
+      'password' => 'comfort%user$1', // assuming this is necessary
+      'host' => 'localhost', // assumes localhost
+      'driver' => 'mysql', // replace with your database driver
+  );
+  // replace 'YourDatabaseKey' with something that's unique to your module
+  Database::addConnectionInfo('COMFORT', 'default', $bg_db);
+  db_set_active('COMFORT');
+  
+  $query = array();
+  $params = array();
+  $result_all = array(); 
+  $time_hr = -1;
+  $db_tables = array('pulserate', 'resprate', 'bedmovement', 'bedstatus');
+  foreach($uid_list as $snum => $uid) {
+    //for($i = 0; $i < 4; $i++) {
+    foreach($db_tables as $tblname) {
+      //$query = db_select('pulserate', 'hr')
+      //dpm($uid);
+      $query = db_select($tblname, 'hr')
+        ->fields('hr', array('timestamp', 'value2use,'))
+        ->condition('userid', $uid)
+        // ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+        ->orderBy('timestamp', 'DESC')
+        ->range(0, 1);
+      $result = $query->execute(); 
+      //dpm($result);
+      // If there is no next record, FALSE will be returned.
+      if($result->rowCount() > 0) { 
+        $row = $result->fetchAssoc();
+        $time = $row['timestamp'];
+        if($tblname == 'pulserate') {
+          $time_hr = $time;
+        } 
+        $params[$tblname] = round($row['value2use'], 2);
+        //dpm($row);
+        //dpm($params);
+      } else {
+        $time = -1;
+        $value = -1;
+      }
+    }
+    $result_all[] = array('UserID' => $uid, 
+                          'TimeP' => $time_hr, 
+                          'Pulse' => $params['pulserate'],
+                          'Resp' => $params['resprate'],
+                          'Mov' => $params['bedmovement'],
+                          'Occ' => $params['bedstatus'],
+                          );
+  }
+  //      
+  // without the paramater means set back to the default for the site
+  db_set_active(); 
+  //drupal_set_message(t('The queries have been made.'));
+
+/*
+   while($record = $result->fetchAssoc()) {
+        print_r($record);
+   }
+*/
+
+  return $result_all;
+}
+
+/**
+ * Page callback: Current posts settings
+ *
+ * @see current_posts_menu()
+ */
+function bedmon_form($form, &$form_state) {
+  $form['bedmon_max'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Maximum number of entries in the chart'),
+    '#default_value' => variable_get('bedmon_max', 3),
+    '#size' => 2,
+    '#maxlength' => 2,
+    '#description' => t('The maximum number of entries to display in the chart.'),
+    '#required' => TRUE,
+  );
+
+  return system_settings_form($form);
+}
