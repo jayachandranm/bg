@@ -114,6 +114,10 @@ function bedmon_block_view($delta = '') {
   // TODO: check whether exists.
   if(isset($node->field_user_id)) {
     $userid=$node->field_user_id['und'][0]['value'];
+    // https://www.computerminds.co.uk/articles/rendering-drupal-7-fields-right-way
+    //$userid = field_get_items('node', $node, 'field_user_id');
+    // $output = field_view_field('node', $node, 'field_name');
+    // $output = field_view_value('node', $node, 'field_name', $field[$delta]);
     // nothing to do with sensors, just return.
   }
   else {
