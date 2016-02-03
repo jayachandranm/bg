@@ -1,0 +1,44 @@
+<?php
+/**
+ * @file
+ * The primary PHP file for this theme.
+ */
+
+
+/**
+ * https://www.drupal.org/node/2169157
+ * Apply bootstrap image class img-circle to specific Drupal image stype.
+ */
+function gaea_preprocess_image_style(&$vars) {
+  if($vars['style_name'] == 'circle_thumbnail'){
+    // can be 'img-rounded', 'img-circle', or 'img-thumbnail'
+    $vars['attributes']['class'][] = 'img-circle'; 
+  }
+}
+
+
+/**
+ * Adjust the footer CSS class depending on the number of items placed in this region.
+ * Consider 4 regions to form the footer.
+ */
+function gaea_preprocess_page(&$variables) {
+  $footer_first = $variables['page']['footer_first'];
+  $footer_second = $variables['page']['footer_second'];
+  $footer_third = $variables['page']['footer_third'];
+  $footer_fourth = $variables['page']['footer_fourth'];
+
+  /*Footer Layout*/
+  if ($footer_first && $footer_second && $footer_third && $footer_fourth) {
+    $variables['footer_grid_class'] = 'col-sm-6 col-md-3';
+  } elseif ((!$footer_first && $footer_second && $footer_third && $footer_fourth) || ($footer_first && !$footer_second && $footer_third && $footer_fourth)
+        || ($footer_first && $footer_second && !$footer_third && $footer_fourth) || ($footer_first && $footer_second && $footer_third && !$footer_fourth)) {
+    $variables['footer_grid_class'] = 'col-sm-4';
+  } elseif ((!$footer_first && !$footer_second && $footer_third && $footer_fourth) || (!$footer_first && $footer_second && !$footer_third && $footer_fourth)
+        || (!$footer_first && $footer_second && $footer_third && !$footer_fourth) || ($footer_first && !$footer_second && !$footer_third && $footer_fourth)
+        || ($footer_first && !$footer_second && $footer_third && !$footer_fourth) || ($footer_first && $footer_second && !$footer_third && !$footer_fourth)) {
+    $variables['footer_grid_class'] = 'col-sm-6';
+  } else {
+    $variables['footer_grid_class'] = 'col-sm-12';
+  }
+}
+
