@@ -181,21 +181,21 @@
 <?php endif; ?>
 
 <?php if ($page['bottom_content']):?>
-<div class="main-container <?php print $container_class; ?>">
   <!-- <header role="banner" id="page-header"> -->
     <?php /*if (!empty($bottom_content)):*/ ?>
-    <div class="col-md-12">
+    <!-- <div class="col-md-12"> -->
+    <div class="main-container <?php print $container_class; ?>">
       <?php print render($page['bottom_content']); ?></p>
+    <!-- </div> -->
     </div>
     <?php /*endif;*/ ?>
   <!-- </header> --><!-- /#page-header -->
-</div>
 <?php endif; ?>
 
 <?php if ($page['footer_first'] || $page['footer_second'] || $page['footer_third'] || $page['footer_fourth']):?>
 <footer id="footer" class="footer-area-all clearfix">
     <div class="container">
-        <div class="row">
+        <div class="row" style="margin-bottom:20px">
             <?php if ($page['footer_first']):?>
                 <div class="<?php print $footer_grid_class; ?>">
                     <div class="footer-area">
