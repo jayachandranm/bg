@@ -1,0 +1,31 @@
+core: 8.x
+type: theme
+base theme: bootstrap
+
+name: 'VSS Theme (Bootstrap)'
+description: 'VSS Theme created based on Bootstrap framework.'
+package: 'Bootstrap'
+
+regions:
+  navigation: 'Navigation'
+  navigation_collapsible: 'Navigation (Collapsible)'
+  banner: 'Banner'
+  header: 'Top Bar'
+  highlighted: 'Highlighted'
+  help: 'Help'
+  content: 'Content'
+  sidebar_first: 'Primary'
+  sidebar_second: 'Secondary'
+  featured_bottom: 'Featured Bottom (Full Width)'
+  bottom_content: 'Bottom Content'
+  footer_first: 'Footer First'
+  footer_second: 'Footer Second'
+  footer_third: 'Footer Third'
+  footer_fourth: 'Footer Fourth'
+  footer: 'Footer'
+  page_top: 'Page top'
+  page_bottom: 'Page bottom'
+
+libraries:
+  - 'vss/global-styling'
+  - 'vss/bootstrap-scripts'
