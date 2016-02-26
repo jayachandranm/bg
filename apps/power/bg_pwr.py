@@ -81,9 +81,9 @@ import binascii
 import ctypes
 import array
 
-preg= 0x5B00
+reg_addr= 0x5B00
 
-def add_hex2(hex1, hex2)
+def add_hex2(hex1, hex2):
     return hex(int(hex1, 16) + int(hex2, 16))
 
     # result = client.read_holding_registers(0x5000, 4, unit=0x01)
@@ -107,36 +107,27 @@ def add_hex2(hex1, hex2)
 for item in range(0, 21):
     # starting add, num of reg to read, slave unit.
     #       result= client.read_input_registers(0x5B00,2,unit=0x01)
-    result = client.read_holding_registers(preg, 2, unit=0x01)
+    result = client.read_holding_registers(reg_addr, 2, unit=0x01)
     #print "Voltage", result.registers
     raw = struct.pack('>HH', result.registers[0], result.registers[1])
-    v1 = struct.unpack('>l', raw)
-    print (v1)[0] * 0.1
-    pwrvals[paramNames[0]] = result.registers[1] * 0.1
-    # #       print result
-    # # Python 3.2    v2= int.from_bytes(raw2, byteorder='big', signed=False)
-    # raw2 = ctypes.create_string_buffer(4)
-    # #       raw2 = array.array('c', '\0' * 4)
-    # struct.pack_into('>HH', raw2, 0, result.registers[0], result.registers[1])
-    # v2 = struct.unpack('>l', raw2)
-    # print v2
-    #       print int(raw2.encode('hex'), 16)
+    if item < 9: # unsigned
+        val = struct.unpack('>l', raw)
+    else: # signed
+        val = struct.unpack('>l', raw)
+    # fval = result.registers[1] * 0.1
+    fval = 0.0
+    if (item < 6): #  or (item > 22)
+        fval = (val)[0] * 0.01
+    else:
+        fval = (val)[0] * 0.1
 
-    #       v1 = struct.unpack('>l', raw)[0]
-    #       print "Voltage :",int(v1), "V"
-
+    print fval
+    pwrvals[paramNames[item]] = fval
 
     with open('data.json', 'w') as f:
         json.dump(pwrvals, f)
 
-    #       i = time.strftime("%Y-%m-%d %H:%M:%S")
-    #       print (i)
-    #       payload = [{"SID":"P1001","T":i,"V": int(v1),"I":v2,"W":int(-v3),"F":v7,"Pf":v6,"Wh":v8*1000}]
-    #       print "Send Data to server"
-    #       r1 = requests.put("http://52.74.191.39/blupower/powerdata.php", data=json.dumps(payload))
-    #       r1 = requests.put("http://52.74.191.39/blupower/powerdata.php", data=json.dumps(pwrvals))
-    #       print r1.status_code
-    #       print r1.content
+    add_hex2(reg_addr, 0x2)
 
     print " "
     #time.sleep(5)
