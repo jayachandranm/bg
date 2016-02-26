@@ -22,7 +22,7 @@ from pymodbus.payload import BinaryPayloadDecoder
 # unit= the slave unit this request is targeting
 # address= the starting address to read from
 
-paramNames = [
+paramNameList = [
 'voltage_L1-N',
 'voltage_L2-N',
 'voltage_L3-N',
@@ -104,32 +104,76 @@ def add_hex2(hex1, hex2):
     #       print "Frequency :",int(v1), "A"
 
 
-for item in range(0, 21):
+# for param in paramNames:
+for item in range(0, 22):
+    paramName = paramNameList[item]
     # starting add, num of reg to read, slave unit.
     #       result= client.read_input_registers(0x5B00,2,unit=0x01)
     result = client.read_holding_registers(reg_addr, 2, unit=0x01)
     #print "Voltage", result.registers
-    raw = struct.pack('>HH', result.registers[0], result.registers[1])
-    if item < 9: # unsigned
+    if item < 10: # unsigned
+        raw = struct.pack('>HH', result.registers[0], result.registers[1])
         val = struct.unpack('>l', raw)
     else: # signed
+        raw = struct.pack('>HH', result.registers[0], result.registers[1])
         val = struct.unpack('>l', raw)
     # fval = result.registers[1] * 0.1
-    fval = 0.0
+    result_val = 0.0
     if (item < 6): #  or (item > 22)
-        fval = (val)[0] * 0.01
+        result_val = (val)[0] * 0.01
     else:
-        fval = (val)[0] * 0.1
+        result_val = (val)[0] * 0.1
 
-    print fval
-    pwrvals[paramNames[item]] = fval
+    print result_val
+    pwrvals[paramName] = result_val
 
     with open('data.json', 'w') as f:
         json.dump(pwrvals, f)
 
+
+    # For the last one, will skip Freq, as freq is separately handled.
     add_hex2(reg_addr, 0x2)
 
     print " "
     #time.sleep(5)
+
+    paramName = paramNameList[22]
+    result = client.read_holding_registers(0x5B2C, 1, unit=0x01)
+    val = struct.unpack('>l', result.registers)[0]
+    #result_val = result.registers[0] * 0.01
+    result_val = val * 0.01
+    #        print "Frequency", int(v1), "Hz"
+    pwrvals[paramName] = result_val
+
+
+for item in range(22, 40):
+    paramName = paramNameList[item]
+    # starting add, num of reg to read, slave unit.
+    #       result= client.read_input_registers(0x5B00,2,unit=0x01)
+    result = client.read_holding_registers(reg_addr, 1, unit=0x01)
+    #print "Voltage", result.registers
+    if item > 36: # unsigned
+        raw = struct.pack('>HH', result.registers[0], result.registers[1])
+        val = struct.unpack('>l', raw)
+    else: # signed
+        raw = struct.pack('>HH', result.registers[0], result.registers[1])
+        val = struct.unpack('>l', raw)
+    # fval = result.registers[1] * 0.1
+    result_val = 0.0
+    if (item < 33): #  or (item > 22)
+        result_val = (val)[0] * 0.1
+    else:
+        result_val = (val)[0]
+
+    print result_val
+    pwrvals[paramName] = result_val
+
+    with open('data.json', 'w') as f:
+        json.dump(pwrvals, f)
+
+    add_hex2(reg_addr, 0x1)
+
+    print " "
+
 # closes the underlying socket connection
 client.close()
