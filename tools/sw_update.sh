@@ -3,9 +3,13 @@
 # This script updates various programs I use on my computer that I do
 # not manage through apt-get.
 #
+# https://ericjmritz.name/2013/05/24/shell-script-to-update-programs/
+#
 ######################################################################
 
 SOFTWARE_DIRECTORY="/home/arkbg/dev/github/bg"
+RUN_DIR="/home/arkbg/dev"
+BKUP_DIR="/home/arkbg/dev/bkup"
 
 # Do not allow the script to run as root.  Otherwise the programs
 # which have Git repositories will end up fetching and creating
@@ -41,37 +45,27 @@ function configure_and_make() {
         fi
 }
 
+function wait_and_copy() {
+    echo "Backing up current files.."
+    cp "$RUN_DIRECTORY/*" "$BKUP_DIR/."
+    sleep 5s
+    echo "Copying files to RUN directory.."
+    cp "$SOFTWARE_DIRECTORY/apps/sense/*" "$RUN_DIR/."
+    cp "$SOFTWARE_DIRECTORY/tools/*" "$RUN_DIR/."
+    echo "Files copied."
+}
+
 checkout_latest_master "apps"
 checkout_latest_master "tools"
 #checkout_latest_master "web"
-
-#configure_and_make "Git" "/usr/local"
-#configure_and_make "PHP" "/opt/php"
-
-# jq
-#checkout_latest_master "jq" && make
-
-# Git Documentation
-#echo "Updating Git Documentation"
-#cd "$SOFTWARE_DIRECTORY/Git" \
-#    && make doc html         \
-#    && sudo make install-doc install-html
-
-# tup
-#echo "Updating tup"
-#cd "$SOFTWARE_DIRECTORY/tup" \
-#    && ./build.sh
-
-# LuaJIT
-#echo "Updating LuaJIT"
-#cd "$SOFTWARE_DIRECTORY/LuaJIT" \
-#    && git fetch origin \
-#    && git merge --ff-only origin/master \
-#    && make \
-#    && sudo make install
+wait_and_copy
 
 # Remove my home /tmp directory created by some of the installation
 # processes above.
-if [ -d "/home/eric/tmp" ]; then
-    rm -rf "/home/eric/tmp"
+if [ -d "/home/arkbg/dev/tmp" ]; then
+    rm -rf "/home/arkbg/dev/tmp"
 fi
+
+# Record the time so that I can see when was the last time I updated
+# all of these programs.
+echo "$(date)" > "$RUN_DIR/Update-Programs-Timestamp.txt"
