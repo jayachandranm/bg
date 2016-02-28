@@ -29,7 +29,8 @@ function checkout_latest_master() {
     cd "$SOFTWARE_DIRECTORY/$1" \
         && git fetch origin     \
         && git checkout master  \
-        && git merge --ff-only origin/master
+        && git merge origin/master
+#        && git merge --ff-only origin/master
 }
 
 # This performs checkout_latest_master() and takes the same first
