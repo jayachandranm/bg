@@ -63,8 +63,21 @@ paramNameList = [
 'current_quadrant_total',
 'current_quadrant_L1',
 'current_quadrant_L2',
-'current_quadrant_L3'
+'current_quadrant_L3',
+'peak_power_demand',
+'peak_current_demand',
+'voltage_harmonics_L1-N',
+'voltage_harmonics_L2-N',
+'voltage_harmonics_L3-N',
+'voltage_harmonics_L1-L2',
+'voltage_harmonics_L3-L2',
+'voltage_harmonics_L1-L3',
+'current_harmonics_L1',
+'current_harmonics_L2',
+'current_harmonics_L3',
+'current_harmonics_N'
 ]
+
 
 pwrvals = {}
 
@@ -87,24 +100,6 @@ reg_addr= 0x5B00
 def add_hex2(hex1, hex2):
     return hex(int(hex1, 16) + int(hex2, 16))
 
-    # result = client.read_holding_registers(0x5000, 4, unit=0x01)
-    # print "Active Import", result.registers
-    # client.write_registers(0x8A00, date)
-    #
-    # result = client.read_holding_registers(0x8A00, 3, unit=0x01)
-    # print "Date", result.registers
-
-    # result = client.read_holding_registers(0x5B2C, 1, unit=0x01)
-    # print result.registers
-    # pwrvals['freq'] = result.registers[0] * 0.01
-    #       v1 = struct.unpack('>l', result.registers)[0]
-    #        print "Frequency", int(v1), "Hz"
-
-    #        raw = struct.pack('>HH', result.registers[0])
-    #       v1 = struct.unpack('>f', raw)[0]
-    #       print "Frequency :",int(v1), "A"
-
-
 # for param in paramNames:
 for item in range(0, 22):
     paramName = paramNameList[item]
@@ -114,16 +109,16 @@ for item in range(0, 22):
     #print "Voltage", result.registers
     if item < 10: # unsigned
         raw = struct.pack('>HH', result.registers[0], result.registers[1])
-        val = struct.unpack('>l', raw)
+        val = struct.unpack('>L', raw)
     else: # signed
         raw = struct.pack('>HH', result.registers[0], result.registers[1])
         val = struct.unpack('>l', raw)
     # fval = result.registers[1] * 0.1
     result_val = 0.0
     if (item < 6): #  or (item > 22)
-        result_val = (val)[0] * 0.01
-    else:
         result_val = (val)[0] * 0.1
+    else:
+        result_val = (val)[0] * 0.01
 
     print item, paramName, result_val
     pwrvals[paramName] = result_val
@@ -148,7 +143,7 @@ print "Frequency", int(result_val), "Hz"
 pwrvals[paramName] = result_val
 
 
-for item in range(22, 40):
+for item in range(23, 40):
     paramName = paramNameList[item]
     # starting add, num of reg to read, slave unit.
     #       result= client.read_input_registers(0x5B00,2,unit=0x01)
@@ -183,6 +178,18 @@ for item in range(22, 40):
     reg_addr = reg_addr + 0x2
 
     print " "
+
+reg_addr_n=0x5D00
+#The harmonics values are found here
+for item in range(43, 52):
+    paramName = paramNameList[item]
+    for x in range(0, 16):
+	result = client.read_holding_registers(reg_addr_n, 2, unit=0x01)	
+    	val = result.registers[0]
+	result_val = val * 0.1
+	print item, paramName+" "+str(x), result_val, reg_addr_n 
+	reg_addr_n = reg_addr_n + 0x2
+    reg_addr_n = reg_addr_n + 96
 
 # closes the underlying socket connection
 client.close()
