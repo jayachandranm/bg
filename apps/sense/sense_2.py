@@ -17,6 +17,7 @@ print "Serial Connected!"
 ser.flushInput()
 time.sleep(1)
 bus = smbus.SMBus(1)
+
 #config params
 loop_time=9.995
 num_samp_avg=6
