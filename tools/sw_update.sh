@@ -27,9 +27,10 @@ fi
 function checkout_latest_master() {
     echo "Updating $1"
     cd "$SOFTWARE_DIRECTORY/$1" \
-        && git fetch origin     \
+        && git pull origin     \
+#        && git fetch origin     \
         && git checkout master  \
-        && git merge origin/master
+#        && git merge origin/master
 #        && git merge --ff-only origin/master
 }
 
