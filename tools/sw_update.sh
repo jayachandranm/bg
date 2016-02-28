@@ -7,7 +7,7 @@
 #
 ######################################################################
 
-SOFTWARE_DIRECTORY="/home/arkbg/dev/github/bg"
+SW_DIR="/home/arkbg/dev/github/bg"
 RUN_DIR="/home/arkbg/dev"
 BKUP_DIR="/home/arkbg/dev/bkup"
 
@@ -26,7 +26,7 @@ fi
 # sub-directory in $SOFTWARE_DIRECTORY.
 function checkout_latest_master() {
     echo "Updating $1"
-    cd "$SOFTWARE_DIRECTORY/$1" \
+    cd "$SW_DIR/$1" \
         && git pull origin     \
 #        && git fetch origin     \
 #        && git checkout master  \
@@ -52,14 +52,14 @@ function wait_and_copy() {
     file2="sendfile_2.py"
     file3="sw_update.sh"
     echo "Backing up current files.."
-    cp "$RUN_DIRECTORY/$file1" "$BKUP_DIR/."
-    cp "$RUN_DIRECTORY/$file2" "$BKUP_DIR/."
-    cp "$RUN_DIRECTORY/$file3" "$BKUP_DIR/."
+    cp "$RUN_DIR/$file1" "$BKUP_DIR/."
+    cp "$RUN_DIR/$file2" "$BKUP_DIR/."
+    cp "$RUN_DIR/$file3" "$BKUP_DIR/."
     sleep 5s
     echo "Copying files to RUN directory.."
-    cp "$SOFTWARE_DIRECTORY/apps/sense/sense_2.py" "$RUN_DIR/."
-    cp "$SOFTWARE_DIRECTORY/apps/sense/sendfile_2.py" "$RUN_DIR/."
-    cp "$SOFTWARE_DIRECTORY/tools/sw_update.sh" "$RUN_DIR/."
+    cp "$SW_DIR/apps/sense/sense_2.py" "$RUN_DIR/."
+    cp "$SW_DIR/apps/sense/sendfile_2.py" "$RUN_DIR/."
+    cp "$SW_DIR/tools/sw_update.sh" "$RUN_DIR/."
     echo "Files copied."
 }
 
