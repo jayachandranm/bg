@@ -27,7 +27,8 @@ fi
 function checkout_latest_master() {
     echo "Updating $1"
     cd "$SW_DIR/$1" \
-        && git pull origin     \
+        && git pull origin     
+#        && git pull origin     \
 #        && git fetch origin     \
 #        && git checkout master  \
 #        && git merge origin/master

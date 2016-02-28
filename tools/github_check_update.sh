@@ -1,7 +1,13 @@
 #!/bin/sh
 
+SW_DIR="/home/arkbg/dev/github/bg"
+RUN_DIR="/home/arkbg/dev"
+BKUP_DIR="/home/arkbg/dev/bkup"
+
 # Before checking for updates, do a remote update.
-git remote update
+cd "$SW_DIR/$1" \
+    && git remote update     
+#git remote update
 
 LOCAL=$(git rev-parse @{0})
 REMOTE=$(git rev-parse @{u})
@@ -11,6 +17,7 @@ if [ $LOCAL = $REMOTE ]; then
     echo "Up-to-date"
 elif [ $LOCAL = $BASE ]; then
     echo "Need to pull"
+    $RUN_DIR/sw_update.sh
 elif [ $REMOTE = $BASE ]; then
     echo "Need to push"
 else
