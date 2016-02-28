@@ -23,7 +23,7 @@ fi
 # Fetches the latest updates from the remote origin Git repository and
 # fast-forwards the 'master' branch so that it reflects any updates.
 # The function takes one argument, which is the name of a
-# sub-directory in $SOFTWARE_DIRECTORY.
+# sub-directory in $SW_DIR.
 function checkout_latest_master() {
     echo "Updating $1"
     cd "$SW_DIR/$1" \
