@@ -52,15 +52,18 @@ function wait_and_copy() {
     file1="sense_2.py"
     file2="sendfile_2.py"
     file3="sw_update.sh"
+    file4="github_check_update.sh"
     echo "Backing up current files.."
     cp "$RUN_DIR/$file1" "$BKUP_DIR/."
     cp "$RUN_DIR/$file2" "$BKUP_DIR/."
     cp "$RUN_DIR/$file3" "$BKUP_DIR/."
+    cp "$RUN_DIR/$file4" "$BKUP_DIR/."
     sleep 5s
     echo "Copying files to RUN directory.."
-    cp "$SW_DIR/apps/sense/sense_2.py" "$RUN_DIR/."
-    cp "$SW_DIR/apps/sense/sendfile_2.py" "$RUN_DIR/."
-    cp "$SW_DIR/tools/sw_update.sh" "$RUN_DIR/."
+    cp "$SW_DIR/apps/sense/$file1" "$RUN_DIR/."
+    cp "$SW_DIR/apps/sense/$file2" "$RUN_DIR/."
+    cp "$SW_DIR/tools/$file3" "$RUN_DIR/."
+    cp "$SW_DIR/tools/$file4" "$RUN_DIR/."
     echo "Files copied."
 }
 
