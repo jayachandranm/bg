@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# Before checking for updates, do a remote update.
 git remote update
 
 LOCAL=$(git rev-parse @{0})
