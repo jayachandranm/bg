@@ -51,8 +51,9 @@ function wait_and_copy() {
     cp "$RUN_DIRECTORY/*" "$BKUP_DIR/."
     sleep 5s
     echo "Copying files to RUN directory.."
-    cp "$SOFTWARE_DIRECTORY/apps/sense/*" "$RUN_DIR/."
-    cp "$SOFTWARE_DIRECTORY/tools/*" "$RUN_DIR/."
+    cp "$SOFTWARE_DIRECTORY/apps/sense/sense_2.py" "$RUN_DIR/."
+    cp "$SOFTWARE_DIRECTORY/apps/sense/sendfile_2.py" "$RUN_DIR/."
+    cp "$SOFTWARE_DIRECTORY/tools/sw_update.sh" "$RUN_DIR/."
     echo "Files copied."
 }
 
