@@ -48,8 +48,13 @@ function configure_and_make() {
 }
 
 function wait_and_copy() {
+    file1="sense_2.py"
+    file2="sendfile_2.py"
+    file3="sw_update.sh"
     echo "Backing up current files.."
-    cp "$RUN_DIRECTORY/*" "$BKUP_DIR/."
+    cp "$RUN_DIRECTORY/$file1" "$BKUP_DIR/."
+    cp "$RUN_DIRECTORY/$file2" "$BKUP_DIR/."
+    cp "$RUN_DIRECTORY/$file3" "$BKUP_DIR/."
     sleep 5s
     echo "Copying files to RUN directory.."
     cp "$SOFTWARE_DIRECTORY/apps/sense/sense_2.py" "$RUN_DIR/."
