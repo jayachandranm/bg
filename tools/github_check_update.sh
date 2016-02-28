@@ -1,5 +1,7 @@
 #!/bin/sh
 
+git remote update
+
 LOCAL=$(git rev-parse @{0})
 REMOTE=$(git rev-parse @{u})
 BASE=$(git merge-base @{0} @{u})
