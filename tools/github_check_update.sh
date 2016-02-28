@@ -4,6 +4,7 @@ SW_DIR="/home/arkbg/dev/github/bg"
 RUN_DIR="/home/arkbg/dev"
 BKUP_DIR="/home/arkbg/dev/bkup"
 
+# http://stackoverflow.com/questions/3258243/check-if-pull-needed-in-git
 # Before checking for updates, do a remote update.
 cd "$SW_DIR/$1" \
     && git remote update     
