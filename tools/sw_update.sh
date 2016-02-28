@@ -49,21 +49,26 @@ function configure_and_make() {
 }
 
 function wait_and_copy() {
+    now=`date +"%m_%d_%Y"`
+    #
     file1="sense_2.py"
     file2="sendfile_2.py"
     file3="sw_update.sh"
     file4="github_check_update.sh"
+    file5="server_stat.sh"
     echo "Backing up current files.."
-    cp "$RUN_DIR/$file1" "$BKUP_DIR/."
-    cp "$RUN_DIR/$file2" "$BKUP_DIR/."
-    cp "$RUN_DIR/$file3" "$BKUP_DIR/."
-    cp "$RUN_DIR/$file4" "$BKUP_DIR/."
+    cp "$RUN_DIR/$file1" "$BKUP_DIR/$file1_$now"
+    cp "$RUN_DIR/$file2" "$BKUP_DIR/$file2_$now"
+    cp "$RUN_DIR/$file3" "$BKUP_DIR/$file3_$now"
+    cp "$RUN_DIR/$file4" "$BKUP_DIR/$file4_$now"
+    cp "$RUN_DIR/$file5" "$BKUP_DIR/$file5_$now"
     sleep 5s
     echo "Copying files to RUN directory.."
     cp "$SW_DIR/apps/sense/$file1" "$RUN_DIR/."
     cp "$SW_DIR/apps/sense/$file2" "$RUN_DIR/."
     cp "$SW_DIR/tools/$file3" "$RUN_DIR/."
     cp "$SW_DIR/tools/$file4" "$RUN_DIR/."
+    cp "$SW_DIR/tools/$file5" "$RUN_DIR/."
     echo "Files copied."
 }
 
@@ -74,9 +79,9 @@ wait_and_copy
 
 # Remove my home /tmp directory created by some of the installation
 # processes above.
-if [ -d "/home/arkbg/dev/tmp" ]; then
-    rm -rf "/home/arkbg/dev/tmp"
-fi
+#if [ -d "/home/arkbg/dev/tmp" ]; then
+#    rm -rf "/home/arkbg/dev/tmp"
+#fi
 
 # Record the time so that I can see when was the last time I updated
 # all of these programs.
