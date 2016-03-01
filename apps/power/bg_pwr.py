@@ -23,12 +23,14 @@ from pymodbus.payload import BinaryPayloadDecoder
 # address= the starting address to read from
 
 paramNameList = [
-'voltage_L1-N',
-'voltage_L2-N',
-'voltage_L3-N',
-'voltage_L1-L2',
-'voltage_L3-L2',
-'voltage_L1-L3',
+'station_id',
+'station_datetime',
+'voltage_L1_N',
+'voltage_L2_N',
+'voltage_L3_N',
+'voltage_L1_L2',
+'voltage_L3_L2',
+'voltage_L1_L3',
 'current_L1',
 'current_L2',
 'current_L3',
@@ -66,20 +68,24 @@ paramNameList = [
 'current_quadrant_L3',
 'peak_power_demand',
 'peak_current_demand',
-'voltage_harmonics_L1-N',
-'voltage_harmonics_L2-N',
-'voltage_harmonics_L3-N',
-'voltage_harmonics_L1-L2',
-'voltage_harmonics_L3-L2',
-'voltage_harmonics_L1-L3',
+'voltage_harmonics_L1_N',
+'voltage_harmonics_L2_N',
+'voltage_harmonics_L3_N',
+'voltage_harmonics_L1_L2',
+'voltage_harmonics_L3_L2',
+'voltage_harmonics_L1_L3',
 'current_harmonics_L1',
 'current_harmonics_L2',
 'current_harmonics_L3',
 'current_harmonics_N'
 ]
 
-
 pwrvals = {}
+
+paramName = paramNameList[0]
+pwrvals[paramName] = "P1001"
+paramName = paramNameList[1]
+pwrvals[paramName] = time.strftime("%Y_%m-%d %H:%M") 
 
 date = [1002, 1816, 0300]
 
@@ -101,7 +107,7 @@ def add_hex2(hex1, hex2):
     return hex(int(hex1, 16) + int(hex2, 16))
 
 # for param in paramNames:
-for item in range(0, 22):
+for item in range(2, 24):
     paramName = paramNameList[item]
     # starting add, num of reg to read, slave unit.
     #       result= client.read_input_registers(0x5B00,2,unit=0x01)
@@ -115,7 +121,7 @@ for item in range(0, 22):
         val = struct.unpack('>l', raw)
     # fval = result.registers[1] * 0.1
     result_val = 0.0
-    if (item < 6): #  or (item > 22)
+    if (item < 8): #  or (item > 22)
         result_val = (val)[0] * 0.1
     else:
         result_val = (val)[0] * 0.01
@@ -134,22 +140,22 @@ for item in range(0, 22):
     print " "
     #time.sleep(5)
 
-paramName = paramNameList[22]
+paramName = paramNameList[24]
 result = client.read_holding_registers(0x5B2C, 1, unit=0x01)
 #val = struct.unpack('>l', result.registers)[0]
 result_val = result.registers[0] * 0.01
 #result_val = val * 0.01
-print "Frequency", int(result_val), "Hz"
+print " 22 Frequency", int(result_val), "Hz"
 pwrvals[paramName] = result_val
 
 
-for item in range(23, 40):
+for item in range(25, 35):
     paramName = paramNameList[item]
     # starting add, num of reg to read, slave unit.
     #       result= client.read_input_registers(0x5B00,2,unit=0x01)
     result = client.read_holding_registers(reg_addr, 1, unit=0x01)
     #print "Voltage", result.registers
-    if item > 36: # unsigned
+    if item > 38: # unsigned
         #raw = struct.pack('>H', result.registers[0])
         #raw = struct.pack('>HH', result.registers[0], result.registers[1])
         val = result.registers[0] 
@@ -161,7 +167,7 @@ for item in range(23, 40):
         #val = struct.unpack('>l', raw)
     # fval = result.registers[1] * 0.1
     result_val = 0.0
-    if (item < 33): #  or (item > 22)
+    if (item < 35): #  or (item > 22)
         #result_val = (val)[0] * 0.1
         result_val = val * 0.1
     else:
@@ -176,20 +182,32 @@ for item in range(23, 40):
 
     #add_hex2(reg_addr, 0x1)
     reg_addr = reg_addr + 0x2
-
+    
     print " "
 
 reg_addr_n=0x5D00
 #The harmonics values are found here
-for item in range(43, 52):
-    paramName = paramNameList[item]
-    for x in range(0, 16):
-	result = client.read_holding_registers(reg_addr_n, 2, unit=0x01)	
-    	val = result.registers[0]
-	result_val = val * 0.1
-	print item, paramName+" "+str(x), result_val, reg_addr_n 
-	reg_addr_n = reg_addr_n + 0x2
-    reg_addr_n = reg_addr_n + 96
+#for item in range(45, 52):
+#    paramName = paramNameList[item]
+#    for x in range(0, 16):
+#	result = client.read_holding_registers(reg_addr_n, 2, unit=0x01)	
+#    	val = result.registers[0]
+#	result_val = val * 0.1
+#	print item, paramName+" "+str(x), result_val, reg_addr_n 
+#	reg_addr_n = reg_addr_n + 0x2
+#    reg_addr_n = reg_addr_n + 96
 
 # closes the underlying socket connection
+
+try:
+    pwrjson = '[' + json.dumps(pwrvals) + ']'
+#       r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=json.dumps(payload), timeout=0.1)
+    #r1 = requests.put("http://52.74.191.39/blupower/powerdata.php", json.dumps(pwrvals), timeout=0.1)
+    r1 = requests.put("http://52.74.191.39/blupower/powerdata.php", pwrjson, timeout=0.1)
+    print r1.status_code
+    print r1.content
+except Exception as x:
+    print "Network Failed Error:", x
+
+
 client.close()
