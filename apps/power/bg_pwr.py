@@ -82,6 +82,26 @@ paramNameList = [
 
 pwrvals = {}
 
+// For harmonics.
+paramNameLis2 = [
+'station_id',
+'station_datetime',
+'voltage_harmonics_L1_N',
+'voltage_harmonics_L2_N',
+'voltage_harmonics_L3_N',
+'voltage_harmonics_L1_L2',
+'voltage_harmonics_L3_L2',
+'voltage_harmonics_L1_L3',
+'current_harmonics_L1',
+'current_harmonics_L2',
+'current_harmonics_L3',
+'current_harmonics_N'
+]
+
+pwrvals2 = {}
+
+//result = ()
+
 paramName = paramNameList[0]
 pwrvals[paramName] = "P1001"
 paramName = paramNameList[1]
@@ -111,7 +131,10 @@ for item in range(2, 24):
     paramName = paramNameList[item]
     # starting add, num of reg to read, slave unit.
     #       result= client.read_input_registers(0x5B00,2,unit=0x01)
-    result = client.read_holding_registers(reg_addr, 2, unit=0x01)
+    try:
+        result = client.read_holding_registers(reg_addr, 2, unit=0x01)
+    except Exception as x:
+        print "Register Read Error 1:", x
     #print "Voltage", result.registers
     if item < 10: # unsigned
         raw = struct.pack('>HH', result.registers[0], result.registers[1])
@@ -141,7 +164,10 @@ for item in range(2, 24):
     #time.sleep(5)
 
 paramName = paramNameList[24]
-result = client.read_holding_registers(0x5B2C, 1, unit=0x01)
+try:
+    result = client.read_holding_registers(0x5B2C, 1, unit=0x01)
+except Exception as x:
+    print "Register Read Error for Freq:", x
 #val = struct.unpack('>l', result.registers)[0]
 result_val = result.registers[0] * 0.01
 #result_val = val * 0.01
@@ -153,7 +179,10 @@ for item in range(25, 35):
     paramName = paramNameList[item]
     # starting add, num of reg to read, slave unit.
     #       result= client.read_input_registers(0x5B00,2,unit=0x01)
-    result = client.read_holding_registers(reg_addr, 1, unit=0x01)
+    try:
+        result = client.read_holding_registers(reg_addr, 1, unit=0x01)
+    except Exception as x:
+        print "Register Read Error 2:", x
     #print "Voltage", result.registers
     if item > 38: # unsigned
         #raw = struct.pack('>H', result.registers[0])
@@ -187,18 +216,24 @@ for item in range(25, 35):
 
 reg_addr_n=0x5D00
 #The harmonics values are found here
-#for item in range(45, 52):
-#    paramName = paramNameList[item]
-#    for x in range(0, 16):
-#	result = client.read_holding_registers(reg_addr_n, 2, unit=0x01)	
-#    	val = result.registers[0]
-#	result_val = val * 0.1
-#	print item, paramName+" "+str(x), result_val, reg_addr_n 
-#	reg_addr_n = reg_addr_n + 0x2
-#    reg_addr_n = reg_addr_n + 96
+for item in range(2, 12):
+    paramName = paramNameList2[item]
+    for child in range(0, 16):
+        try:
+	    result = client.read_holding_registers(reg_addr_n, 2, unit=0x01)	
+        except Exception as ex:
+            print "Network Failed Error:", ex
+    	val = result.registers[0]
+	result_val = val * 0.1
+	print item, paramName+" "+str(child), result_val, reg_addr_n 
+        pwrvals2[paramName][child] = result_val
+        #
+        with open('data2.json', 'w') as f:
+            json.dump(pwrvals, f)
+	reg_addr_n = reg_addr_n + 0x2
+    reg_addr_n = reg_addr_n + 0x80
 
-# closes the underlying socket connection
-
+# Update the results to server.
 try:
     pwrjson = '[' + json.dumps(pwrvals) + ']'
 #       r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=json.dumps(payload), timeout=0.1)
@@ -210,4 +245,5 @@ except Exception as x:
     print "Network Failed Error:", x
 
 
+# closes the underlying socket connection
 client.close()
