@@ -13,6 +13,8 @@ from pymodbus.transaction import ModbusRtuFramer
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
+from collections import defaultdict
+
 # import logging
 # logging.basicConfig()
 # log = logging.getLogger()
@@ -82,8 +84,8 @@ paramNameList = [
 
 pwrvals = {}
 
-// For harmonics.
-paramNameLis2 = [
+# For harmonics.
+paramNameList2 = [
 'station_id',
 'station_datetime',
 'voltage_harmonics_L1_N',
@@ -98,9 +100,10 @@ paramNameLis2 = [
 'current_harmonics_N'
 ]
 
-pwrvals2 = {}
+#pwrvals2 = {}
+pwrvals2 = defaultdict(list)
 
-//result = ()
+#result = ()
 
 paramName = paramNameList[0]
 pwrvals[paramName] = "P1001"
@@ -110,6 +113,7 @@ pwrvals[paramName] = time.strftime("%Y_%m-%d %H:%M")
 date = [1002, 1816, 0300]
 
 client = ModbusClient(method="rtu", port="/dev/ttyAMA0", baudrate=19200, stopbits=1, bytesize=8, parity='E')
+#client = ModbusClient(method="rtu", port="/dev/ttyAMA0", baudrate=19200, stopbits=1, bytesize=8, parity='E')
 #client = ModbusClient(method="rtu", port="/dev/ttyRPC0", baudrate=19200, stopbits=1, bytesize=8, parity='E')
 # client= ModbusClient(method = "rtu", port="/dev/ttyRPC0",baudrate= 19200,stopbits=1,bytesize=8,parity='E')
 print client.connect()
@@ -216,22 +220,27 @@ for item in range(25, 35):
 
 reg_addr_n=0x5D00
 #The harmonics values are found here
-for item in range(2, 12):
-    paramName = paramNameList2[item]
-    for child in range(0, 16):
-        try:
-	    result = client.read_holding_registers(reg_addr_n, 2, unit=0x01)	
-        except Exception as ex:
-            print "Network Failed Error:", ex
-    	val = result.registers[0]
-	result_val = val * 0.1
-	print item, paramName+" "+str(child), result_val, reg_addr_n 
-        pwrvals2[paramName][child] = result_val
+#for item in range(2, 12):
+#    paramName = paramNameList2[item]
+#    for child in range(0, 16):
+#        try:
+#            result = client.read_holding_registers(reg_addr_n, 2, unit=0x01)	
+#        except Exception as ex:
+#            print "Network Failed Error:", ex
+        #raw = struct.pack('>HH', result.registers[0], result.registers[1])
+        #val = struct.unpack('>L', raw)
+        #result_val = (val)[0] * 0.1
+#        val = result.registers[0]
+#        result_val = val * 0.1
+#        print item, paramName+" "+str(child), result_val  
+        #pwrvals2[paramName].append(child) = result_val
+#        pwrvals2[paramName].append(result_val)
         #
-        with open('data2.json', 'w') as f:
-            json.dump(pwrvals, f)
-	reg_addr_n = reg_addr_n + 0x2
-    reg_addr_n = reg_addr_n + 0x80
+#        reg_addr_n = reg_addr_n + 0x2
+#    reg_addr_n = reg_addr_n + 0x80
+        
+#with open('data2.json', 'w') as f:
+#    json.dump(pwrvals2, f)
 
 # Update the results to server.
 try:
@@ -243,7 +252,6 @@ try:
     print r1.content
 except Exception as x:
     print "Network Failed Error:", x
-
 
 # closes the underlying socket connection
 client.close()
