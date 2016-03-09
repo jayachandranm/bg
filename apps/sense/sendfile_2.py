@@ -18,49 +18,26 @@ for file in glob.glob("*.txt"):
 print "There are " + str(len(file_list)) + " files in the directory"
 
 #print file_list
+tnow = time.strftime("%Y-%m-%d %H:%M:%S")
 
-if len(file_list)==0:
-	print "There are no files in the directory"
+if len(file_list) > 0:
+	print tnow,": There are files to be uploaded."
 
 for k in range(0,len(file_list)):
         try:
-#		f = open(file_list[k], 'r')
-#		tofile.append=f.read()
 		try:
-#			for line in f:
-#    				tofile.append(line.rstrip('\n').rstrip('"'))
-			print file_list[k]
-#			with open(file_list[k],'rU') as f:
+#			print file_list[k]
 			with open(file_list[k],'r') as f:
-#				print "Reading File"
-#    				tofile = jason.dumps(f.read().splitlines())	
-#				tofile= f.read().splitlines()
-				print "File opened for reading."
-#				tofile_json = json.load(f)
+#				print "File opened for reading."
 				tofile_json = f.read()
-#			for l in range (0,len(tofile)):
-#				tofilen[l]=json.dumps(tofile[l])
-#			print tofilen	
-#			print json.dumps(tofile[0])
-#			print "*****"
-#			print tofile_json
-#			print "============"
-#			print json.dumps(tofile[0])
-#			with open(file_list[k], 'r') as f:
-#				tofile.append(f.readlines())
-#				print line	
-#			with open(file_list[k], 'r') as f:
-#			    	tofile = [line.strip() for line in f]
 		except:
-			print "The file can not be read"
+			print tnow,": The file can not be read"
 		
 		try:		
-#			print tofile
 #               	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=json.dumps(payload), timeout=0.1)
-#	               	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
-                	r1 = requests.put("http://52.74.191.39/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
-                	print r1.status_code
-#                	print r1.content
+	               	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
+#                	r1 = requests.put("http://52.74.191.39/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
+#                	print r1.status_code
 			del tofile[:]
 			try:
 			        os.remove(file_list[k])
@@ -68,6 +45,6 @@ for k in range(0,len(file_list)):
         			print ("Error: %s - %s." % (e.filename,e.strerror))
 				
 		except:
- 	               print "Network Failed Error:"
+ 	               print tnow,": Network Failed Error:"
         except:
-                print "File Error"
+                print tnow,": File Error"
