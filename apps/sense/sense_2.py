@@ -20,7 +20,7 @@ bus = smbus.SMBus(1)
 #config params
 LOOP_TIME=9.995
 NUM_SAMP_AVG=6
-dev_ID="D1070"
+dev_ID="A1004"
 BACKLOG_BUFF_LEN=59
 SERVER_ADDR="172.18.53.42:81"
 
@@ -41,8 +41,8 @@ while 1:
 	if (len(tofile))>0:
 		print t,": Network connection re-established ; Send data buffer to server"
     	try:
-	       	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=json.dumps(tofile), timeout=0.1)
-#		r1 = requests.put("http://52.74.191.39/BluIEQ/sensordata.php", data=json.dumps(tofile), timeout=0.1)
+#	       	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=json.dumps(tofile), timeout=0.1)
+		r1 = requests.put("http://52.74.191.39/BluIEQ/sensordata.php", data=json.dumps(tofile), timeout=0.1)
 		print t,r1.status_code,": server response."
 #        	print r1.content
 		del tofile[:]
@@ -81,7 +81,7 @@ while 1:
 		time.sleep(LOOP_TIME)
 #		print " "
     
-#	print "Averaging for 1 min"
+	print "Averaging for 1 min"
 #	print "Length = " + str(len(templ))
 	
 	temp=(sum(templ)/len(templ))

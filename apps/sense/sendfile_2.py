@@ -35,8 +35,8 @@ for k in range(0,len(file_list)):
 		
 		try:		
 #               	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=json.dumps(payload), timeout=0.1)
-	               	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
-#                	r1 = requests.put("http://52.74.191.39/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
+#	               	r1 = requests.put("http://172.18.53.42:81/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
+                	r1 = requests.put("http://52.74.191.39/BluIEQ/sensordata.php", data=tofile_json, timeout=0.1)
 #                	print r1.status_code
 			del tofile[:]
 			try:
