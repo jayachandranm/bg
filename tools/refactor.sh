@@ -25,8 +25,12 @@ chown -R arkbg.pi *
 #
 if [[ ! -e $SW_DIR ]]; then
   mkdir -p $SW_DIR
-elif [[ ! -d $SW_DIR ]]; then
-  echo "$SW_DIR already exists but is not a directory" 1>&2
+else
+  # If directory or file with the name exists, delete first.
+  rm -rf $SW_DIR
+  mkdir -p $SW_DIR
+#elif [[ ! -d $SW_DIR ]]; then
+#  echo "$SW_DIR already exists but is not a directory" 1>&2
 fi
 #
 if [[ ! -e $BKUP_DIR ]]; then
