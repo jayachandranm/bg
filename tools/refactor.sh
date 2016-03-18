@@ -7,6 +7,7 @@
 
 RUN_DIR="/home/arkbg/dev"
 SW_DIR="$RUN_DIR/devsrc"
+SW_DIR_BG="$RUN_DIR/github"
 BKUP_DIR="$RUN_DIR/bkup"
 LOG_DIR="$RUN_DIR/logs"
 
@@ -19,7 +20,8 @@ fi
 # Remove all existing files. Prepare new dir for src.
 cd $RUN_DIR
 # Remove the existing repo.
-rm -rf github
+if [[ -e $SW_DIR_BG ]]; then
+  rm -rf $SW_DIR_BG
 # Some files may have root permissions. Change all to user perm.
 chown -R arkbg.pi *
 #
