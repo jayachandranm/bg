@@ -55,3 +55,4 @@ function clone_master() {
 }
 
 clone_master "bgsense"
+cp "$SW_DIR/bgsense/tools/check_update.sh" $RUN_DIR
