@@ -1,0 +1,2 @@
+- Check whether the latest time value is taken while grouping across time range.
+- Consider Organic group membership while displaying the vehicles.
