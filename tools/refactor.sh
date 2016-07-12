@@ -22,8 +22,7 @@ cd $RUN_DIR
 # Remove the existing repo.
 if [[ -e $SW_DIR_BG ]]; then
   rm -rf $SW_DIR_BG
-# Some files may have root permissions. Change all to user perm.
-chown -R arkbg.pi *
+fi
 #
 if [[ ! -e $SW_DIR ]]; then
   mkdir -p $SW_DIR
@@ -46,6 +45,8 @@ if [[ ! -e $LOG_DIR ]]; then
 elif [[ ! -d $LOG_DIR ]]; then
   echo "$LOG_DIR already exists but is not a directory" 1>&2
 fi
+# Some files may have root permissions. Change all to user perm.
+chown -R arkbg.pi *
 
 function clone_master() {
     echo "Cloning $1"
@@ -54,3 +55,4 @@ function clone_master() {
 }
 
 clone_master "bgsense"
+cp "$SW_DIR/bgsense/tools/check_update.sh" $RUN_DIR
