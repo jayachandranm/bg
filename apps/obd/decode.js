@@ -74,8 +74,28 @@ var LoginPackage = new Parser()
         length: 20
     });
 
-var LoginReply = new Parser();
+// Nothing to decode. Just need to reply.
+var HeartBeatPackage = new Parser();
+
+var GPSPackage = new Parser()
+    //Parser.start()
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .nest('gps_data', {
+        // 20 bytes
+        type: gpsData
+    });
+
 var DataFlow = new Parser();
+
+var PIDPackage = new Parser();
+
+var AlarmsPackage = new Parser();
+
+var GSensePackage = new Parser();
+
 
 var Message = new Parser()
     //Parser.start()
@@ -92,9 +112,15 @@ var Message = new Parser()
         tag: 'type',
         choices: {
             0x1001: LoginPackage,
+            0x1003, HeartBeatPackage, 
+            0x4001: GPSPackage,
+            0x4002: PIDPackage,
+            0x4007: AlarmsPackage,
+            0x4003: GSensePackage,
             0x9001: LoginReply,
             0x4004: DataFlow
         },
+        // TODO: handle this.
         defaultChoice: new Parser()
     })
     .uint16('crc16')
@@ -185,9 +211,14 @@ switch(dcMsg.type) {
         //console.log(dcMsg.payload.gps_data);
         updateDB(dcMsg.payload.gps_data);
         //console.log("DB updated.");
+        // TODO: Login reply.
         break;
-    case 0x9001:
-        console.log("Login Reply");
+    case 0x1003:
+        console.log('HeartBeatPackage received, send reply.')
+        break;
+    case 0x4001:
+        console.log('GPS data');
+        updateDB(dcMsg.payload.gps_data);
     case 0x4004:
         console.log("Data Flow");
 }
@@ -211,7 +242,7 @@ var dataToDev = c.uint16le('0x4040')
                         .uint16be('0x9001')
                         .uint32le('0xffffffff')
                         .uint16('0x0')
-                        .uint32le('1395277770')
+                        .uint32le('1395277770') // TODO: send current time.
                         .copy();
 
 var crcReply = crc16(dataToDev.result());
@@ -223,6 +254,28 @@ var dataToDev2 = c.uint16(crcReply)
                   .result();
 
 console.log(dataToDev2);
+c.reset();
+
+
+
+// Heart Beat.
+var dataToDev = c.uint16le('0x4040')
+                        .uint16le('0x1F')
+                        .uint8('0x03')
+                        .string(devID, 'hex')
+                        .uint16be('0x9003')
+                        .copy();
+
+var crcReply = crc16(dataToDev.result());
+
+console.log(crcReply.toString(16));
+
+var dataToDev2 = c.uint16(crcReply)
+                  .uint16('0x0a0d')
+                  .result();
+
+
+
 
 /*
 require('fs').readFile('Hello.class', function(err, data) {
