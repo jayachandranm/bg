@@ -184,13 +184,13 @@ switch(dcMsg.type) {
 
 var buf2 = new Buffer('40407F000431303031313132353239393837000000000000001001C1F06952FDF069529C91110000000000698300000C0000000000036401014C00030001190A0D04121A1480D60488C5721800000000AF4944445F3231364730325F532056312E322E31004944445F3231364730325F482056312E322E31000000', 'hex');
 
-var crc = require('crc');
-//var crc16 = require('crc-itu').crc16;
+//var crc = require('crc');
+var crc16 = require('crc-itu').crc16;
 
-var res = crc.crc16(buf2);
-//var crcInHex = crc16(buf2).toString(16);
+//var res = crc.crc16(buf2);
+var crcInHex = crc16(buf2).toString('hex');
 
-console.log(res.toString(16));
+console.log(crcInHex);
 //console.log(Message.parse(buf));
 
 /*
