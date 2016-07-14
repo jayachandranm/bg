@@ -1,5 +1,8 @@
 //ar Parser = require('../lib/binary_parser').Parser;
 var Parser = require('binary-parser').Parser;
+var mysql      = require('mysql');
+//var crc = require('crc');
+var crc16 = require('crc-itu').crc16;
 
 
 var dateTime = new Parser()
@@ -21,7 +24,13 @@ var statData = new Parser()
     .uint32('fuel_total')
     .uint16('fuel_current')
     .uint32('veh_state')
-    .string('reserved', {
+/*    .nest('vstate_flags', {
+        type: new Parser()
+        .bit1('east_long')
+        .bit1('north_lat')
+        .bit2('test')
+        .bit4('num_satellites')
+*/    .string('reserved', {
         encoding: 'hex',
         length: 8
     });
@@ -91,11 +100,10 @@ var Message = new Parser()
     .uint16('crc16')
     .uint16('tail');
 
-var buf = new Buffer('40407F000431303031313132353239393837000000000000001001C1F06952FDF069529C91110000000000698300000C0000000000036401014C00030001190A0D04121A1480D60488C5721800000000AF4944445F3231364730325F532056312E322E31004944445F3231364730325F482056312E322E31000000DF640D0A', 'hex');
+var buf = new Buffer('40407F000431333630303030303030310000000000000000001001C1F06952FDF069529C91110000000000698300000C0000000000036401014C00030001190A0D04121A1480D60488C5721800000000AF4944445F3231364730325F532056312E322E31004944445F3231364730325F482056312E322E31000000DF640D0A', 'hex');
 var dcMsg = Message.parse(buf);
 //console.log(dcMsg);
 //console.log(dcMsg.type);
-var mysql      = require('mysql');
 /*var connection = mysql.createConnection({
   host     : 'localhost',
   user     : 'root',
@@ -169,6 +177,9 @@ function updateDB(gpsVals) {
 */    });
 }
 
+var devID = dcMsg.dev_id;
+console.log(devID);
+
 switch(dcMsg.type) {
     case 0x1001: 
         //console.log(dcMsg.payload.gps_data);
@@ -182,16 +193,36 @@ switch(dcMsg.type) {
 }
 
 
+/*
 var buf2 = new Buffer('40407F000431303031313132353239393837000000000000001001C1F06952FDF069529C91110000000000698300000C0000000000036401014C00030001190A0D04121A1480D60488C5721800000000AF4944445F3231364730325F532056312E322E31004944445F3231364730325F482056312E322E31000000', 'hex');
-
-//var crc = require('crc');
-var crc16 = require('crc-itu').crc16;
-
+//var crcInHex = crc.crc16ccitt(buf2).toString(16);
 //var res = crc.crc16(buf2);
-var crcInHex = crc16(buf2).toString('hex');
-
+var crcInHex = crc16(buf2).toString(16);
 console.log(crcInHex);
 //console.log(Message.parse(buf));
+*/
+
+var Concentrate = require("concentrate/index");
+var c = Concentrate();
+var dataToDev = c.uint16le('0x4040')
+                        .uint16le('0x29')
+                        .uint8('0x03')
+                        .string(devID, 'hex')
+                        .uint16be('0x9001')
+                        .uint32le('0xffffffff')
+                        .uint16('0x0')
+                        .uint32le('1395277770')
+                        .copy();
+
+var crcReply = crc16(dataToDev.result());
+
+console.log(crcReply.toString(16));
+
+var dataToDev2 = c.uint16(crcReply)
+                  .uint16('0x0a0d')
+                  .result();
+
+console.log(dataToDev2);
 
 /*
 require('fs').readFile('Hello.class', function(err, data) {
