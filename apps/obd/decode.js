@@ -112,12 +112,11 @@ var Message = new Parser()
         tag: 'type',
         choices: {
             0x1001: LoginPackage,
-            0x1003, HeartBeatPackage,
+            0x1003: HeartBeatPackage,
             0x4001: GPSPackage,
             0x4002: PIDPackage,
             0x4007: AlarmsPackage,
             0x4003: GSensePackage,
-            0x9001: LoginReply,
             0x4004: DataFlow
         },
         // TODO: handle this.
