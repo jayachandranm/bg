@@ -1,0 +1,68 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a view of unformatted rows.
+ *
+ * Available variables:
+ * - title: The title of this group of rows. May be empty.
+ * - rows: A list of the view's row items.
+ *   - attributes: The row's HTML attributes.
+ *   - content: The row's content.
+ * - view: The view object.
+ * - default_row_class: A flag indicating whether default classes should be
+ *   used on rows.
+ *
+ * @see template_preprocess_views_view_unformatted()
+ *
+ * @ingroup themeable
+ */
+#}
+{% if title %}
+  <h3>{{ title }}</h3>
+{% endif %}
+
+{#
+/* https://www.reddit.com/r/drupal/comments/3xenmg/bootstrap_carousel_alternatives_for_drupal_8/ */
+#}
+      
+
+<div id="Front-page-carousel" class="carousel slide" data-ride="carousel">
+  <ol class="carousel-indicators">
+    {% for row in rows %}
+      {% if loop.first == 1 %}
+        {% set state = 'active' %}
+      {% else %}
+        {% set state = '' %}
+      {% endif %}
+        <li {{ row.attributes.addClass(state) }} data-target="#Front-page-carousel" data-slide-to="{{loop.index0}}"></li>
+    {% endfor %}
+  </ol>
+  <div class="carousel-inner" role="listbox">
+    {% for row in rows %}
+      {%
+        set row_classes = [
+          default_row_class ? 'views-row',
+        ]
+      %}
+      {% if loop.index0 == 0 %}
+        {% set state = 'active' %}
+      {% else %}
+        {% set state = '' %}
+      {% endif %}
+      <div class="item {{state}} {{loop.index0}}">
+        <div {{ row.attributes.addClass(row_classes) }}>
+          {{ row.content }} 
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <a class="left carousel-control" href="#Front-page-carousel" role="button" data-slide="prev">
+    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="right carousel-control" href="#Front-page-carousel" role="button" data-slide="next">
+    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
+</div>
+
