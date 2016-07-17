@@ -1,9 +1,9 @@
 //ar Parser = require('../lib/binary_parser').Parser;
 var Parser = require('binary-parser').Parser;
-var mysql      = require('mysql');
 //var crc = require('crc');
 var crc16 = require('crc-itu').crc16;
 
+module.exports.decodeMessage = decodeMessage;
 
 var dateTime = new Parser()
     .uint8('day')
@@ -112,12 +112,11 @@ var Message = new Parser()
         tag: 'type',
         choices: {
             0x1001: LoginPackage,
-            0x1003, HeartBeatPackage, 
+            0x1003: HeartBeatPackage,
             0x4001: GPSPackage,
             0x4002: PIDPackage,
             0x4007: AlarmsPackage,
             0x4003: GSensePackage,
-            0x9001: LoginReply,
             0x4004: DataFlow
         },
         // TODO: handle this.
@@ -126,8 +125,13 @@ var Message = new Parser()
     .uint16('crc16')
     .uint16('tail');
 
-var buf = new Buffer('40407F000431333630303030303030310000000000000000001001C1F06952FDF069529C91110000000000698300000C0000000000036401014C00030001190A0D04121A1480D60488C5721800000000AF4944445F3231364730325F532056312E322E31004944445F3231364730325F482056312E322E31000000DF640D0A', 'hex');
-var dcMsg = Message.parse(buf);
+// var buf = new Buffer('40407F000431333630303030303030310000000000000000001001C1F06952FDF069529C91110000000000698300000C0000000000036401014C00030001190A0D04121A1480D60488C5721800000000AF4944445F3231364730325F532056312E322E31004944445F3231364730325F482056312E322E31000000DF640D0A', 'hex');
+// var dcMsg = Message.parse(buf);
+
+function decodeMessage(obdData) {
+  var dcMsg = Message.parse(obdData);
+  return dcMsg;
+}
 //console.log(dcMsg);
 //console.log(dcMsg.type);
 /*var connection = mysql.createConnection({
@@ -140,8 +144,8 @@ var dcMsg = Message.parse(buf);
 connection.connect();
 
 
-connection.query('INSERT INTO location SET ?', 
-    {dev_id: '23', timestamp: '12345678', longitude: '123.12', latitude: '22.45'}, 
+connection.query('INSERT INTO location SET ?',
+    {dev_id: '23', timestamp: '12345678', longitude: '123.12', latitude: '22.45'},
     function(err, result) {
   if (err) throw err;
 
@@ -159,71 +163,6 @@ connection.query('SELECT * from location', function(err, rows, fields) {
 connection.end();
 */
 
-var pool  = mysql.createPool({
-    connectionLimit : 10,
-     host            : 'localhost',
-     user            : 'root',
-    password        : 'root123',
-    database        : 'obd'
-});
-
-function updateDB(gpsVals) {
-
-    var LocLong = gpsVals.longitude/3600000;
-    var LocLat = gpsVals.latitude/3600000;
-
-    var dt = gpsVals.date_time;
-    var yr = '20' + dt.year;
-    //console.log(yr, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-    var utime = new Date(yr, dt.month, dt.day, dt.hour, dt.minute, dt.second).getTime();
-    //console.log(utime);
-    //console.log(LocLong, LocLat);
-
-    pool.getConnection(function(err, connection) {
-        // Use the connection
-        connection.query('INSERT INTO location SET ?', 
-                    {dev_id: '23', timestamp: utime, longitude: LocLong, latitude: LocLat}, 
-                    function(err, result) {
-            connection.release();
-            if (err) throw err;
-
-            console.log(result.insertId);
-        });
-
-/*        connection.query( 'SELECT * from location', function(err, rows) {
-            // And done with the connection.
-            connection.release();
-            if (!err)
-                console.log('The solution is: ', rows);
-            else
-                console.log('Error while performing Query.');
-
-        // Don't use the connection here, it has been returned to the pool.
-        });
-*/    });
-}
-
-var devID = dcMsg.dev_id;
-console.log(devID);
-
-switch(dcMsg.type) {
-    case 0x1001: 
-        //console.log(dcMsg.payload.gps_data);
-        updateDB(dcMsg.payload.gps_data);
-        //console.log("DB updated.");
-        // TODO: Login reply.
-        break;
-    case 0x1003:
-        console.log('HeartBeatPackage received, send reply.')
-        break;
-    case 0x4001:
-        console.log('GPS data');
-        updateDB(dcMsg.payload.gps_data);
-    case 0x4004:
-        console.log("Data Flow");
-}
-
-
 /*
 var buf2 = new Buffer('40407F000431303031313132353239393837000000000000001001C1F06952FDF069529C91110000000000698300000C0000000000036401014C00030001190A0D04121A1480D60488C5721800000000AF4944445F3231364730325F532056312E322E31004944445F3231364730325F482056312E322E31000000', 'hex');
 //var crcInHex = crc.crc16ccitt(buf2).toString(16);
@@ -232,47 +171,6 @@ var crcInHex = crc16(buf2).toString(16);
 console.log(crcInHex);
 //console.log(Message.parse(buf));
 */
-
-var Concentrate = require("concentrate/index");
-var c = Concentrate();
-var dataToDev = c.uint16le('0x4040')
-                        .uint16le('0x29')
-                        .uint8('0x03')
-                        .string(devID, 'hex')
-                        .uint16be('0x9001')
-                        .uint32le('0xffffffff')
-                        .uint16('0x0')
-                        .uint32le('1395277770') // TODO: send current time.
-                        .copy();
-
-var crcReply = crc16(dataToDev.result());
-
-console.log(crcReply.toString(16));
-
-var dataToDev2 = c.uint16(crcReply)
-                  .uint16('0x0a0d')
-                  .result();
-
-console.log(dataToDev2);
-c.reset();
-
-
-
-// Heart Beat.
-var dataToDev = c.uint16le('0x4040')
-                        .uint16le('0x1F')
-                        .uint8('0x03')
-                        .string(devID, 'hex')
-                        .uint16be('0x9003')
-                        .copy();
-
-var crcReply = crc16(dataToDev.result());
-
-console.log(crcReply.toString(16));
-
-var dataToDev2 = c.uint16(crcReply)
-                  .uint16('0x0a0d')
-                  .result();
 
 
 
