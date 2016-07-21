@@ -5,6 +5,8 @@ module.exports.updateDB = updateDB;
 var pool  = mysql.createPool({
     connectionLimit : 10,
      host            : 'localhost',
+     user            : 'bgmap',
+    password        : 'bgmap%user$1',
     database        : 'bgmap'
 });
 
