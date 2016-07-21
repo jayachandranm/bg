@@ -37,7 +37,7 @@ var statData = new Parser()
 
 var gpsData = new Parser()
     //Parser.start()
-    .uint8('gps_available')
+    .uint8('gps_count')
     .nest('date_time', {
         // 3 byes for date, 3 bytes for time.
         type: dateTime
@@ -78,7 +78,7 @@ var LoginPackage = new Parser()
 var HeartBeatPackage = new Parser();
 
 var GPSPackage = new Parser()
-    //Parser.start()
+    .uint8('realtime')
     .nest('stat_data', {
         // 34 bytes
         type: statData
