@@ -36,6 +36,7 @@ function loginReply(dcMsg) {
 
 // Heart Beat.
 function heartBeatReply(dcMsg) {
+    var devID = dcMsg.dev_id;
     var dataToDev = c.uint16le('0x4040')
     .uint16le('0x1F')
     .uint8('0x03')
