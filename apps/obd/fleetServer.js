@@ -85,10 +85,10 @@ function processMessage(sock, dcMsg) {
           break;
       case 0x4001:
           console.log('GPS data');
-          if(dcMsg.payload.gps_data.gps_available) {
+          if(dcMsg.payload.gps_data.gps_count > 0) {
             dbutil.updateDB(dcMsg.payload.gps_data);
           } else {
-            console.log("GPS not available.");
+            console.log("No GPS items available.");
           }
       case 0x4004:
           console.log("Data Flow");
