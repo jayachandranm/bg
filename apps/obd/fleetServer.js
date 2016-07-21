@@ -16,10 +16,11 @@ var buf = new Buffer('40407F000431333630303030303030310000000000000000001001C1F0
 //console.log('\n' + respToOBD +'\n');
 
 // TODO: for test.
+/*
 var dcMsg = decode.decodeMessage(buf);
 console.log(dcMsg);
 processMessage2(dcMsg);
-
+*/
 
 // Create a server instance, and chain the listen function to it
 // The function passed to net.createServer() becomes the event handler for the 'connection' event
@@ -34,17 +35,21 @@ net.createServer(function(sock) {
 
         //var base64str = new Buffer(data).toString('base64');
         var rawData = new Buffer(data); //aby
-        console.log('rawData: ' + rawData + '\n'); // aby
+        //console.log('rawData: ' + rawData + '\n'); // aby
 
         var base64str = new Buffer(data).toString('hex');
         //console.log('DATA ' + sock.remoteAddress + ': ' + data);
         console.log('DATA(base64) ' + sock.remoteAddress + ': ' + base64str);
+        
+        //debugger;
 
         var dcMsg = decode.decodeMessage(rawData);
-        processMessage(dcMsg);
+        console.log("==================");
+        console.log(dcMsg);
+        processMessage(sock, dcMsg);
 
         // Write the data back to the socket, the client will receive it as data from the server
-        sock.write('You said "' + data + '"');
+        //sock.write('You said "' + data + '"');
         // Send only once.
         /*
         if(count == 1)

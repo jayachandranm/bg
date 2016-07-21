@@ -5,9 +5,9 @@ module.exports.updateDB = updateDB;
 var pool  = mysql.createPool({
     connectionLimit : 10,
      host            : 'localhost',
-     user            : 'root',
-    password        : 'root123',
-    database        : 'obd'
+     user            : 'bgmap',
+    password        : 'bgmap%user$1',
+    database        : 'bgmap'
 });
 
 function updateDB(gpsVals) {
@@ -21,11 +21,18 @@ function updateDB(gpsVals) {
     var utime = new Date(yr, dt.month, dt.day, dt.hour, dt.minute, dt.second).getTime();
     //console.log(utime);
     //console.log(LocLong, LocLat);
+   
+    var dateNow = new Date();
+    var currTimeMillis = Date.now();
+    var offset = dateNow.getTimezoneOffset();
+    var adjTime = currTimeMillis + offset*60*1000 + 8*60*60*1000;
+    //var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
+    var datetime_db = new Date(utime).toISOString().slice(0, 19).replace('T', ' ');
 
     pool.getConnection(function(err, connection) {
         // Use the connection
-        connection.query('INSERT INTO location SET ?',
-                    {dev_id: '23', timestamp: utime, longitude: LocLong, latitude: LocLat},
+        connection.query('INSERT INTO bgmap_obd_gps SET ?',
+                    {sid: '204', timestamp: utime, datetime: datetime_db, longitude: LocLong, latitude: LocLat},
                     function(err, result) {
             connection.release();
             if (err) throw err;

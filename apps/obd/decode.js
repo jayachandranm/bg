@@ -130,6 +130,7 @@ var Message = new Parser()
 
 function decodeMessage(obdData) {
   var dcMsg = Message.parse(obdData);
+  console.log(dcMsg);
   return dcMsg;
 }
 //console.log(dcMsg);
