@@ -32,32 +32,26 @@ net.createServer(function(sock) {
 
     // Add a 'data' event handler to this instance of socket
     sock.on('data', function(data) {
-
         //var base64str = new Buffer(data).toString('base64');
         var rawData = new Buffer(data); //aby
-        //console.log('rawData: ' + rawData + '\n'); // aby
 
         var base64str = new Buffer(data).toString('hex');
         //console.log('DATA ' + sock.remoteAddress + ': ' + data);
         console.log('DATA(base64) ' + sock.remoteAddress + ': ' + base64str);
-        
+
         //debugger;
-
-        var dcMsg = decode.decodeMessage(rawData);
-        console.log("==================");
-        console.log(dcMsg);
-        processMessage(sock, dcMsg);
-
-        // Write the data back to the socket, the client will receive it as data from the server
-        //sock.write('You said "' + data + '"');
-        // Send only once.
-        /*
-        if(count == 1)
-        {
-            sock.write(respToOBD);
-            count --;
+        try {
+          var dcMsg = decode.decodeMessage(rawData);
+          console.log("==================");
+          console.log(dcMsg);
+        } catch (err) {
+          console.log("Error in decoding.");
         }
-        */
+        try {
+          processMessage(sock, dcMsg);
+        } catch (err) {
+          console.log("Error in processing decoded data.");
+        }
         //sock.pipe(sock);
     });
 
@@ -91,7 +85,11 @@ function processMessage(sock, dcMsg) {
           break;
       case 0x4001:
           console.log('GPS data');
-          dbutil.updateDB(dcMsg.payload.gps_data);
+          if(dcMsg.payload.gps_data.gps_available) {
+            dbutil.updateDB(dcMsg.payload.gps_data);
+          } else {
+            console.log("GPS not available.");
+          }
       case 0x4004:
           console.log("Data Flow");
   }
