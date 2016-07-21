@@ -521,7 +521,8 @@ function bgmap_current_all($display, $filter){
   //Get today's date.
   $today = getdate();
   //Calculate the date one day ago.
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  $start_time = 0;
   //Get all posts from one week ago to the present.
   $end_time = time();
 
@@ -601,7 +602,8 @@ function bgmap_current_single($display, $filter){
   //Get today's date.
   $today = getdate();
   //Calculate the date one day ago.
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  $start_time = 0;
   //Get all posts from one week ago to the present.
   $end_time = time();
 
