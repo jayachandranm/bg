@@ -14,15 +14,16 @@ var dateTime = new Parser()
     .uint8('second');
 
 var statData = new Parser()
+    .endianess('little')
     //Parser.start()
     // Unix time
     .uint32('acc_on_time')
     // Unix time
     .uint32('utc_time')
-    .uint32('mileage_total')
-    .uint32('mileage_current')
-    .uint32('fuel_total')
-    .uint16('fuel_current')
+    .uint32le('mileage_total')
+    .uint32le('mileage_current')
+    .uint32le('fuel_total')
+    .uint16le('fuel_current')
     .uint32('veh_state')
 /*    .nest('vstate_flags', {
         type: new Parser()
@@ -35,9 +36,7 @@ var statData = new Parser()
         length: 8
     });
 
-var gpsData = new Parser()
-    //Parser.start()
-    .uint8('gps_count')
+var gpsItem = new Parser()
     .nest('date_time', {
         // 3 byes for date, 3 bytes for time.
         type: dateTime
@@ -61,9 +60,10 @@ var LoginPackage = new Parser()
         // 34 bytes
         type: statData
     })
-    .nest('gps_data', {
+    .uint8('gps_active')
+    .nest('gps_item', {
         // 20 bytes
-        type: gpsData
+        type: gpsItem
     })
     .string('sw_version', {
         encoding: 'utf8',
@@ -78,15 +78,33 @@ var LoginPackage = new Parser()
 var HeartBeatPackage = new Parser();
 
 var GPSPackage = new Parser()
-    .uint8('realtime')
+    // history(1) or realtime(0).
+    .uint8('history')
     .nest('stat_data', {
         // 34 bytes
+        // UTC_Time is the sample time of the last GPS data.
         type: statData
     })
-    .nest('gps_data', {
+    // The first byte of GPS_DATA is interpreted differently
+    // in LoginPackage and GPSPackage.
+    .uint8('gps_count')
+    .array('gps_items', {
+      type: gpsItem,
+      length: 'gps_count'
+    })
+    // RPM_DATA
+    // if val = 0xffff, invalid RPM.
+    .uint8('rpm_count')
+    .array('rpm_items', {
+      type: 'uint16le',
+      length: 'rpm_count'
+    });
+    /*
+    .nest('gps_item', {
         // 20 bytes
         type: gpsData
     });
+    */
 
 var DataFlow = new Parser();
 
