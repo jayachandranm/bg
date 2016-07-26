@@ -24,6 +24,7 @@ var statData = new Parser()
     .uint32le('mileage_current')
     .uint32le('fuel_total')
     .uint16le('fuel_current')
+    // TODO: Decode VEH_STATE details.
     .uint32('veh_state')
 /*    .nest('vstate_flags', {
         type: new Parser()
@@ -37,6 +38,7 @@ var statData = new Parser()
     });
 
 var gpsItem = new Parser()
+    .endianess('little')
     .nest('date_time', {
         // 3 byes for date, 3 bytes for time.
         type: dateTime
@@ -53,6 +55,32 @@ var gpsItem = new Parser()
         .bit4('num_satellites')
     });
 
+// Acceleration Data, GSENSOR_DATA.
+var gData = new Parser()
+    .endianess('little')
+    .int16('x')
+    .int16('y')
+    .int16('z');
+
+var alarmItems = new Parser()
+    .endianess('little')
+    .uint8('new_alarm_flag')
+    .uint8('alarm_type')
+    // TODO: Alarm description is to be further decoded.
+    .uint16('alarm_desc')
+    .uint16('alarm_threshold');
+
+var TLVItems = new Parser()
+    .endianess('little')
+    .uint16('tag')
+    .uint16('length')
+    .array('values', {
+      type: 'int8',
+      length: 'length'
+    });
+
+
+//-----------------------------------------
 
 var LoginPackage = new Parser()
     //Parser.start()
@@ -73,6 +101,17 @@ var LoginPackage = new Parser()
         encoding: 'utf8',
         length: 20
     });
+
+var LogoutPackage = new Parser()
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint8('gps_active')
+    .nest('gps_item', {
+        // 20 bytes
+        type: gpsItem
+    })
 
 // Nothing to decode. Just need to reply.
 var HeartBeatPackage = new Parser();
@@ -99,21 +138,240 @@ var GPSPackage = new Parser()
       type: 'uint16le',
       length: 'rpm_count'
     });
-    /*
+
+var PIDPackage = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint16('pid_sample_rate')
+    .uint8('pid_type_count')
+    .array('pid_type', {
+      type: 'uint16le',
+      length: 'pid_type_count'
+    })
+    .uint8('pid_group_count')
+    .uint8('pid_group_size')
+    // TODO: Properly decode PID Group items.
+    .array('pid_data', {
+      type: 'uint8',
+      length: function() { return (pid_group_count*pid_group_size); }
+    });
+
+var GSensorPackage = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint16('g_sample_rate')
+    .uint8('g_group_count')
+    .array('g_data', {
+      // Each gData item is 6 bytes.
+      type: gData,
+      length: 'g_group_count'
+    });
+
+var PIDTypesPackage = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint8('pid_type_count')
+    .array('pid_type', {
+      type: 'uint16le',
+      length: 'pid_type_count'
+    });
+
+var SnapshotFrame = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint8('frozen_flag')
+    .uint8('pid_type_count')
+    .array('pid_type', {
+      type: 'uint16le',
+      length: 'pid_type_count'
+    })
+    // TODO: Decode PID data properly.
+    .array('pid_data', {
+      type: 'uint8',
+      length: 'pid_type_count'
+    });
+
+var DTCsCar = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint8('dtc_flag')
+    .uint8('dtc_count')
+    .array('dtc_vals', {
+      type: 'uint16le',
+      length: 'dtc_count'
+    });
+
+
+var DTCsCommercial = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint8('dtc_flag')
+    .uint8('dtc_count')
+    .array('dtc_vals', {
+      // TODO: To be further decoded.
+      type: 'uint32le',
+      length: 'dtc_count'
+    });
+
+var AlarmsPackage = new Parser()
+    .endianess('little')
+    .uint32('alarm_seq_num')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    // TODO: GPS_DATA not described properly.
+    .uint8('gps_active')
     .nest('gps_item', {
         // 20 bytes
-        type: gpsData
+        type: gpsItem
+    })
+    .uint8('alarm_count')
+    .array('alarms', {
+      // Each item takes 6 bytes..
+      type: alarmItems,
+      length: 'alarm_count'
     });
-    */
 
-var DataFlow = new Parser();
+var CellId = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint16('local_area_code')
+    .uint16('cell_id');
 
-var PIDPackage = new Parser();
+var GPSReportInSleep = new Parser()
+    .endianess('little')
+    .uint32('utc_time')
+    .nest('gps_item', {
+        // 19 bytes
+        type: gpsItem
+    });
 
-var AlarmsPackage = new Parser();
+var DriverCardId = new Parser()
+    .endianess('little')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .array('card_id', {
+      type: 'uint8',
+      // TODO: Variable length. May have to search till crc/tail data.
+      length: 1
+      //length: function() { return this.dataLength - 4; }
+      //readUntil: function(item, buffer) { return item === oxodoa; }
+    });
 
-var GSensePackage = new Parser();
+var AGPSRequest = new Parser()
+    .endianess('little')
+    .nest('gps_item', {
+        // 19 bytes
+        type: gpsItem
+    });
 
+var SettingResponse = new Parser()
+    .endianess('little')
+    .uint16('cmd_seq_num')
+    .uint8('success_tag_count')
+    .array('success_tags', {
+      type: 'uint16le',
+      length: 'success_tag_count'
+    });
+
+var QueryResponse = new Parser()
+    .endianess('little')
+    .uint16('cmd_seq_num')
+    .uint8('resp_count')
+    .uint8('resp_index')
+    .uint8('fail_count')
+    .array('fail_tags', {
+      type: 'uint16le',
+      length: 'fail_count'
+    })
+    .uint8('success_count')
+    .array('success_tlvs', {
+      type: TLVItems,
+      length: 'success_count'
+    });
+
+var CurrentLocation = new Parser()
+    .endianess('little')
+    .uint16('cmd_seq_num')
+    .nest('stat_data', {
+        // 34 bytes
+        type: statData
+    })
+    .uint8('gps_active')
+    .nest('gps_item', {
+        // 20 bytes
+        type: gpsItem
+    });
+
+var ClearDTCResp = new Parser()
+    .endianess('little')
+    .uint16('cmd_seq_num')
+    .uint8('flag');
+
+var RestoreFactorySetResp = new Parser()
+    .endianess('little')
+    .uint16('cmd_seq_num')
+    .uint8('flag');
+
+var TextInfo = new Parser()
+    .endianess('little')
+    .uint16('cmd_seq_num')
+    // TODO: Variable length. Will it be automatically handled?
+    .string('info', {
+      encoding: 'ascii',
+      zeroTerminated: 'true'
+    });
+
+var TextInfoResp = new Parser()
+    .endianess('little')
+    .uint16('cmd_seq_num')
+    .uint8('flag');
+
+var UpdateConfirm = new Parser()
+    .endianess('little')
+    .uint32('update_id')
+    .string('firmware_version', {
+      encoding: 'ascii',
+      length: 16
+    })
+    .uint8('update_confirmation');
+
+var UpdateMessageConfirm = new Parser()
+    .endianess('little')
+    .uint32('update_id')
+    .uint8('receive_mark')
+    .uint16('message_index');
+
+var AGPSConfirm = new Parser()
+    .endianess('little')
+    .uint8('agps_index')
+    .uint8('agps_mark');
+
+//-------------------------------------------
 
 var Message = new Parser()
     //Parser.start()
@@ -130,12 +388,30 @@ var Message = new Parser()
         tag: 'type',
         choices: {
             0x1001: LoginPackage,
+            0x1002: LogoutPackage,
             0x1003: HeartBeatPackage,
             0x4001: GPSPackage,
             0x4002: PIDPackage,
+            0x4003: GSensorPackage,
+            0x4004: PIDTypesPackage,
+            0x4005: SnapshotFrame,
+            0x4006: DTCsCar,
+            0x400B: DTCsCommercial,
             0x4007: AlarmsPackage,
-            0x4003: GSensePackage,
-            0x4004: DataFlow
+            0x4008: CellId,
+            0x4009: GPSReportInSleep,
+            0x400C: DriverCardId,
+            0x5101: AGPSRequest,
+            0xA001: SettingResponse,
+            0xA002: QueryResponse,
+            0xB001: CurrentLocation,
+            0xB002: ClearDTCResp,
+            0xB003: RestoreFactorySetResp,
+            0x3006: TextInfo,
+            0xB006: TextInfoResp,
+            0xD001: UpdateConfirm,
+            0xD002: UpdateMessageConfirm,
+            0xD102: AGPSConfirm
         },
         // TODO: handle this.
         defaultChoice: new Parser()
