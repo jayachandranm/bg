@@ -156,7 +156,9 @@ var PIDPackage = new Parser()
     // TODO: Properly decode PID Group items.
     .array('pid_data', {
       type: 'uint8',
-      length: function() { return (pid_group_count*pid_group_size); }
+      // TODO: Fix this.
+      length: 1
+      //length: function() { return (pid_group_count*pid_group_size); }
     });
 
 var GSensorPackage = new Parser()
@@ -185,6 +187,7 @@ var PIDTypesPackage = new Parser()
       length: 'pid_type_count'
     });
 
+// TODO: Decoding in not complete, the tail does not match.
 var SnapshotFrame = new Parser()
     .endianess('little')
     .nest('stat_data', {
@@ -391,10 +394,10 @@ var Message = new Parser()
             0x1002: LogoutPackage,
             0x1003: HeartBeatPackage,
             0x4001: GPSPackage,
-            0x4002: PIDPackage,
+            0x4002: PIDPackage, // TODO:
             0x4003: GSensorPackage,
             0x4004: PIDTypesPackage,
-            0x4005: SnapshotFrame,
+            0x4005: SnapshotFrame, // TODO:
             0x4006: DTCsCar,
             0x400B: DTCsCommercial,
             0x4007: AlarmsPackage,
