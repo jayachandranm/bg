@@ -16,9 +16,9 @@
                 $("#show_report").height(400);
 
                 data_url = basepath + '?q=bgmap/get/' + 'car';
-                var lng = 1.421, lat = 103.829;
+                var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
-                var map = L.map('show_report').setView([lng, lat], 13);
+                var map = L.map('show_report').setView([lat, lng], 15);
 
                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -67,6 +67,7 @@
                                 var nid = jsonData[i].nid;
                                 var vnum = jsonData[i].vnum;
                                 var mymarker;
+                                var currLtLng = L.latLng(newlt, newlg);
                                 //console.log(newlg, newlt, nid, vnum);
                                 if (nid == -1) {
                                     // delete the entry corresponding to this vnum, that page does not exist.
@@ -74,13 +75,19 @@
                                 }
                                 if (!(vnum in markerList)) {
                                     console.log('marker not found in the list.');
-                                    mymarker = L.marker([newlg, newlt], {icon: carIcon_r}).addTo(map);
+                                    //mymarker = L.marker([newlg, newlt], {icon: carIcon_r}).addTo(map);
+                                    mymarker = L.marker(currLtLng, {icon: carIcon_r}).addTo(map);
                                     markerList[vnum] = mymarker;
                                 } else {
-                                    console.log('marker found, update.');
+                                    console.log('marker found, update, lt first.', newlt, newlg);
                                     mymarker = markerList[vnum];
                                     //markers[i].setLatLng([newlg, newlt]);
-                                    mymarker.setLatLng([newlg, newlt]);
+                                    //mymarker.setLatLng([newlg, newlt]);
+                                    mymarker.setLatLng(currLtLng);
+                                    //var bounds = L.latLngBounds(southWest, northEast);
+                                    //map.fitBounds(bounds);
+                                    //map.fitBounds([[1,1],[2,2],[3,3]]);
+                                    map.panTo(currLtLng);
                                 }
                                 var nodeurl = basepath + '?q=node/' + nid;
                                 var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
@@ -89,7 +96,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestAllData, 5000);
+                            setTimeout(requestAllData, 1000);
                         },
                         //error: function(xhr, status, error) {
                         error: function () {
