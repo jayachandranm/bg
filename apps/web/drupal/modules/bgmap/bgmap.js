@@ -120,16 +120,16 @@
         // Place a div name correcly.
         $("#block-bgmap-trace").append("<input class='datepicker' type='text'/>");
         $("#block-bgmap-trace").append("<input class='timepicker' type='text'/>");
-        $("#block-bgmap-trace").append("<div id='show_report2'>Map will display here.....</div>");
+        $("#block-bgmap-trace").append("<div id='show_map2'>Map will display here.....</div>");
         //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
         $("#block-bgmap-trace").height(600);
         $("#show_report2").height(400);
 
         data_url = basepath + '?q=bgmap/getgeoj/' + sid;
-        var lng = 1.421, lat = 103.829;
+        var lat = 1.421, lng = 103.829;
         //center: [51.505, -0.09], zoom: 13
         //var map = L.map('show_report2').setView([lng, lat], 13);
-        var map2 = L.map('show_report2').setView([lng, lat], 13);
+        var map2 = L.map('show_map2').setView([lat, lng], 13);
         //$('input[name="date_range_picker2"]').daterangepicker();
         //$('input[name="daterange"]').daterangepicker();
         //$('#config-demo').daterangepicker();
