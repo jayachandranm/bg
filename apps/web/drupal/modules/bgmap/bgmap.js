@@ -96,7 +96,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestAllData, 1000);
+                            setTimeout(requestAllData, 5000);
                         },
                         //error: function(xhr, status, error) {
                         error: function () {
@@ -109,6 +109,13 @@
             } // if settings, bgmap
             // If trace array is set, happens inside trace block.
             if (Drupal.settings.trace) {
+                // Globals, will get updated through datetime picker.
+                var selectedStartDateVal = 0;
+                var selectedStartTimeVal = 0;
+                //
+                var selectedEndDateVal = 0;
+                var selectedEndTimeVal = 0;
+                //
                 var latlngs = new Array();
                 var sid = Drupal.settings.trace.sid;
                 //var data = Drupal.settings.bgchart.data.data;
@@ -135,16 +142,22 @@
                 //$('input[name="daterange"]').daterangepicker();
                 //$('#config-demo').daterangepicker();
                 //$('#dtp1').datetimepicker();
-                var $input_ds = $('.datepicker_s').pickadate();
-                //var picker = $input.pickadate('picker');
-                var picker = $input_ds.pickadate('picker');
                 var date = new Date();
                 // Current time. Will be overwritten by datepicker.
                 // Set by start time be default to start of previous day.
-                var selectedStartTime = date.setHours(0).setSeconds(0);
+                date.setHours(0);
+                date.setMinutes(0);
+                date.setSeconds(0);
+                var startTimeOfDay = date.getTime();
+                console.log('Initial start time: ', startTimeOfDay);
+/*
+                var $input_ds = $('.datepicker_s').pickadate();
+                //var picker = $input.pickadate('picker');
+                var picker = $input_ds.pickadate('picker');
                 //picker.set('select', [date.getFullYear(), date.getMonth() + 1, date.getDate()]);
-                /*
-                picker.set('select', [date.getFullYear(), date.getMonth(), date.getDate() - 1]);
+                picker.set('select', [date.getFullYear(), date.getMonth(), date.getDate() -1]);
+                var prevDayStartTime = startTimeOfDay - (60*60*24*1000) 
+                console.log('Prev day start time: ', prevDayStartTime);
                 picker.on({
                     open: function () {
                         console.log('Opened up!')
@@ -152,10 +165,11 @@
                     set: function (thingSet) {
                         console.log('Set stuff:', thingSet.select)
                         // Override the default day.
-                        unixtimeSelected = thingSet.select;
+                        selectedStartDateVal = thingSet.select;
                     }
-                })
-                */
+                });
+*/
+
                 var $input_ds = $('.datepicker_s').pickadate({
                   onStart: function() {
                     console.log('Hello there :)');
@@ -175,23 +189,25 @@
                   },
                   onSet: function(context) {
                     console.log('Just set stuff:', context.select);
-                    selectedStartTime = context.select;
+                    selectedStartDateVal = context.select;
                   }
                 });
+
                 var $input_ts = $('.timepicker_s').pickatime({
                     onStart: function () {
-                        console.log('Started time picker')
-                        this.set('select', [0, 0])
+                        console.log('Started time picker');
+                        this.set('select', 0);
                     },
                     onOpen: function () {
-                        console.log('Opened up')
+                        console.log('Opened up');
                     },
                     onSet: function (context) {
-                        console.log('Just set stuff:', context)
-                        selectedStartTime += context.select;
+                        console.log('Retrieved secs: ', context);
+                        selectedStartTimeVal = context.select * 1000; 
+                        console.log('Calculated Total Time: ', selectedStartDateVal + selectedStartTimeVal);
                     }
                 });
-                console.log('Selected start time=', selectedStartTime);
+                console.log('Selected start time=', selectedStartDateVal + selectedStartTimeVal);
                 //var picker2 = $input.pickatime('picker2');
                 /*
                  picker2.on({
