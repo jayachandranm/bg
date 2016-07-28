@@ -117,14 +117,14 @@
                 //
                 var title2 = 'GPS Trace on Map';
                 // Place a div name correcly.
-                $("#block-bgmap-trace").append("From: <input class='datepicker' type='text'/>");
-                $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker' type='text'/>");
-                $("#block-bgmap-trace").append("To: <input class='datepicker2' type='text'/>");
-                $("#block-bgmap-trace").append("<input class='timepicker2' type='text'/>");
-                $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_report2'>Map will display here.....</div>");
+                $("#block-bgmap-trace").append("From: <input class='datepicker_s' type='text'/>");
+                $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_s' type='text'/>");
+                $("#block-bgmap-trace").append("To: <input class='datepicker_e' type='text'/>");
+                $("#block-bgmap-trace").append("<input class='timepicker_e' type='text'/>");
+                $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
                 //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
                 $("#block-bgmap-trace").height(600);
-                $("#show_report2").height(400);
+                $("#show_map2").height(400);
 
                 data_url = basepath + '?q=bgmap/getgeoj/' + sid;
                 var lat = 1.421, lng = 103.829;
@@ -135,11 +135,15 @@
                 //$('input[name="daterange"]').daterangepicker();
                 //$('#config-demo').daterangepicker();
                 //$('#dtp1').datetimepicker();
-                var $input = $('.datepicker').pickadate();
+                var $input_ds = $('.datepicker_s').pickadate();
                 //var picker = $input.pickadate('picker');
-                var picker = $input.pickadate('picker');
+                var picker = $input_ds.pickadate('picker');
                 var date = new Date();
+                // Current time. Will be overwritten by datepicker.
+                // Set by start time be default to start of previous day.
+                var selectedStartTime = date.setHours(0).setSeconds(0);
                 //picker.set('select', [date.getFullYear(), date.getMonth() + 1, date.getDate()]);
+                /*
                 picker.set('select', [date.getFullYear(), date.getMonth(), date.getDate() - 1]);
                 picker.on({
                     open: function () {
@@ -147,20 +151,47 @@
                     },
                     set: function (thingSet) {
                         console.log('Set stuff:', thingSet.select)
+                        // Override the default day.
+                        unixtimeSelected = thingSet.select;
                     }
                 })
-                var $input2 = $('.timepicker').pickatime({
+                */
+                var $input_ds = $('.datepicker_s').pickadate({
+                  onStart: function() {
+                    console.log('Hello there :)');
+                    this.set('select', [date.getFullYear(), date.getMonth(), date.getDate() - 1]);
+                  },
+                  onRender: function() {
+                    console.log('Whoa.. rendered anew');
+                  },
+                  onOpen: function() {
+                    console.log('Opened up');
+                  },
+                  onClose: function() {
+                    console.log('Closed now');
+                  },
+                  onStop: function() {
+                    console.log('See ya.');
+                  },
+                  onSet: function(context) {
+                    console.log('Just set stuff:', context.select);
+                    selectedStartTime = context.select;
+                  }
+                });
+                var $input_ts = $('.timepicker_s').pickatime({
                     onStart: function () {
                         console.log('Started time picker')
-                        this.set('select', [1, 0])
+                        this.set('select', [0, 0])
                     },
                     onOpen: function () {
                         console.log('Opened up')
                     },
                     onSet: function (context) {
                         console.log('Just set stuff:', context)
+                        selectedStartTime += context.select;
                     }
                 });
+                console.log('Selected start time=', selectedStartTime);
                 //var picker2 = $input.pickatime('picker2');
                 /*
                  picker2.on({
