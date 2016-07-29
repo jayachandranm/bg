@@ -76,7 +76,7 @@
                                 if (!(vnum in markerList)) {
                                     console.log('marker not found in the list.');
                                     //mymarker = L.marker([newlg, newlt], {icon: carIcon_r}).addTo(map);
-                                    mymarker = L.marker(currLtLng, {icon: carIcon_r}).addTo(map);
+                                    mymarker = L.marker(currLtLng, { icon: carIcon_r }).addTo(map);
                                     markerList[vnum] = mymarker;
                                 } else {
                                     console.log('marker found, update, lt first.', newlt, newlg);
@@ -128,11 +128,15 @@
                 $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_s' type='text'/>");
                 $("#block-bgmap-trace").append("To: <input class='datepicker_e' type='text'/>");
                 $("#block-bgmap-trace").append("<input class='timepicker_e' type='text'/>");
+                $("#block-bgmap-trace").append("<button id="rangeSubmit" class="btn btn-default" type="submit">Button</button>");
                 $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
                 //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
                 $("#block-bgmap-trace").height(600);
                 $("#show_map2").height(400);
 
+$('#rangeSubmit').on('click', function (e) {
+  console.log("Button Clicked.");
+})
                 data_url = basepath + '?q=bgmap/getgeoj/' + sid;
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
@@ -150,47 +154,47 @@
                 date.setSeconds(0);
                 var startTimeOfDay = date.getTime();
                 console.log('Initial start time: ', startTimeOfDay);
-/*
-                var $input_ds = $('.datepicker_s').pickadate();
-                //var picker = $input.pickadate('picker');
-                var picker = $input_ds.pickadate('picker');
-                //picker.set('select', [date.getFullYear(), date.getMonth() + 1, date.getDate()]);
-                picker.set('select', [date.getFullYear(), date.getMonth(), date.getDate() -1]);
-                var prevDayStartTime = startTimeOfDay - (60*60*24*1000) 
-                console.log('Prev day start time: ', prevDayStartTime);
-                picker.on({
-                    open: function () {
-                        console.log('Opened up!')
-                    },
-                    set: function (thingSet) {
-                        console.log('Set stuff:', thingSet.select)
-                        // Override the default day.
-                        selectedStartDateVal = thingSet.select;
-                    }
-                });
-*/
+                /*
+                                var $input_ds = $('.datepicker_s').pickadate();
+                                //var picker = $input.pickadate('picker');
+                                var picker = $input_ds.pickadate('picker');
+                                //picker.set('select', [date.getFullYear(), date.getMonth() + 1, date.getDate()]);
+                                picker.set('select', [date.getFullYear(), date.getMonth(), date.getDate() -1]);
+                                var prevDayStartTime = startTimeOfDay - (60*60*24*1000) 
+                                console.log('Prev day start time: ', prevDayStartTime);
+                                picker.on({
+                                    open: function () {
+                                        console.log('Opened up!')
+                                    },
+                                    set: function (thingSet) {
+                                        console.log('Set stuff:', thingSet.select)
+                                        // Override the default day.
+                                        selectedStartDateVal = thingSet.select;
+                                    }
+                                });
+                */
 
                 var $input_ds = $('.datepicker_s').pickadate({
-                  onStart: function() {
-                    console.log('Hello there :)');
-                    this.set('select', [date.getFullYear(), date.getMonth(), date.getDate() - 1]);
-                  },
-                  onRender: function() {
-                    console.log('Whoa.. rendered anew');
-                  },
-                  onOpen: function() {
-                    console.log('Opened up');
-                  },
-                  onClose: function() {
-                    console.log('Closed now');
-                  },
-                  onStop: function() {
-                    console.log('See ya.');
-                  },
-                  onSet: function(context) {
-                    console.log('Just set stuff:', context.select);
-                    selectedStartDateVal = context.select;
-                  }
+                    onStart: function () {
+                        console.log('Hello there :)');
+                        this.set('select', [date.getFullYear(), date.getMonth(), date.getDate() - 1]);
+                    },
+                    onRender: function () {
+                        console.log('Whoa.. rendered anew');
+                    },
+                    onOpen: function () {
+                        console.log('Opened up');
+                    },
+                    onClose: function () {
+                        console.log('Closed now');
+                    },
+                    onStop: function () {
+                        console.log('See ya.');
+                    },
+                    onSet: function (context) {
+                        console.log('Just set stuff:', context.select);
+                        selectedStartDateVal = context.select;
+                    }
                 });
 
                 var $input_ts = $('.timepicker_s').pickatime({
@@ -203,10 +207,50 @@
                     },
                     onSet: function (context) {
                         console.log('Retrieved secs: ', context);
-                        selectedStartTimeVal = context.select * 1000; 
+                        selectedStartTimeVal = context.select * 1000;
                         console.log('Calculated Total Time: ', selectedStartDateVal + selectedStartTimeVal);
                     }
                 });
+
+                var $input_de = $('.datepicker_e').pickadate({
+                    onStart: function () {
+                        console.log('Hello there :)');
+                        // Set end date as 00:00am today.
+                        this.set('select', [date.getFullYear(), date.getMonth(), date.getDate()]);
+                    },
+                    onRender: function () {
+                        console.log('Whoa.. rendered anew');
+                    },
+                    onOpen: function () {
+                        console.log('Opened up');
+                    },
+                    onClose: function () {
+                        console.log('Closed now');
+                    },
+                    onStop: function () {
+                        console.log('See ya.');
+                    },
+                    onSet: function (context) {
+                        console.log('Just set stuff:', context.select);
+                        selectedEndDateVal = context.select;
+                    }
+                });
+
+                var $input_te = $('.timepicker_s').pickatime({
+                    onStart: function () {
+                        console.log('Started time picker');
+                        this.set('select', 0);
+                    },
+                    onOpen: function () {
+                        console.log('Opened up');
+                    },
+                    onSet: function (context) {
+                        console.log('Retrieved secs: ', context);
+                        selectedEndTimeVal = context.select * 1000;
+                        console.log('Calculated Total Time: ', selectedEndDateVal + selectedEndTimeVal);
+                    }
+                });
+
                 console.log('Selected start time=', selectedStartDateVal + selectedStartTimeVal);
                 //var picker2 = $input.pickatime('picker2');
                 /*
@@ -246,7 +290,7 @@
                             //var test = JSON.stringify(latlngs);
                             var test2 = [[103.83, 1.46], [103.82, 1.45], [103.81, 1.43]];
                             //console.log(test);
-                            L.polyline(latlngs, {color: 'blue'}).addTo(map2);
+                            L.polyline(latlngs, { color: 'blue' }).addTo(map2);
                             //map2.fitBounds(latlngs);
                             //var polygon = L.polygon().addTo(map);
                         },
