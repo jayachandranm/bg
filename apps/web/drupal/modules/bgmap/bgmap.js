@@ -95,7 +95,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestAllData, 5000);
+                            setTimeout(requestAllData, 50000);
                         },
                         //error: function(xhr, status, error) {
                         error: function () {
@@ -115,6 +115,8 @@
                 var selectedEndDateVal = 0;
                 var selectedEndTimeVal = 0;
                 //
+                // TODO: check this.
+                var polylines = new Array();
                 var latlngs = new Array();
                 var sid = Drupal.settings.trace.sid;
                 //var data = Drupal.settings.bgchart.data.data;
@@ -133,9 +135,6 @@
                 $("#block-bgmap-trace").height(600);
                 $("#show_map2").height(400);
 
-$('#rangeSubmit').on('click', function (e) {
-  console.log("Button Clicked.");
-})
                 data_url = basepath + '?q=bgmap/getgeoj/' + sid;
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
@@ -152,6 +151,9 @@ $('#rangeSubmit').on('click', function (e) {
                 date.setMinutes(0);
                 date.setSeconds(0);
                 var startTimeOfDay = date.getTime();
+                var endTime =  startTimeOfDay;
+                // From 2 days back.
+                var startTime = endTime - (3600*24*2*1000);
                 console.log('Initial start time: ', startTimeOfDay);
                 /*
                                 var $input_ds = $('.datepicker_s').pickadate();
@@ -205,8 +207,8 @@ $('#rangeSubmit').on('click', function (e) {
                         console.log('Opened up');
                     },
                     onSet: function (context) {
-                        console.log('Retrieved secs: ', context);
-                        selectedStartTimeVal = context.select * 1000;
+                        console.log('Retrieved minutes: ', context);
+                        selectedStartTimeVal = context.select * 60 * 1000;
                         console.log('Calculated Total Time: ', selectedStartDateVal + selectedStartTimeVal);
                     }
                 });
@@ -244,12 +246,21 @@ $('#rangeSubmit').on('click', function (e) {
                         console.log('Opened up');
                     },
                     onSet: function (context) {
-                        console.log('Retrieved secs: ', context);
-                        selectedEndTimeVal = context.select * 1000;
+                        console.log('Retrieved minutes: ', context);
+                        selectedEndTimeVal = context.select * 60 * 1000;
                         console.log('Calculated Total Time: ', selectedEndDateVal + selectedEndTimeVal);
                     }
                 });
 
+$('#rangeSubmit').on('click', function (e) {
+  console.log("Button Clicked.");
+  //Override the range values.
+  // TODO: take care of partial selections.
+  startTime = selectedStartDateVal + selectedStartTimeVal;
+  endTime = selectedEndDateVal + selectedEndTimeVal;
+  console.log(startTime, endTime, polylines);
+  requestTraceData();
+})
                 console.log('Selected start time=', selectedStartDateVal + selectedStartTimeVal);
                 //var picker2 = $input.pickatime('picker2');
                 /*
@@ -274,10 +285,13 @@ $('#rangeSubmit').on('click', function (e) {
                  * Real time updates.
                  */
                 var requestTraceData = (function () {
-                    console.log('Trace: Ajax call.');
-                    var endTime =  1472036090000; //startTimeOfDay;
-                    startTimeOfDay = 1472036090000;
-                    var startTime = endTime - (3600*24*2*1000);
+                    console.log('Trace: Ajax call: ', startTime, endTime);
+                    if(typeof polylines != "undefined") {
+                    console.log("CLEAR TRACE.");
+                    map2.removeLayer(polylines);
+                    }
+                    // Clear the array before getting new values.
+                    latlngs.length = 0; 
                     data_url = basepath + '?q=bgmap/getgeoj/' + sid + '/' + startTime + '/' + endTime;
                     $.ajax({
                         url: data_url,
@@ -292,7 +306,8 @@ $('#rangeSubmit').on('click', function (e) {
                             //var test = JSON.stringify(latlngs);
                             //var test2 = [[1.46, 103.83], [1.45, 103.82], [1.43, 103.81]];
                             //console.log(test);
-                            L.polyline(latlngs, { color: 'blue' }).addTo(map2);
+                            polylines = L.polyline(latlngs, { color: 'blue' });
+                            polylines.addTo(map2);
                             //map2.fitBounds(latlngs);
                             //var polygon = L.polygon().addTo(map);
                         },
