@@ -374,7 +374,8 @@ else {
         }
         else {
           // Pass data through theme function.
-          $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          $block['content']['#markup'] = theme('table', array('items' => $items2));
           //$block['content'] = theme('item_list', array('items' => $items2));
         }
       }
@@ -405,7 +406,8 @@ else {
           }
           else {
             // Pass data through theme function.
-            $block['content']['#markup'] = theme('item_list', array('items' => $items2));
+            //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+            $block['content']['#markup'] = theme('table', array('items' => $items2));
             //$block['content'] = theme('item_list', array('items' => $items2));
           }
         } // access.
@@ -495,9 +497,11 @@ function bgmap_get_json($filter) {
 * @return
 *   JSON data.
 */
-function bgmap_get_geojson($filter) {
+function bgmap_get_geojson($filter, $starttime, $endtime) {
+  //dpm($filter);
+  //dpm($starttime);
   $items2 = array();
-  $items2 = bgmap_current_single('block', $filter);
+  $items2 = bgmap_current_single('block', $filter, $starttime, $endtime);
   return drupal_json_output($items2);
 }
 
@@ -519,9 +523,12 @@ function bgmap_current_all($display, $filter){
   //Get today's date.
   $today = getdate();
   //Calculate the date one day ago.
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  $start_time = 0;
   //Get all posts from one week ago to the present.
-  $end_time = time();
+  // Time in millis.
+  $end_time = time() * 1000 * 10;
+  $end_time = 1471771166000;
 
   // From admin page.
   //print_r($start_time);
@@ -542,13 +549,21 @@ function bgmap_current_all($display, $filter){
   if ($display == 'block'){
     //$start_time = 1434254042000;
     //$end_time = 1434254311000;
+/*
     $query = db_select('bgmap_obd_gps', 'a')
     ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
     ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
     ->orderBy('datetime', 'DESC')
     ->groupBy('sid');
+*/
+    // TODO: temp. Takes just one latest value, irrespective of number of veh.
+    $query = db_select('bgmap_obd_gps', 'a')
+    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    //->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('timestamp', 'DESC');
     // TODO: Can be conditional, different for block and page.
     //$query->range(0, $max_num);
+    $query->range(0, 1);
   } //Now proceeds to execute().
   //drupal_set_message((string) $query);
   $result = $query->execute();
@@ -591,7 +606,9 @@ function bgmap_current_all($display, $filter){
 */
 }
 
-function bgmap_current_single($display, $filter){
+function bgmap_current_single($display, $filter, $starttime, $endtime){
+  //dpm($filter);
+  //print_r($filter);
   /*
   $node = menu_get_object();
   $sensor_id=$node->field_station_id['und'][0]['value'];
@@ -599,9 +616,16 @@ function bgmap_current_single($display, $filter){
   //Get today's date.
   $today = getdate();
   //Calculate the date one day ago.
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  $start_time = 0;
   //Get all posts from one week ago to the present.
-  $end_time = time();
+  // Time in millis.
+  $end_time = time() * 1000 *10; 
+
+  $start_time = $starttime;
+  $end_time = $endtime;
+
+  dpm($start_time, $end_time);
 
   // From admin page.
   //print_r($start_time);
@@ -661,7 +685,7 @@ function bgmap_getdata_exdb($display, $filter){
   $sid = $filter;
   $today = getdate();
   $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
-  $end_time = time();
+  $end_time = time() * 1000;
 
   $max_num = variable_get('bgmap_max', 3);
 

@@ -15,7 +15,6 @@
                 $("#block-bgmap-bgmap").height(500);
                 $("#show_report").height(400);
 
-                data_url = basepath + '?q=bgmap/get/' + 'car';
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
                 var map = L.map('show_report').setView([lat, lng], 15);
@@ -62,8 +61,8 @@
                         success: function (jsonData) {
                             console.log('Received JSON for All Veh=', jsonData);
                             for (var i = 0; i < jsonData.length; i++) {
-                                var newlg = jsonData[i].lg;
                                 var newlt = jsonData[i].lt;
+                                var newlg = jsonData[i].lg;
                                 var nid = jsonData[i].nid;
                                 var vnum = jsonData[i].vnum;
                                 var mymarker;
@@ -127,8 +126,8 @@
                 $("#block-bgmap-trace").append("From: <input class='datepicker_s' type='text'/>");
                 $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_s' type='text'/>");
                 $("#block-bgmap-trace").append("To: <input class='datepicker_e' type='text'/>");
-                $("#block-bgmap-trace").append("<input class='timepicker_e' type='text'/>");
-                $("#block-bgmap-trace").append("<button id="rangeSubmit" class="btn btn-default" type="submit">Button</button>");
+                $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_e' type='text'/>");
+                $("#block-bgmap-trace").append("<button id='rangeSubmit' class='btn btn-default' type='submit'>Trace</button>");
                 $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
                 //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
                 $("#block-bgmap-trace").height(600);
@@ -236,7 +235,7 @@ $('#rangeSubmit').on('click', function (e) {
                     }
                 });
 
-                var $input_te = $('.timepicker_s').pickatime({
+                var $input_te = $('.timepicker_e').pickatime({
                     onStart: function () {
                         console.log('Started time picker');
                         this.set('select', 0);
@@ -276,19 +275,22 @@ $('#rangeSubmit').on('click', function (e) {
                  */
                 var requestTraceData = (function () {
                     console.log('Trace: Ajax call.');
-                    data_url = basepath + '?q=bgmap/getgeoj/' + sid;
+                    var endTime =  1472036090000; //startTimeOfDay;
+                    startTimeOfDay = 1472036090000;
+                    var startTime = endTime - (3600*24*2*1000);
+                    data_url = basepath + '?q=bgmap/getgeoj/' + sid + '/' + startTime + '/' + endTime;
                     $.ajax({
                         url: data_url,
                         success: function (jsonData) {
                             console.log('Received JSON for Trace=', jsonData);
                             for (var i = 0; i < jsonData.length; i++) {
-                                latlngs.push([parseFloat(jsonData[i].lg), parseFloat(jsonData[i].lt)]);
+                                latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
                                 //latlngs[i][0] = 111; //jsonData.latitude;
                                 //latlngs[i][1] = 222; //jsonData.longitude;
                             }
                             console.log(latlngs);
                             //var test = JSON.stringify(latlngs);
-                            var test2 = [[103.83, 1.46], [103.82, 1.45], [103.81, 1.43]];
+                            //var test2 = [[1.46, 103.83], [1.45, 103.82], [1.43, 103.81]];
                             //console.log(test);
                             L.polyline(latlngs, { color: 'blue' }).addTo(map2);
                             //map2.fitBounds(latlngs);
