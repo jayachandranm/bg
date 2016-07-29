@@ -151,9 +151,9 @@
                 date.setMinutes(0);
                 date.setSeconds(0);
                 var startTimeOfDay = date.getTime();
-                var endTime =  startTimeOfDay;
+                var endTime = startTimeOfDay;
                 // From 2 days back.
-                var startTime = endTime - (3600*24*2*1000);
+                var startTime = endTime - (3600 * 24 * 2 * 1000);
                 console.log('Initial start time: ', startTimeOfDay);
                 /*
                                 var $input_ds = $('.datepicker_s').pickadate();
@@ -252,15 +252,15 @@
                     }
                 });
 
-$('#rangeSubmit').on('click', function (e) {
-  console.log("Button Clicked.");
-  //Override the range values.
-  // TODO: take care of partial selections.
-  startTime = selectedStartDateVal + selectedStartTimeVal;
-  endTime = selectedEndDateVal + selectedEndTimeVal;
-  console.log(startTime, endTime, polylines);
-  requestTraceData();
-})
+                $('#rangeSubmit').on('click', function (e) {
+                    console.log("Button Clicked.");
+                    //Override the range values.
+                    // TODO: take care of partial selections.
+                    startTime = selectedStartDateVal + selectedStartTimeVal;
+                    endTime = selectedEndDateVal + selectedEndTimeVal;
+                    console.log(startTime, endTime, polylines);
+                    requestTraceData();
+                })
                 console.log('Selected start time=', selectedStartDateVal + selectedStartTimeVal);
                 //var picker2 = $input.pickatime('picker2');
                 /*
@@ -286,12 +286,12 @@ $('#rangeSubmit').on('click', function (e) {
                  */
                 var requestTraceData = (function () {
                     console.log('Trace: Ajax call: ', startTime, endTime);
-                    if(typeof polylines != "undefined") {
-                    console.log("CLEAR TRACE.");
-                    map2.removeLayer(polylines);
+                    if (typeof polylines != "undefined") {
+                        console.log("CLEAR TRACE.");
+                        map2.removeLayer(polylines);
                     }
                     // Clear the array before getting new values.
-                    latlngs.length = 0; 
+                    latlngs.length = 0;
                     data_url = basepath + '?q=bgmap/getgeoj/' + sid + '/' + startTime + '/' + endTime;
                     $.ajax({
                         url: data_url,
