@@ -76,6 +76,11 @@ function bgmap_init() {
   drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.date.css');
   drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.time.css');
 
+  //
+  drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
+  drupal_add_js('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2.1.24/daterangepicker.js', 'external');
+  drupal_add_js('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2.1.24/daterangepicker.css', 'external');
+
   //drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
   //drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
   if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
@@ -620,7 +625,7 @@ function bgmap_current_single($display, $filter, $starttime, $endtime){
   $start_time = 0;
   //Get all posts from one week ago to the present.
   // Time in millis.
-  $end_time = time() * 1000 *10; 
+  $end_time = time() * 1000 *10;
 
   $start_time = $starttime;
   $end_time = $endtime;

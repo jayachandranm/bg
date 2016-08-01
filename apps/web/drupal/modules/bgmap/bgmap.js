@@ -131,9 +131,12 @@
                 $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_e' type='text'/>");
                 $("#block-bgmap-trace").append("<button id='rangeSubmit' class='btn btn-default' type='submit'>Trace</button>");
                 $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
+                $("#block-bgmap-trace").append("<input type='text' name='daterange' value='01/01/2015 - 01/31/2015' />")
                 //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
                 $("#block-bgmap-trace").height(600);
                 $("#show_map2").height(400);
+                //
+                $('input[name="daterange"]').daterangepicker();
 
                 data_url = basepath + '?q=bgmap/getgeoj/' + sid;
                 var lat = 1.421, lng = 103.829;
@@ -161,7 +164,7 @@
                                 var picker = $input_ds.pickadate('picker');
                                 //picker.set('select', [date.getFullYear(), date.getMonth() + 1, date.getDate()]);
                                 picker.set('select', [date.getFullYear(), date.getMonth(), date.getDate() -1]);
-                                var prevDayStartTime = startTimeOfDay - (60*60*24*1000) 
+                                var prevDayStartTime = startTimeOfDay - (60*60*24*1000)
                                 console.log('Prev day start time: ', prevDayStartTime);
                                 picker.on({
                                     open: function () {
