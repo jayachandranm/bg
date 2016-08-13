@@ -78,8 +78,8 @@ function bgmap_init() {
 
   //
   drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
-  drupal_add_js('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2.1.24/daterangepicker.js', 'external');
-  drupal_add_js('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2.1.24/daterangepicker.css', 'external');
+  drupal_add_js('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js', 'external');
+  drupal_add_css('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css', 'external');
 
   //drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
   //drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
@@ -107,6 +107,7 @@ function bgmap_init() {
   }
 */
 
+/*
   if (($library = libraries_detect('daterangepicker')) && !empty($library['installed'])) {
     // The library is installed. Awesome!
     //print_r("Daterange lib loaded.");
@@ -116,7 +117,7 @@ function bgmap_init() {
     $error_message = $library['error message'];
     print_r("Error: Daterange lib not loaded.");
   }
-
+*/
 }
 
 /**

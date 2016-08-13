@@ -34,7 +34,9 @@
 
                     iconSize: [32, 37], // size of the icon
                     //shadowSize:   [50, 64], // size of the shadow
-                    iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
+                    // point of the icon which will correspond to marker's location
+                    // Fix: http://gis.stackexchange.com/questions/179734/leaflet-customer-marker-changes-position-with-scale
+                    //iconAnchor: [22, 94], 
                     shadowAnchor: [4, 62],  // the same for the shadow
                     popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
                 });
@@ -43,11 +45,12 @@
                     iconUrl: 'sites/default/files/car_red.png',
                     //shadowUrl: 'sites/default/car.png',
 
-                    iconSize: [32, 37], // size of the icon
-                    //shadowSize:   [50, 64], // size of the shadow
-                    iconAnchor: [22, 94], // point of the icon which will correspond to marker's location
-                    shadowAnchor: [4, 62],  // the same for the shadow
-                    popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
+                    iconSize: [32, 37], 
+                    //shadowSize:   [50, 64], 
+                    // Fix: http://gis.stackexchange.com/questions/179734/leaflet-customer-marker-changes-position-with-scale
+                    //iconAnchor: [22, 94], 
+                    shadowAnchor: [4, 62],  
+                    popupAnchor: [-3, -76] 
                 });
 
                 /*
@@ -75,7 +78,8 @@
                                 if (!(vnum in markerList)) {
                                     console.log('marker not found in the list.');
                                     //mymarker = L.marker([newlg, newlt], {icon: carIcon_r}).addTo(map);
-                                    mymarker = L.marker(currLtLng, { icon: carIcon_r }).addTo(map);
+                                    //mymarker = L.marker(currLtLng, { icon: carIcon_r }).addTo(map);
+                                    mymarker = L.marker(currLtLng).addTo(map);
                                     markerList[vnum] = mymarker;
                                 } else {
                                     console.log('marker found, update, lt first.', newlt, newlg);
@@ -95,7 +99,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestAllData, 50000);
+                            setTimeout(requestAllData, 2000);
                         },
                         //error: function(xhr, status, error) {
                         error: function () {
@@ -131,12 +135,18 @@
                 $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_e' type='text'/>");
                 $("#block-bgmap-trace").append("<button id='rangeSubmit' class='btn btn-default' type='submit'>Trace</button>");
                 $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
-                $("#block-bgmap-trace").append("<input type='text' name='daterange' value='01/01/2015 - 01/31/2015' />")
+                $("#block-bgmap-trace").append("<input type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM' />")
                 //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
                 $("#block-bgmap-trace").height(600);
                 $("#show_map2").height(400);
                 //
-                $('input[name="daterange"]').daterangepicker();
+                $('input[name="daterange"]').daterangepicker({
+        timePicker: true,
+        timePickerIncrement: 30,
+        locale: {
+            format: 'MM/DD/YYYY h:mm A'
+        }
+                });
 
                 data_url = basepath + '?q=bgmap/getgeoj/' + sid;
                 var lat = 1.421, lng = 103.829;
@@ -144,7 +154,6 @@
                 //var map = L.map('show_report2').setView([lng, lat], 13);
                 var map2 = L.map('show_map2').setView([lat, lng], 13);
                 //$('input[name="date_range_picker2"]').daterangepicker();
-                //$('input[name="daterange"]').daterangepicker();
                 //$('#config-demo').daterangepicker();
                 //$('#dtp1').datetimepicker();
                 var date = new Date();
@@ -261,7 +270,7 @@
                     // TODO: take care of partial selections.
                     startTime = selectedStartDateVal + selectedStartTimeVal;
                     endTime = selectedEndDateVal + selectedEndTimeVal;
-                    console.log(startTime, endTime, polylines);
+                    console.log(startTime, endTime);
                     requestTraceData();
                 })
                 console.log('Selected start time=', selectedStartDateVal + selectedStartTimeVal);
