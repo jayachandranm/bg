@@ -2,12 +2,12 @@
     Drupal.behaviors.bgmap = {
         attach: function (context, settings) {
             console.log('JS attach, initialization.');
+            var basepath = Drupal.settings.basePath;
             if (Drupal.settings.bgmap) {
-                // No context parameters are required.
+                console.log('Retrieving bgmap settings.');
+                // Check, if available, extract the elements from array.
                 //var sid = Drupal.settings.bgmap.sid;
                 //var data = Drupal.settings.bgchart.data.data;
-                var basepath = Drupal.settings.basePath;
-                console.log('Retrieving bgmap settings.');
                 //
                 var title = 'Real Time Map';
                 // Place a div name correcly.
@@ -59,10 +59,15 @@
                 var requestAllData = (function () {
                     console.log('Bgmap: Ajax call.');
                     data_url = basepath + '?q=bgmap/get/' + 'car';
+                    // Prepare filter and POST as JSON.
                     $.ajax({
                         url: data_url,
                         success: function (jsonData) {
                             console.log('Received JSON for All Veh=', jsonData);
+                            // TODO: Handle as GeoJSON data.
+                            // Can be handled as special case when num_elements=1, 
+                            // so that we can panTo. or use fitBounds.
+                            // TODO: How to remove current markers and update new ones?
                             for (var i = 0; i < jsonData.length; i++) {
                                 var newlt = jsonData[i].lt;
                                 var newlg = jsonData[i].lg;
@@ -125,7 +130,7 @@
                 var sid = Drupal.settings.trace.sid;
                 //var data = Drupal.settings.bgchart.data.data;
                 console.log('Retrieving (trace) settings.');
-                var basepath = Drupal.settings.basePath;
+                //var basepath = Drupal.settings.basePath;
                 //
                 var title2 = 'GPS Trace on Map';
                 // Place a div name correcly.
@@ -191,6 +196,7 @@
                     onStart: function () {
                         console.log('Hello there :)');
                         this.set('select', [date.getFullYear(), date.getMonth(), date.getDate() - 1]);
+                        // TODO: set selectedStartDateVal here, as initial value.
                     },
                     onRender: function () {
                         console.log('Whoa.. rendered anew');
@@ -214,6 +220,7 @@
                     onStart: function () {
                         console.log('Started time picker');
                         this.set('select', 0);
+                        // TODO: Set selectedStartTimeVal here, as initial value.
                     },
                     onOpen: function () {
                         console.log('Opened up');
@@ -309,6 +316,7 @@
                         url: data_url,
                         success: function (jsonData) {
                             console.log('Received JSON for Trace=', jsonData);
+                            // TODO: handle as GeoJSON.
                             for (var i = 0; i < jsonData.length; i++) {
                                 latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
                                 //latlngs[i][0] = 111; //jsonData.latitude;
