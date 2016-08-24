@@ -2,12 +2,12 @@
     Drupal.behaviors.bgmap = {
         attach: function (context, settings) {
             console.log('JS attach, initialization.');
-            var basepath = Drupal.settings.basePath;
             if (Drupal.settings.bgmap) {
-                console.log('Retrieving bgmap settings.');
-                // Check, if available, extract the elements from array.
+                // No context parameters are required.
                 //var sid = Drupal.settings.bgmap.sid;
                 //var data = Drupal.settings.bgchart.data.data;
+                var basepath = Drupal.settings.basePath;
+                console.log('Retrieving bgmap settings.');
                 //
                 var title = 'Real Time Map';
                 // Place a div name correcly.
@@ -59,15 +59,10 @@
                 var requestAllData = (function () {
                     console.log('Bgmap: Ajax call.');
                     data_url = basepath + '?q=bgmap/get/' + 'car';
-                    // Prepare filter and POST as JSON.
                     $.ajax({
                         url: data_url,
                         success: function (jsonData) {
                             console.log('Received JSON for All Veh=', jsonData);
-                            // TODO: Handle as GeoJSON data.
-                            // Can be handled as special case when num_elements=1, 
-                            // so that we can panTo. or use fitBounds.
-                            // TODO: How to remove current markers and update new ones?
                             for (var i = 0; i < jsonData.length; i++) {
                                 var newlt = jsonData[i].lt;
                                 var newlg = jsonData[i].lg;
@@ -130,28 +125,49 @@
                 var sid = Drupal.settings.trace.sid;
                 //var data = Drupal.settings.bgchart.data.data;
                 console.log('Retrieving (trace) settings.');
-                //var basepath = Drupal.settings.basePath;
+                var basepath = Drupal.settings.basePath;
                 //
                 var title2 = 'GPS Trace on Map';
                 // Place a div name correcly.
-                $("#block-bgmap-trace").append("From: <input class='datepicker_s' type='text'/>");
-                $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_s' type='text'/>");
-                $("#block-bgmap-trace").append("To: <input class='datepicker_e' type='text'/>");
-                $("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_e' type='text'/>");
-                $("#block-bgmap-trace").append("<button id='rangeSubmit' class='btn btn-default' type='submit'>Trace</button>");
-                $("#block-bgmap-trace").append("<div style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
-                $("#block-bgmap-trace").append("<input type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM' />")
+                //$("#block-bgmap-trace").append("From: <input class='datepicker_s' type='text'/>");
+                //$("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_s' type='text'/>");
+                //$("#block-bgmap-trace").append("To: <input class='datepicker_e' type='text'/>");
+                //$("#block-bgmap-trace").append("<input style='margin-right:5em' class='timepicker_e' type='text'/>");
+                //$("#block-bgmap-trace").append("<button id='rangeSubmit' class='btn btn-default' type='submit'>Trace</button>");
+                //$("#block-bgmap-trace").append("<div class='row'>"); class='form-control'
+                $("#block-bgmap-trace").append("<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div>");
+                //$("#block-bgmap-trace").append("</div>");
+                //$("#block-bgmap-trace").append("<div class='row'>");
+                $("#block-bgmap-trace").append("<div class='row' style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
+                //$("#block-bgmap-trace").append("</div>");
                 //$("#block-bgmap-trace").append("<div class='col-md-4 col-md-offset-2' id='dtp1'> <input type='text' id='config-demo' class='form-control'></div>");
                 $("#block-bgmap-trace").height(600);
                 $("#show_map2").height(400);
                 //
+                var start = moment().subtract(1, 'days');
+                var end = moment();
+                startTime = start.valueOf();
+                endTime = end.valueOf();
                 $('input[name="daterange"]').daterangepicker({
-        timePicker: true,
-        timePickerIncrement: 30,
-        locale: {
-            format: 'MM/DD/YYYY h:mm A'
-        }
-                });
+                  timePicker: true,
+                  timePickerIncrement: 30,
+                  locale: {
+                    format: 'MM/DD/YYYY h:mm A'
+                  },
+                  startDate: start,
+                  endDate: end,
+                  ranges: {
+                   'Today': [moment().subtract(3, 'hours'), moment()],
+                   'Yesterday': [moment().subtract(2, 'days'), moment().subtract(1, 'days')]
+                  }
+                },
+                function(start, end, label) {
+                   console.log('Apply datetime: ', start.format('x'), end.valueOf());
+                   startTime = start.valueOf();
+                   endTime = end.valueOf();
+                   requestTraceData();
+                }
+                );
 
                 data_url = basepath + '?q=bgmap/getgeoj/' + sid;
                 var lat = 1.421, lng = 103.829;
@@ -191,12 +207,11 @@
                                     }
                                 });
                 */
-
+/*
                 var $input_ds = $('.datepicker_s').pickadate({
                     onStart: function () {
                         console.log('Hello there :)');
                         this.set('select', [date.getFullYear(), date.getMonth(), date.getDate() - 1]);
-                        // TODO: set selectedStartDateVal here, as initial value.
                     },
                     onRender: function () {
                         console.log('Whoa.. rendered anew');
@@ -220,7 +235,6 @@
                     onStart: function () {
                         console.log('Started time picker');
                         this.set('select', 0);
-                        // TODO: Set selectedStartTimeVal here, as initial value.
                     },
                     onOpen: function () {
                         console.log('Opened up');
@@ -281,6 +295,7 @@
                     requestTraceData();
                 })
                 console.log('Selected start time=', selectedStartDateVal + selectedStartTimeVal);
+*/
                 //var picker2 = $input.pickatime('picker2');
                 /*
                  picker2.on({
@@ -316,7 +331,6 @@
                         url: data_url,
                         success: function (jsonData) {
                             console.log('Received JSON for Trace=', jsonData);
-                            // TODO: handle as GeoJSON.
                             for (var i = 0; i < jsonData.length; i++) {
                                 latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
                                 //latlngs[i][0] = 111; //jsonData.latitude;
