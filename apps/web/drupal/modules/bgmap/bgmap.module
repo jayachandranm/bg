@@ -17,7 +17,7 @@
 function bgmap_help($path, $arg) {
   switch ($path) {
     case "admin/help#bgmap":
-    return '<p>' . t("Displays real time data in a map") . '</p>';
+    return '<p>' . t("Manage Geo/OBD data.") . '</p>';
     break;
   }
 }
@@ -27,7 +27,7 @@ function bgmap_help($path, $arg) {
 */
 function bgmap_block_info() {
   $blocks = array();
-  $blocks['bgmap'] = array(
+  $blocks['rt'] = array(
     // The name that will appear in the block list.
     'info' => t('Real Time Leaflet map'),
     // Default setting.
@@ -205,30 +205,26 @@ function bgmap_short_circuit_version() {
 function bgmap_menu() {
   $items = array();
 
+  // Provide configuration options for the module from Admin page.
   $items['admin/config/content/bgmap'] = array(
-    'title' => 'Real time Leaflet Map',
-    'description' => 'Configuration for Real time map module',
+    'title' => 'Custom Leaflet Map',
+    'description' => 'Configuration for map module',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('bgmap_form'),
     'access arguments' => array('access administration pages'),
     'type' => MENU_NORMAL_ITEM,
   );
-
+/* Example for creating a page instead of block.
   $items['bgmap'] = array(
     'title' => 'Real time map',
     'page callback' => '_bgmap_page',
     'access arguments' => array('access bgmap content'),
-    'type' => MENU_NORMAL_ITEM, //Will appear in Navigation menu.
+    //Will appear in Navigation menu.
+    'type' => MENU_NORMAL_ITEM, 
   );
-  $items['bgmap/get'] = array(
-    'title' => 'Real time map',
-    'page callback' => 'bgmap_get_json',
-    //'page arguments' => array(1), //get param from URL.
-    'access arguments' => array('access bgmap content'),
-    'type' => MENU_CALLBACK,
-  );
+  */
   $items['bgmap/getgeoj'] = array(
-    'title' => 'Real time trace on map',
+    'title' => 'Retrieve GeoJSON for RT markers or Trace.',
     'page callback' => 'bgmap_get_geojson',
     //'page arguments' => array(1), //get param from URL.
     'access arguments' => array('access bgmap content'),
@@ -237,9 +233,11 @@ function bgmap_menu() {
   return $items;
 }
 
+/* Example for creating a page instead of block.
 function _bgmap_page() {
   return "Hello There!";
 }
+*/
 
 /**
 * Implements hook_node_insert().
@@ -289,89 +287,42 @@ function bgmap_node_update($node) {
   }
 }
 
-function bgmap_update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
-  $bg_db = array(
-    'database' => 'bgmap',
-    'username' => 'bgmap', // assuming this is necessary
-    'password' => 'bgmap%user$1', // assuming this is necessary
-    'host' => 'localhost', // assumes localhost
-    'driver' => 'mysql', // replace with your database driver
-  );
-
-  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
-  db_set_active('BLUGRAPHTECH');
-
-  //$query = array();
-  if($flag) {
-    db_insert('bgmap_obd_node_map')
-    ->fields(array(
-      'nid' => $nid,
-      'sid' => $sid,
-      'veh_num' => $vnum,
-      'veh_type' => $vgroup,
-    ))->execute();
-  }
-  else {
-    db_update('bgmap_obd_node_map')
-    ->fields(array(
-      'nid' => $nid,
-      'sid' => $sid,
-      'veh_num' => $vnum,
-      'veh_type' => $vgroup,
-    ))
-    ->condition('nid', $nid)
-    ->execute();
-  }
-  // without the paramater means set back to the default for the site
-  db_set_active();
-}
-
 /**
 * Implements hook_block_view().
 *
 * Prepares the contents of the block.
 */
 function bgmap_block_view($delta = '') {
-  // if ($node = menu_get_object()) {... }
-  // TODO: exit if it is not a node but a view or something else.
-  //$node = menu_get_object();
-  // TODO: check whether exists.
-
-  /*
-  if(isset($node->field_sensor_id)) {
-  // TODO...
-}
-else {
-// Invalid sensor_id.
-}
-*/
   // Set sid invalid by default, means to select all.
   //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
-
   $block = array();
+  // TODO: exit if it is not a node but a view or something else.
+  if ($node = menu_get_object()) {
+      if ($node->type == 'vehicles') {
+        //dpm($node);
+        $nid = $node->nid;
+        // TODO: Fix this. Use the correct approach.
+        $sid = $node->field_sensor_id['und'][0]['value'];
+        $vnum = $node->field_vehicle_num['und'][0]['value'];
+      } // if node-type.
+  } // if node.
+
   switch ($delta) {
-    case 'bgmap':
-      drupal_add_js(array('bgmap' => array('vtype' => 'car')), 'setting');
-      $block['subject'] = t('Real Time Leaflet Map');
+    /* 
+    * The real time block may appear in a page that shows all items or on a page that 
+    * shows single item. Create a filter to reflect this context. The filter can be 
+    * presented as a JSON, where some parameters may be missing, if some fields on the page 
+    * is missing (eg. sensor_id).
+    */
+    case 'rt':
+      // Pass any node related parameters here, which can then be used by the JS during Ajax.
+      // Here will be an array that contains the filter values. 
+      // if(isset($sid)) {
+      // vnum/sid list.
+      drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
+      $block['subject'] = t('Real Time Location.');
       if (user_access('access content')) {
-        //$result = bgmap_contents('block');
         $items2 = array();
-        // Iterate over the resultset and format as links.
-        /*
-        foreach ($result as $row) {
-        date_default_timezone_set('Asia/Singapore');
-        $date = new DateTime();
-        //$timeHr = date('g:i a',($row->timestamp)/1000);
-        $date->setTimestamp(($row->currentdatetime)/1000);
-        $timeHr = $date->format('g:i a');
-
-        $noise = round($row->noise_data, 2);
-        if($noise == -1)
-        $noise = '-';
-
-        $items2[] = array($timeHr, $noise);
-      } // foreach
-      */
         $items2[] = array('Test', '2');
         // No content in the last week.
         if (empty($items2)) {
@@ -381,6 +332,7 @@ else {
         else {
           // Pass data through theme function.
           //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+          // TODO: Create empty div here?
           $block['content']['#markup'] = theme('table', array('items' => $items2));
           //$block['content'] = theme('item_list', array('items' => $items2));
         }
@@ -392,14 +344,10 @@ else {
       break;
     case 'trace':
     // TODO: If not a node or if node type is different, don't show the block.
-      if ($node = menu_get_object()) {
-      if ($node->type == 'vehicles') {
-        //dpm($node);
-        $nid = $node->nid;
-        $sid = $node->field_sensor_id['und'][0]['value'];
-        $vnum = $node->field_vehicle_num['und'][0]['value'];
         //$vgroup = 'car';
-        drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
+        if(isset($sid)) {
+          drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
+        }
 
         $block['subject'] = t('Real Time Map Trace');
         if (user_access('access content')) {
@@ -417,19 +365,13 @@ else {
             //$block['content'] = theme('item_list', array('items' => $items2));
           }
         } // access.
-      } // if node-type.
-      } // if node.
       break;
     case 'fuel':
     // TODO: If not a node, or node type is different, don't show the block.
-      if ($node = menu_get_object()) {
-      if ($node->type == 'vehicles') {
-        //dpm($node);
-        $nid = $node->nid;
-        $sid = $node->field_sensor_id['und'][0]['value'];
-        $vnum = $node->field_vehicle_num['und'][0]['value'];
         //$vgroup = 'car';
+        if(isset($sid)) {
         drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
+        }
 
         $block['subject'] = t('Fuel Usage Table');
         if (user_access('access content')) {
@@ -467,8 +409,6 @@ else {
             //$block['content'] = theme('item_list', array('items' => $items2));
           }
         } // access.
-      } // if node-type.
-      } // if node.
       break;
     case 'aob':
       if (user_access('access content')) {
@@ -478,21 +418,6 @@ else {
   return $block;
 }
 
-/**
-* Ajax end point function, menu callback.
-*
-* Used by browser JS to retrieve data in real time.
-* saved in that time period.
-*
-* @return
-*   JSON data.
-*/
-function bgmap_get_json($filter) {
-  $items2 = array();
-  $items2 = bgmap_current_all('block', $filter);
-  return drupal_json_output($items2);
-}
-
 
 /**
 * Ajax end point function, menu callback.
@@ -503,42 +428,83 @@ function bgmap_get_json($filter) {
 * @return
 *   JSON data.
 */
-function bgmap_get_geojson($filter, $starttime, $endtime) {
+function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
   //dpm($filter);
-  //dpm($starttime);
+  //print_r($start_time);
+  $today = getdate();
+  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+  $end_time = time() * 1000 * 10;
+  $max_num = variable_get('bgmap_max', 3);
+
+  $filter.startTime =  $starttime;
+  $filter.endTime =  $endtime;
+
+  $result = _getdata_exdb($reqtype, $filter);
+  //
+  date_default_timezone_set('Asia/Singapore');
+  $geojson = array(
+   'type'      => 'FeatureCollection',
+   'features'  => array()
+  );
+
   $items2 = array();
-  $items2 = bgmap_current_single('block', $filter, $starttime, $endtime);
-  return drupal_json_output($items2);
+  switch($reqtype) {
+    case 'trace':
+      foreach ($result as $row) {
+        $time = ($row->timestamp);
+        //$noise = round($row->noise_data, 2);
+        $latitude = $row->latitude;
+        $longitude = $row->longitude;
+
+        $polygon = array($latitude, $longitude);
+        //
+      } // foreach
+      $feature = array(
+        'type' => 'Feature',
+        'geometry' => {"type": "Polygon", "coordinates": array($latitude, $longitude)},
+        'properties' => array(
+          'title' => $row['name'],
+          'marker-color' => '#f00',
+          'marker-size' => 'small'
+        )
+      );
+      # Add feature arrays to feature collection array
+      array_push($geojson['features'], $feature);
+
+      break;
+    case 'rt':
+      foreach ($result as $row) {
+        $time = ($row->timestamp);
+        //$noise = round($row->noise_data, 2);
+        $longitude = $row->longitude;
+        $latitude = $row->latitude;
+      
+        $feature = array(
+          'type' => 'Feature',
+          'geometry' => {"type": "Point", "coordinates": [$polygon]},
+          'properties' => array(
+            'title' => $row['name'],
+            'line-color' => '#f00',
+            'line-size' => 'small'
+          ),
+        );
+        # Add feature arrays to feature collection array
+        array_push($geojson['features'], $feature);
+        //
+      } // foreach
+      break;
+  }
+
+  return drupal_json_output($geojson);
 }
 
 
-/**
-* Custom content function.
-*
-* Set beginning and end dates, retrieve posts from database
-* saved in that time period.
-*
-* @return
-*   A result set of the targeted posts.
-*/
-function bgmap_current_all($display, $filter){
-  /*
-  $node = menu_get_object();
-  $sensor_id=$node->field_station_id['und'][0]['value'];
-  */
-  //Get today's date.
-  $today = getdate();
-  //Calculate the date one day ago.
-  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
-  $start_time = 0;
-  //Get all posts from one week ago to the present.
-  // Time in millis.
-  $end_time = time() * 1000 * 10;
-  $end_time = 1471771166000;
+function _getdata_exdb($restype, $filter){
+  $sid = $filter.sid;
+  $start_time = $filter.st;
+  $end_time = $filter.et;
 
-  // From admin page.
-  //print_r($start_time);
-  $max_num = variable_get('bgmap_max', 3);
+  // Sanitize sids array before using in the query statement.
 
   $bg_db = array(
     'database' => 'bgmap',
@@ -551,39 +517,8 @@ function bgmap_current_all($display, $filter){
   Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
   db_set_active('BLUGRAPHTECH');
 
-  $query = array();
-  if ($display == 'block'){
-    //$start_time = 1434254042000;
-    //$end_time = 1434254311000;
 /*
-    $query = db_select('bgmap_obd_gps', 'a')
-    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('datetime', 'DESC')
-    ->groupBy('sid');
-*/
-    // TODO: temp. Takes just one latest value, irrespective of number of veh.
-    $query = db_select('bgmap_obd_gps', 'a')
-    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    //->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('timestamp', 'DESC');
-    // TODO: Can be conditional, different for block and page.
-    //$query->range(0, $max_num);
-    $query->range(0, 1);
-  } //Now proceeds to execute().
-  //drupal_set_message((string) $query);
-  $result = $query->execute();
-  $items2 = array();
-  foreach ($result as $row) {
-    date_default_timezone_set('Asia/Singapore');
-    $time = ($row->timestamp);
-    //$noise = round($row->noise_data, 2);
-    $longitude = $row->longitude;
-    $latitude = $row->latitude;
-    //
-    $sid = $row->sid;
     $query2 = array();
-
     $query2 = db_select('bgmap_obd_node_map', 'm')
     ->fields('m', array('nid', 'veh_num', 'veh_type'))
     ->condition('sid', $sid);
@@ -599,115 +534,10 @@ function bgmap_current_all($display, $filter){
       $vnum = 'NA';
     }
     // TODO: iF multiple entry match the condition, handle as error?
-
-    $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude, 'nid' => $nid, 'vnum' => $vnum) ;
-  } // foreach
-  db_set_active();
-  return $items2;
-  //drupal_set_message(t('The queries have been made.'));
-  /*
-  while($record = $result->fetchAssoc()) {
-  print_r($record);
-}
 */
-}
-
-function bgmap_current_single($display, $filter, $starttime, $endtime){
-  //dpm($filter);
-  //print_r($filter);
-  /*
-  $node = menu_get_object();
-  $sensor_id=$node->field_station_id['und'][0]['value'];
-  */
-  //Get today's date.
-  $today = getdate();
-  //Calculate the date one day ago.
-  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
-  $start_time = 0;
-  //Get all posts from one week ago to the present.
-  // Time in millis.
-  $end_time = time() * 1000 *10;
-
-  $start_time = $starttime;
-  $end_time = $endtime;
-
-  //dpm($start_time, $end_time);
-
-  // From admin page.
-  //print_r($start_time);
-  $max_num = variable_get('bgmap_max', 3);
-
-  $bg_db = array(
-    'database' => 'bgmap',
-    'username' => 'bgmap', // assuming this is necessary
-    'password' => 'bgmap%user$1', // assuming this is necessary
-    'host' => 'localhost', // assumes localhost
-    'driver' => 'mysql', // replace with your database driver
-  );
-
-  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
-  db_set_active('BLUGRAPHTECH');
-
-  if ($display == 'block'){
-    $query = array();
-    //$start_time = 1434254042000;
-    //$end_time = 1434254311000;
-    $query = db_select('bgmap_obd_gps', 'a')
-    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    ->condition('sid', $filter)
-    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('datetime', 'DESC');
-    //->groupBy('sid');
-    // TODO: Can be conditional, different for block and page.
-    //$query->range(0, $max_num);
-  } //Now proceeds to execute().
-  //drupal_set_message((string) $query);
-  $result = $query->execute();
-  $items2 = array();
-  foreach ($result as $row) {
-    date_default_timezone_set('Asia/Singapore');
-    $time = ($row->timestamp);
-    //$noise = round($row->noise_data, 2);
-    $longitude = $row->longitude;
-    $latitude = $row->latitude;
-    //
-    //$sid = $row->sid;
-
-    $items2[] = array('x' => $time, 'lg' => $longitude, 'lt' => $latitude ) ;
-    //$items2[] = array($longitude, $latitude ) ;
-  } // foreach
-  db_set_active();
-  return $items2;
-  //drupal_set_message(t('The queries have been made.'));
-  /*
-  while($record = $result->fetchAssoc()) {
-  print_r($record);
-}
-*/
-}
-
-
-function bgmap_getdata_exdb($display, $filter){
-  $sid = $filter;
-  $today = getdate();
-  $start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 1), $today['year']);
-  $end_time = time() * 1000;
-
-  $max_num = variable_get('bgmap_max', 3);
-
-  $bg_db = array(
-    'database' => 'bgmap',
-    'username' => 'bgmap', // assuming this is necessary
-    'password' => 'bgmap%user$1', // assuming this is necessary
-    'host' => 'localhost', // assumes localhost
-    'driver' => 'mysql', // replace with your database driver
-  );
-
-  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
-  db_set_active('BLUGRAPHTECH');
 
   $query = array();
-  if ($display == 'fuel'){
+  if ($restype == 'fuel'){
     $query = db_select('bgmap_obd_fuel', 'a')
     ->fields('a', array('sid', 'timestamp', 'value'))
     ->condition('sid', $sid)
@@ -715,18 +545,66 @@ function bgmap_getdata_exdb($display, $filter){
     ->orderBy('datetime', 'DESC')
     ->groupBy('sid');
   }
-  //drupal_set_message((string) $query);
+  if ($restype == 'rt'){
+    $query = db_select('bgmap_obd_gps', 'a')
+    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    ->orderBy('timestamp', 'DESC');
+    // TODO: Can be conditional, different for block and page.
+    //$query->range(0, $max_num);
+    $query->range(0, 1);
+  }
+  if ($restype == 'trace'){
+      $query = db_select('bgmap_obd_gps', 'a')
+    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    ->condition('sid', $filter)
+    //->condition('sid', array(1,5,7),'IN')
+    //->condition('status', 0,'>')
+    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+    ->orderBy('datetime', 'DESC');
+  }
+
   $result = $query->execute();
   db_set_active();
   return $result;
-  //drupal_set_message(t('The queries have been made.'));
-  /*
-  while($record = $result->fetchAssoc()) {
-  print_r($record);
-}
-*/
 }
 
+
+function _update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
+  $bg_db = array(
+    'database' => 'bgmap',
+    'username' => 'bgmap', // assuming this is necessary
+    'password' => 'bgmap%user$1', // assuming this is necessary
+    'host' => 'localhost', // assumes localhost
+    'driver' => 'mysql', // replace with your database driver
+  );
+
+  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+  db_set_active('BLUGRAPHTECH');
+
+  //$query = array();
+  if($flag) {
+    db_insert('bgmap_obd_node_map')
+    ->fields(array(
+      'nid' => $nid,
+      'sid' => $sid,
+      'veh_num' => $vnum,
+      'veh_type' => $vgroup,
+    ))->execute();
+  }
+  else {
+    db_update('bgmap_obd_node_map')
+    ->fields(array(
+      'nid' => $nid,
+      'sid' => $sid,
+      'veh_num' => $vnum,
+      'veh_type' => $vgroup,
+    ))
+    ->condition('nid', $nid)
+    ->execute();
+  }
+  // without the paramater means set back to the default for the site
+  db_set_active();
+}
 
 /**
 * Page callback: Module admin settings page.
@@ -745,3 +623,8 @@ function bgmap_form($form, &$form_state) {
   );
   return system_settings_form($form);
 }
+
+  //drupal_set_message((string) $query);
+  //while($record = $result->fetchAssoc()) {
+  //print_r($record);
+  //dpm($filter);
