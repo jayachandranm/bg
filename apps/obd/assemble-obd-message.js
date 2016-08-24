@@ -9,6 +9,8 @@ var c = Concentrate();
 
 function loginReply(dcMsg) {
     var devID = dcMsg.dev_id;
+    var currTime = Date.now() / 1000 | 0;
+    console.log('Server time: ', currTime);
     var dataToDev = c.uint16le('0x4040')
     .uint16le('0x29')
     .uint8('0x03')
@@ -16,7 +18,7 @@ function loginReply(dcMsg) {
     .uint16be('0x9001')
     .uint32le('0xffffffff')
     .uint16('0x0')
-    .uint32le('1395277770') // TODO: send current time.
+    .uint32le(currTime) // TODO: send current time.
     .copy();
 
     var crcReply = crc16(dataToDev.result());

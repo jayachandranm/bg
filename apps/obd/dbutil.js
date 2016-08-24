@@ -18,16 +18,22 @@ function updateDB(gpsVals) {
     var dt = gpsVals.date_time;
     var yr = '20' + dt.year;
     //console.log(yr, dt.month, dt.day, dt.hour, dt.minute, dt.second);
-    var utime = new Date(yr, dt.month, dt.day, dt.hour, dt.minute, dt.second).getTime();
-    //console.log(utime);
+    // NOTE: Month starts from 0.
+    var utime = new Date(yr, dt.month-1, dt.day, dt.hour, dt.minute, dt.second).getTime();
+    console.log(utime);
     //console.log(LocLong, LocLat);
    
     var dateNow = new Date();
     var currTimeMillis = Date.now();
     var offset = dateNow.getTimezoneOffset();
-    var adjTime = currTimeMillis + offset*60*1000 + 8*60*60*1000;
+    console.log(offset);
+    // Use moment.js instead of manually adding +8hrs for SGT.
+    var adjTime = utime + (8*60*60*1000);
+    // TODO: add server time to DB table.
+    //var adjTime = currTimeMillis + (8*60*60*1000);
     //var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
-    var datetime_db = new Date(utime).toISOString().slice(0, 19).replace('T', ' ');
+    var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
+    console.log(adjTime, datetime_db);
 
     pool.getConnection(function(err, connection) {
         // Use the connection
