@@ -56,11 +56,20 @@
         /*
         * Real time updates.
         */
-        var requestAllData = (function () {
+        var requestCurrentLoc = (function () {
           console.log('Bgmap: Ajax call.');
-          data_url = basepath + '?q=bgmap/get/' + 'car';
+          post_url = basepath + '?q=bgmap/get/' + 'car';
+          var filter = {};
+          filter['nidList'] = sid;
+          filter['start'] = -1;
+          filter['end'] = -1; // or current time.
+          jsonFilter = JSON.stringify(filter);
+          console.log(jsonFilter);
           $.ajax({
-            url: data_url,
+            url: post_url,
+            type: 'POST',
+            dataType: 'json',
+            data: jsonFilter,
             success: function (jsonData) {
               console.log('Received JSON for All Veh=', jsonData);
               for (var i = 0; i < jsonData.length; i++) {
@@ -99,7 +108,7 @@
             },
             complete: function () {
               console.log('Ajax processing complete, call again after delay');
-              setTimeout(requestAllData, 2000);
+              setTimeout(requestCurrentLoc, 2000);
             },
             //error: function(xhr, status, error) {
             error: function () {
@@ -108,7 +117,7 @@
             }
           }); // ajax
         }); // requestData
-        requestAllData();
+        requestCurrentLoc();
       } // if settings, bgmap
       // If trace array is set, happens inside trace block.
       if (Drupal.settings.trace) {
@@ -159,14 +168,9 @@
         }
       );
 
-      data_url = basepath + '?q=bgmap/getgeoj/' + sid;
       var lat = 1.421, lng = 103.829;
       //center: [51.505, -0.09], zoom: 13
-      //var map = L.map('show_report2').setView([lng, lat], 13);
       var map2 = L.map('show_map2').setView([lat, lng], 13);
-      //$('input[name="date_range_picker2"]').daterangepicker();
-      //$('#config-demo').daterangepicker();
-      //$('#dtp1').datetimepicker();
       var date = new Date();
       // Current time. Will be overwritten by datepicker.
       // Set by start time be default to start of previous day.
@@ -189,22 +193,32 @@
       * Real time updates.
       */
       var requestTraceData = (function () {
-        console.log('Trace: Ajax call: ', startTime, endTime);
         if (typeof polylines != "undefined") {
           console.log("CLEAR TRACE.");
           map2.removeLayer(polylines);
         }
         // Clear the array before getting new values.
         latlngs.length = 0;
-        data_url = basepath + '?q=bgmap/getgeoj/' + sid + '/' + startTime + '/' + endTime;
+        console.log('Trace: Ajax call: ', startTime, endTime);
+        var filter = {};
+        filter['nidList'] = sid;
+        filter['start'] = startTime;
+        filter['end'] = endTime; // or current time.
+        jsonFilter = JSON.stringify(filter);
+        console.log(jsonFilter);
+        post_url = basepath + '?q=bgmap/getgeoj/'
+                 + sid + '/'
+                 + startTime + '/'
+                 + endTime;
         $.ajax({
-          url: data_url,
+          url: post_url,
+          type: 'POST',
+          dataType: 'json',
+          data: {sid : sid},
           success: function (jsonData) {
             console.log('Received JSON for Trace=', jsonData);
             for (var i = 0; i < jsonData.length; i++) {
               latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
-              //latlngs[i][0] = 111; //jsonData.latitude;
-              //latlngs[i][1] = 222; //jsonData.longitude;
             }
             console.log(latlngs);
             //var test = JSON.stringify(latlngs);
