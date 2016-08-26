@@ -222,14 +222,14 @@ function bgmap_menu()
     );
     $items['bgmap/get'] = array(
         'title' => 'Real time map',
-        'page callback' => 'bgmap_get_json',
+        'page callback' => '_get_json',
         //'page arguments' => array(1), //get param from URL.
         'access arguments' => array('access bgmap content'),
         'type' => MENU_CALLBACK,
     );
     $items['bgmap/geoj'] = array(
         'title' => 'Retrieve GeoJSON for RT markers or Trace.',
-        'page callback' => 'bgmap_get_geojson',
+        'page callback' => '_get_geojson',
         //'page arguments' => array(1), //get param from URL.
         'access arguments' => array('access bgmap content'),
         'type' => MENU_CALLBACK,
@@ -505,9 +505,10 @@ function bedmon_preprocess_views_view(&$vars)
     }
 }
 
-function bgmap_get_json()
+function _get_json()
 {
     $geojson = array();
+    //$geojson['test'] = 'hello';
     return drupal_json_output($geojson);
 }
 
@@ -520,26 +521,39 @@ function bgmap_get_json()
  * @return
  *   JSON data.
  */
-function bgmap_get_geojson($reqtype)
+//function _get_geojson()
+
+function _get_geojson($reqtype)
 {
     //dpm($reqtype);
+    //$tst_data = $_POST['jsonPost'];
+    $post_data = json_decode($_POST['jsonPost']);
+    //dpm($tst_data);
+    //$post_data = json_decode($tst_data);
+    dpm($post_data);
+    $reqtype = $post_data->reqtype;
+    $filter = $post_data->filter;
+    dpm($filter); // This works, but not print_r.
     $geojson = array();
+    $geojson['test'] = 'hello2';
     return drupal_json_output($geojson);
 }
 
-function _bgmap_get_geojson($reqtype)
+
+function test_get_geojson($rqtype)
 {
     //function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
     //dpm($filter);
-    dpm($reqtype);
+    //dpm($reqtype);
     //print_r($start_time);
     //retrieve our post value
     //$nid_list = $_REQUEST['nidList'];
-    $post_data = json_decode($_POST['jsonPost']);
-    $rqtype = $post_data->reqtype;
+    //$post_data = json_decode($_POST['jsonPost']);
+    $post_data = $_POST['jsonPost'];
+    $reqtype = $post_data->reqtype;
     $filter = $post_data->filter;
     dpm($filter); // This works, but not print_r.
-    print_r($filter);
+    //print_r($filter);
 
     $result = _getdata_exdb($reqtype, $filter);
     //
@@ -605,7 +619,6 @@ function _bgmap_get_geojson($reqtype)
             } // foreach
             break;
     }
-
     return drupal_json_output($geojson);
 }
 

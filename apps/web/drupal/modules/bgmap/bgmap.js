@@ -213,36 +213,39 @@
         postData['filter'] = filter;
         jsonPost = JSON.stringify(postData);
         //post_url = basepath + '?q=bgmap/geoj/' + 'trc';
-        //post_url = basepath + '?q=bgmap/geoj';
+        post_url = basepath + '?q=bgmap/geoj';
         //console.log(post_url, jsonPost);
         /*
         + sid + '/'
         + startTime + '/'
         + endTime;
         */
-        post_url = basepath + '?q=bgmap/geoj';
+/*
+        pst_url = basepath + '?q=bgmap/get';
         $.ajax({
-          url: post_url,
+          url: pst_url,
+          type: 'POST',
+          dataType: 'json',
+          data: {test : 123 },
           success: function(jsonData) {
             console.log(jsonData);
           },
           complete: function() {
             //setTimeout(requestData, 2000);
-            console.log('success');
+            console.log('complete.');
           },
           //error: function(xhr, status, error) {
           error: function() {
             console.log('Error loading ');
           }
         }); // ajax
-
-        /*
+*/
         $.ajax({
         url: post_url,
-        type: 'GET',
+        type: 'POST',
         dataType: 'json',
-        //data: jsonPost,
-        data: {test : 123 },
+        data: { jsonPost : jsonPost },
+        //data: {test : 123 },
         success: function (jsonData) {
         console.log('Received JSON for Trace=', jsonData);
         for (var i = 0; i < jsonData.length; i++) {
@@ -266,7 +269,6 @@
   //alert('Error loading ');
 }
 }); // ajax
-*/
 }); // requestTraceData
 
 requestTraceData();
