@@ -1,487 +1,474 @@
 <?php
 /**
-* @file
-* A module that creates Navigation related blocks.
-*/
+ * @file
+ * A module that creates Navigation related blocks.
+ */
 
 /**
-* Implements hook_help().
-*
-* Displays help and module information.
-*
-* @param path
-*   Which path of the site we're using to display help
-* @param arg
-*   Array that holds the current path as returned from arg() function
-*/
-function bgmap_help($path, $arg) {
-  switch ($path) {
-    case "admin/help#bgmap":
-    return '<p>' . t("Manage Geo/OBD data.") . '</p>';
-    break;
-  }
-}
-
-/**
-* Implements hook_block_info().
-*/
-function bgmap_block_info() {
-  $blocks = array();
-  $blocks['rtsingle'] = array(
-    // The name that will appear in the block list.
-    'info' => t('Location Tracking'),
-    // Default setting.
-    'cache' => DRUPAL_CACHE_PER_ROLE,
-  );
-  $blocks['rtmulti'] = array(
-    'info' => t('Location Tracking All'),
-    'cache' => DRUPAL_CACHE_PER_ROLE,
-  );
-  $blocks['trace'] = array(
-    'info' => t('Location Trace'),
-    'cache' => DRUPAL_CACHE_PER_ROLE,
-  );
-  $blocks['tracemulti'] = array(
-    'info' => t('Location Trace All'),
-    'cache' => DRUPAL_CACHE_PER_ROLE,
-  );
-  $blocks['fuel'] = array(
-    'info' => t('Fuel Usage'),
-    'cache' => DRUPAL_CACHE_PER_ROLE,
-  );
-  return $blocks;
+ * Implements hook_help().
+ *
+ * Displays help and module information.
+ *
+ * @param path
+ *   Which path of the site we're using to display help
+ * @param arg
+ *   Array that holds the current path as returned from arg() function
+ */
+function bgmap_help($path, $arg)
+{
+    switch ($path) {
+        case "admin/help#bgmap":
+            return '<p>' . t("Manage Geo/OBD data.") . '</p>';
+            break;
+    }
 }
 
 /**
-* Implements hook_permission().
-*/
-function bgmap_permission() {
-  return array(
-    'access bgmap content' => array(
-      'title' => t('Access content for the bgmap module'),
-    )
-  );
-}
-
-function bgmap_init() {
-  libraries_load('leaflet');
-  //libraries_load('moment');
-  //drupal_add_library('bgmap', 'moment');
-  //libraries_load('daterangepicker');
-  //drupal_add_library('bgmap', 'daterangepicker');
-  // TODO: drupal_add_library does not work.
-  //drupal_add_library('bgmap', 'highcharts');
-  drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
-  /*
-  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.js');
-  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.date.js');
-  drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.time.js');
-
-  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.css');
-  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.date.css');
-  drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.time.css');
-  */
-
-  //
-  drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
-  drupal_add_js(drupal_get_path('module', 'bgmap') . '/daterangepicker.js');
-  drupal_add_css(drupal_get_path('module', 'bgmap') . '/daterangepicker.css');
-/*
-  drupal_add_js('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js', 'external');
-  drupal_add_css('https://cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css', 'external');
-*/
-  //drupal_add_js('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js', 'external');
-  //drupal_add_css('http://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', 'external');
-  if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
-    // The library is installed. Awesome!
-  }
-  else {
-    // Something went wrong. :(
-    // This contains a short status code of what went wrong, such as 'not found'.
-    $error = $library['error'];
-    // This contains a detailed (localized) error message.
-    $error_message = $library['error message'];
-    print_r("Error: Leaflet lib not loaded.");
-  }
-
-/*
-  if (($library = libraries_detect('moment')) && !empty($library['installed'])) {
-    // The library is installed. Awesome!
-    print_r("Moment lib loaded.");
-  }
-  else {
-    $error = $library['error'];
-    $error_message = $library['error message'];
-    print_r("Moment lib not loaded.");
-  }
-*/
-
-/*
-  if (($library = libraries_detect('daterangepicker')) && !empty($library['installed'])) {
-    // The library is installed. Awesome!
-    //print_r("Daterange lib loaded.");
-  }
-  else {
-    $error = $library['error'];
-    $error_message = $library['error message'];
-    print_r("Error: Daterange lib not loaded.");
-  }
-*/
+ * Implements hook_block_info().
+ */
+function bgmap_block_info()
+{
+    $blocks = array();
+    $blocks['rtsingle'] = array(
+        // The name that will appear in the block list.
+        'info' => t('Location Tracking'),
+        // Default setting.
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['rtmulti'] = array(
+        'info' => t('Location Tracking All'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['trace'] = array(
+        'info' => t('Location Trace'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['tracemulti'] = array(
+        'info' => t('Location Trace All'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['fuel'] = array(
+        'info' => t('Fuel Usage'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    return $blocks;
 }
 
 /**
-* Implements hook_libraries_info().
-*/
-function bgmap_libraries_info() {
-  $libraries = array();
-
-if (($library_path = libraries_get_path('daterangepicker'))) {
-  //print_r("Daterange lib path OK.");
-
-$libraries['daterangepicker'] = array(
-  'library path' => $library_path,
-  'name' => 'Daterange Picker',
-  'vendor url' => 'http://www.daterangepicker.com/',
-  'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
-'version callback' => 'bgmap_short_circuit_version',
-'files' => array(
-  'js' => array(
-    'daterangepicker.js',
-  ),
-  'css' => array(
-    'daterangepicker.css',
-  ),
-),
-/*
-'dependencies' => array(
-      'moment',
-),
-*/
-);
+ * Implements hook_permission().
+ */
+function bgmap_permission()
+{
+    return array(
+        'access bgmap content' => array(
+            'title' => t('Access content for the bgmap module'),
+        )
+    );
 }
-  $libraries['leaflet'] = array(
-    //'title' => 'Vertical Tabs',
-    //'website' => 'http://drupal.org/node/323112',
-    'name' => 'Leaflet',
-    'vendor url' => 'http://www.leaflet.com/',
-    'download url' => 'http://www.leaflet.com/download',
+
+function bgmap_init()
+{
+    libraries_load('leaflet');
+    //libraries_load('moment');
+    //drupal_add_library('bgmap', 'moment');
+    //libraries_load('daterangepicker');
+    //drupal_add_library('bgmap', 'daterangepicker');
+    // TODO: drupal_add_library does not work.
+    //drupal_add_library('bgmap', 'highcharts');
+    drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
+    //
+    drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
+    drupal_add_js(drupal_get_path('module', 'bgmap') . '/daterangepicker.js');
+    drupal_add_css(drupal_get_path('module', 'bgmap') . '/daterangepicker.css');
+    if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
+        // The library is installed. Awesome!
+    } else {
+        // Something went wrong. :(
+        // This contains a short status code of what went wrong, such as 'not found'.
+        $error = $library['error'];
+        // This contains a detailed (localized) error message.
+        $error_message = $library['error message'];
+        print_r("Error: Leaflet lib not loaded.");
+    }
+
     /*
-    'version arguments' => array(
-    'file' => 'highcharts.js',
-    // jQuery FlexSlider v2.1
-    'pattern' => '/Highcharts v(\d+\.+\d+)/',
-    'lines' => 2,
-  ),
-  */
-  'version callback' => 'bgmap_short_circuit_version',
-  'files' => array(
-    'js' => array(
-      'leaflet.js',
-    ),
-    'css' => array(
-      'leaflet.css' => array(),
-    ),
-  ),
-);
+      if (($library = libraries_detect('moment')) && !empty($library['installed'])) {
+        // The library is installed. Awesome!
+        print_r("Moment lib loaded.");
+      }
+      else {
+        $error = $library['error'];
+        $error_message = $library['error message'];
+        print_r("Moment lib not loaded.");
+      }
+    */
 
-/*
-$libraries['moment'] = array(
-  'name' => 'Moment JS',
-  'vendor url' => 'http://www.daterangepicker.com/',
-  'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
-'version callback' => 'bgmap_short_circuit_version',
-'files' => array(
-  'js' => array(
-    'moment.js',
-  ),
-),
-);
-*/
-
-return $libraries;
+    /*
+      if (($library = libraries_detect('daterangepicker')) && !empty($library['installed'])) {
+        // The library is installed. Awesome!
+        //print_r("Daterange lib loaded.");
+      }
+      else {
+        $error = $library['error'];
+        $error_message = $library['error message'];
+        print_r("Error: Daterange lib not loaded.");
+      }
+    */
 }
 
 /**
-* Short-circuit the version argument.
-*/
-function bgmap_short_circuit_version() {
-  return TRUE;
+ * Implements hook_libraries_info().
+ */
+function bgmap_libraries_info()
+{
+    $libraries = array();
+
+    if (($library_path = libraries_get_path('daterangepicker'))) {
+        //print_r("Daterange lib path OK.");
+
+        $libraries['daterangepicker'] = array(
+            'library path' => $library_path,
+            'name' => 'Daterange Picker',
+            'vendor url' => 'http://www.daterangepicker.com/',
+            'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'daterangepicker.js',
+                ),
+                'css' => array(
+                    'daterangepicker.css',
+                ),
+            ),
+            /*
+            'dependencies' => array(
+                  'moment',
+            ),
+            */
+        );
+    }
+    $libraries['leaflet'] = array(
+        //'title' => 'Vertical Tabs',
+        //'website' => 'http://drupal.org/node/323112',
+        'name' => 'Leaflet',
+        'vendor url' => 'http://www.leaflet.com/',
+        'download url' => 'http://www.leaflet.com/download',
+        /*
+        'version arguments' => array(
+        'file' => 'highcharts.js',
+        // jQuery FlexSlider v2.1
+        'pattern' => '/Highcharts v(\d+\.+\d+)/',
+        'lines' => 2,
+      ),
+      */
+        'version callback' => 'bgmap_short_circuit_version',
+        'files' => array(
+            'js' => array(
+                'leaflet.js',
+            ),
+            'css' => array(
+                'leaflet.css' => array(),
+            ),
+        ),
+    );
+
+    /*
+    $libraries['moment'] = array(
+      'name' => 'Moment JS',
+      'vendor url' => 'http://www.daterangepicker.com/',
+      'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
+    'version callback' => 'bgmap_short_circuit_version',
+    'files' => array(
+      'js' => array(
+        'moment.js',
+      ),
+    ),
+    );
+    */
+
+    return $libraries;
 }
 
 /**
-* Implements hook_menu().
-*/
-function bgmap_menu() {
-  $items = array();
-
-  // Provide configuration options for the module from Admin page.
-  $items['admin/config/content/bgmap'] = array(
-    'title' => 'BGTrans',
-    'description' => 'Configuration for bgtrans module',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('bgmap_form'),
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-/* Example for creating a page instead of block.
-  $items['bgmap'] = array(
-    'title' => 'Real time map',
-    'page callback' => '_bgmap_page',
-    'access arguments' => array('access bgmap content'),
-    //Will appear in Navigation menu.
-    'type' => MENU_NORMAL_ITEM,
-  );
-  */
-  $items['bgmap/geoj'] = array(
-    'title' => 'Retrieve GeoJSON for RT markers or Trace.',
-    'page callback' => 'bgmap_get_geojson',
-    //'page arguments' => array(1), //get param from URL.
-    'access arguments' => array('access bgmap content'),
-    'type' => MENU_CALLBACK,
-  );
-  return $items;
+ * Short-circuit the version argument.
+ */
+function bgmap_short_circuit_version()
+{
+    return TRUE;
 }
 
-/* Example for creating a page instead of block. */
-/*
+/**
+ * Implements hook_menu().
+ */
+function bgmap_menu()
+{
+    $items = array();
+
+    // Provide configuration options for the module from Admin page.
+    $items['admin/config/content/bgmap'] = array(
+        'title' => 'BGTrans',
+        'description' => 'Configuration for bgtrans module',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('bgmap_form'),
+        'access arguments' => array('access administration pages'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['bgmap'] = array(
+        'title' => 'Real time map',
+        'page callback' => '_bgmap_page',
+        'access arguments' => array('access bgmap content'),
+        //Will appear in Navigation menu.
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['bgmap/get'] = array(
+        'title' => 'Real time map',
+        'page callback' => 'bgmap_get_json',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access bgmap content'),
+        'type' => MENU_CALLBACK,
+    );
+    $items['bgmap/geoj'] = array(
+        'title' => 'Retrieve GeoJSON for RT markers or Trace.',
+        'page callback' => 'bgmap_get_geojson',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access bgmap content'),
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
 function _bgmap_page() {
   $items = array();
   //return "Hello There!";
   return $items;
 }
-*/
 
 /**
-* Implements hook_node_insert().
-*
-* As a new node is being inserted into the database, we need to do our own
-* database inserts.
-*/
-function bgmap_node_insert($node) {
-  //print_r($node);
-  //dpm($node);
-  if ($node->type == 'vehicles') {
-    $nid = $node->nid;
-    $sid = $node->field_sensor_id['und'][0]['value'];
-    $vnum = $node->field_vehicle_num['und'][0]['value'];
-    $vgroup = 'car';
-    $flag = true;
-    //$vgroup = $node->field_vehicle_group['und'][0]['value'];
-    _update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
-  }
-  /*
-  if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
-  // Notice that we are ignoring any revision information using $node->nid
-}
-*/
-}
-
-/**
-* Implements hook_node_update().
-*
-* As an existing node is being updated in the database, we need to do our own
-* database updates.
-*
-* This hook is called when an existing node has been changed.
-*/
-function bgmap_node_update($node) {
-  //print_r($node);
-  //echo $node;
-  //if ($node->type == 'stations' && !isset($node->nid)) {
-  if ($node->type == 'vehicles') {
-    //dpm($node);
-    $nid = $node->nid;
-    $sid = $node->field_sensor_id['und'][0]['value'];
-    $vnum = $node->field_vehicle_num['und'][0]['value'];
-    $vgroup = 'car';
-    $flag = false;
-    _update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
-  }
-}
-
-/**
-* Implements hook_block_view().
-*
-* Prepares the contents of the block.
-*/
-function bgmap_block_view($delta = '') {
-  // Set sid invalid by default, means to select all.
-  //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
-  $block = array();
-  // TODO: exit if it is not a node but a view or something else.
-  // TODO: Move this to init? For the case of view this happens outside.
-  if ($node = menu_get_object()) {
-      if ($node->type == 'vehicles') {
-        //dpm($node);
+ * Implements hook_node_insert().
+ *
+ * As a new node is being inserted into the database, we need to do our own
+ * database inserts.
+ */
+function bgmap_node_insert($node)
+{
+    if ($node->type == 'vehicles') {
         $nid = $node->nid;
-        // TODO: Fix this. Use the correct approach.
         $sid = $node->field_sensor_id['und'][0]['value'];
         $vnum = $node->field_vehicle_num['und'][0]['value'];
-      } // if node-type.
-  } // if node.
-
-  switch ($delta) {
+        $vgroup = 'car';
+        $flag = true;
+        //$vgroup = $node->field_vehicle_group['und'][0]['value'];
+        _update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
+    }
     /*
-    * The real time block may appear in a page that shows all items or on a page that
-    * shows single item. Create a filter to reflect this context. The filter can be
-    * presented as a JSON, where some parameters may be missing, if some fields on the page
-    * is missing (eg. sensor_id).
-    */
-    case 'rtsingle':
-      // Pass any node related parameters here, which can then be used by the JS during Ajax.
-      // Here will be an array that contains the filter values.
-      // if(isset($sid)) {
-      // vnum/sid list.
-      drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
-      $block['subject'] = t('Real Time Location.');
-      if (user_access('access content')) {
-        $items2 = array();
-        $items2[] = array('Test', '2');
-        // No content in the last week.
-        if (empty($items2)) {
-          $block['content']['#markup'] = t('No data available.');
-          //$block['content'] = t('No data available.');
-        }
-        else {
-          // Pass data through theme function.
-          //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-          // TODO: Create empty div here?
-          $block['content']['#markup'] = theme('table', array('items' => $items2));
-          //$block['content'] = theme('item_list', array('items' => $items2));
-        }
-      }
-      //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
-      //$block['content']['#attached']['libraries_load'][] = array('highcharts');
-      //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
-      //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
-      break;
-      case 'rtmulti':
-        // Only appears in a view.
-        // TODO: What if this block is enabled for a node?
-        // TODO: nidList already set in the view preprocess.
-        //drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
-        $block['subject'] = t('Location Tracking All.');
-        if (user_access('access content')) {
-          $items2 = array();
-          $items2[] = array('Test', '2');
-          // No content in the last week.
-          if (empty($items2)) {
-            $block['content']['#markup'] = t('No data available.');
-            //$block['content'] = t('No data available.');
-          }
-          else {
-            // Pass data through theme function.
-            //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-            // TODO: Create empty div here?
-            $block['content']['#markup'] = theme('table', array('items' => $items2));
-            //$block['content'] = theme('item_list', array('items' => $items2));
-          }
-        }
-        break;
-    case 'trace':
-       // TODO: If not a node or if node type is different, don't show the block.
-        //$vgroup = 'car';
-        if(isset($sid)) {
-          drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
-        }
+    if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
+    // Notice that we are ignoring any revision information using $node->nid
+  }
+  */
+}
 
-        $block['subject'] = t('Real Time Map Trace');
-        if (user_access('access content')) {
-          $items2 = array();
-          $items2[] = array('Test', '2');
-          // No content in the last week.
-          if (empty($items2)) {
-            $block['content']['#markup'] = t('No data available.');
-            //$block['content'] = t('No data available.');
-          }
-          else {
-            // Pass data through theme function.
-            //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-            $block['content']['#markup'] = theme('table', array('items' => $items2));
-            //$block['content'] = theme('item_list', array('items' => $items2));
-          }
-        } // access.
-      break;
-      case 'tracemulti':
-         // TODO: If not a node or if node type is different, don't show the block.
-          //$vgroup = 'car';
-          $block['subject'] = t('Real Time Map Trace All');
-          if (user_access('access content')) {
-            $items2 = array();
-            $items2[] = array('Test', '2');
-            // No content in the last week.
-            if (empty($items2)) {
-              $block['content']['#markup'] = t('No data available.');
-              //$block['content'] = t('No data available.');
+/**
+ * Implements hook_node_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ *
+ * This hook is called when an existing node has been changed.
+ */
+function bgmap_node_update($node)
+{
+    //if ($node->type == 'stations' && !isset($node->nid)) {
+    if ($node->type == 'vehicles') {
+        //dpm($node);
+        $nid = $node->nid;
+        $sid = $node->field_sensor_id['und'][0]['value'];
+        $vnum = $node->field_vehicle_num['und'][0]['value'];
+        $vgroup = 'car';
+        $flag = false;
+        _update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
+    }
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Prepares the contents of the block.
+ */
+function bgmap_block_view($delta = '')
+{
+    // Set sid invalid by default, means to select all.
+    //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
+    $block = array();
+    // TODO: exit if it is not a node but a view or something else.
+    // TODO: Move this to init? For the case of view this happens outside.
+    if ($node = menu_get_object()) {
+        if ($node->type == 'vehicles') {
+            //dpm($node);
+            $nid = $node->nid;
+            // TODO: Fix this. Use the correct approach.
+            $sid = $node->field_sensor_id['und'][0]['value'];
+            $vnum = $node->field_vehicle_num['und'][0]['value'];
+        } // if node-type.
+    } // if node.
+
+    switch ($delta) {
+        /*
+        * The real time block may appear in a page that shows all items or on a page that
+        * shows single item. Create a filter to reflect this context. The filter can be
+        * presented as a JSON, where some parameters may be missing, if some fields on the page
+        * is missing (eg. sensor_id).
+        */
+        case 'rtsingle':
+            // Pass any node related parameters here, which can then be used by the JS during Ajax.
+            // Here will be an array that contains the filter values.
+            // if(isset($sid)) {
+            // vnum/sid list.
+            drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
+            $block['subject'] = t('Real Time Location.');
+            if (user_access('access content')) {
+                $items2 = array();
+                $items2[] = array('Test', '2');
+                // No content in the last week.
+                if (empty($items2)) {
+                    $block['content']['#markup'] = t('No data available.');
+                    //$block['content'] = t('No data available.');
+                } else {
+                    // Pass data through theme function.
+                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+                    // TODO: Create empty div here?
+                    $block['content']['#markup'] = theme('table', array('items' => $items2));
+                    //$block['content'] = theme('item_list', array('items' => $items2));
+                }
             }
-            else {
-              // Pass data through theme function.
-              //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-              $block['content']['#markup'] = theme('table', array('items' => $items2));
-              //$block['content'] = theme('item_list', array('items' => $items2));
+            //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
+            //$block['content']['#attached']['libraries_load'][] = array('highcharts');
+            //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
+            //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
+            break;
+        case 'rtmulti':
+            // Only appears in a view.
+            // TODO: What if this block is enabled for a node?
+            // TODO: nidList already set in the view preprocess.
+            //drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
+            $block['subject'] = t('Location Tracking All.');
+            if (user_access('access content')) {
+                $items2 = array();
+                $items2[] = array('Test', '2');
+                // No content in the last week.
+                if (empty($items2)) {
+                    $block['content']['#markup'] = t('No data available.');
+                    //$block['content'] = t('No data available.');
+                } else {
+                    // Pass data through theme function.
+                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+                    // TODO: Create empty div here?
+                    $block['content']['#markup'] = theme('table', array('items' => $items2));
+                    //$block['content'] = theme('item_list', array('items' => $items2));
+                }
             }
-          } // access.
-        break;
-    case 'fuel':
-        //$vgroup = 'car';
-        // TODO: tmp
-        $sid = 204;
-        // TODO: If not a node, or node type is different, don't show the block.
-        if(isset($sid)) {
-          // TODO: Extend the condition to whole section.
-          drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
-        }
+            break;
+        case 'trace':
+            // TODO: If not a node or if node type is different, don't show the block.
+            //$vgroup = 'car';
+            if (isset($sid)) {
+                drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
+            }
 
-        //$filter['sidList'] = array($sid);
-        //$filter['start'] = -1;
-        //$filter['end'] = -1;
-        $filter = new stdClass();
-        $filter->sidList = array($sid);
-        $filter->start = -1;
-        $filter->end = -1;
-        $block['subject'] = t('Fuel Usage Table');
-        if (user_access('access content')) {
-          $result = _getdata_exdb('fuel', $filter);
-          $items2 = array();
-          $items2[] = array('Test', '2');
-          // No content in the last week.
-          foreach ($result as $row) {
-             date_default_timezone_set('Asia/Singapore');
-             $date = new DateTime();
-             //$timeHr = date('g:i a',($row->timestamp)/1000);
-             $date->setTimestamp(($row->timestamp)/1000);
-             $timeHr = $date->format('g:i a');
+            $block['subject'] = t('Real Time Map Trace');
+            if (user_access('access content')) {
+                $items2 = array();
+                $items2[] = array('Test', '2');
+                // No content in the last week.
+                if (empty($items2)) {
+                    $block['content']['#markup'] = t('No data available.');
+                    //$block['content'] = t('No data available.');
+                } else {
+                    // Pass data through theme function.
+                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+                    $block['content']['#markup'] = theme('table', array('items' => $items2));
+                    //$block['content'] = theme('item_list', array('items' => $items2));
+                }
+            } // access.
+            break;
+        case 'tracemulti':
+            // TODO: If not a node or if node type is different, don't show the block.
+            //$vgroup = 'car';
+            $block['subject'] = t('Real Time Map Trace All');
+            if (user_access('access content')) {
+                $items2 = array();
+                $items2[] = array('Test', '2');
+                // No content in the last week.
+                if (empty($items2)) {
+                    $block['content']['#markup'] = t('No data available.');
+                    //$block['content'] = t('No data available.');
+                } else {
+                    // Pass data through theme function.
+                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+                    $block['content']['#markup'] = theme('table', array('items' => $items2));
+                    //$block['content'] = theme('item_list', array('items' => $items2));
+                }
+            } // access.
+            break;
+        case 'fuel':
+            //$vgroup = 'car';
+            // TODO: tmp
+            $sid = 204;
+            // TODO: If not a node, or node type is different, don't show the block.
+            if (isset($sid)) {
+                // TODO: Extend the condition to whole section.
+                drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
+            }
 
-             $fuel = round($row->value, 2);
-             if($fuel == -1)
-                $noise = '-';
+            //$filter['sidList'] = array($sid);
+            //$filter['start'] = -1;
+            //$filter['end'] = -1;
+            $filter = new stdClass();
+            $filter->sidList = array($sid);
+            $filter->start = -1;
+            $filter->end = -1;
+            $block['subject'] = t('Fuel Usage Table');
+            if (user_access('access content')) {
+                $result = _getdata_exdb('fuel', $filter);
+                $items2 = array();
+                $items2[] = array('Test', '2');
+                // No content in the last week.
+                foreach ($result as $row) {
+                    date_default_timezone_set('Asia/Singapore');
+                    $date = new DateTime();
+                    //$timeHr = date('g:i a',($row->timestamp)/1000);
+                    $date->setTimestamp(($row->timestamp) / 1000);
+                    $timeHr = $date->format('g:i a');
 
-             $items2[] = array($timeHr, $noise);
-           } // foreach
+                    $fuel = round($row->value, 2);
+                    if ($fuel == -1)
+                        $noise = '-';
 
-           $header = array(
-             array('data' => t('Time')),
-             array('data' => t('Fuel usage')),
-           );
+                    $items2[] = array($timeHr, $noise);
+                } // foreach
 
-          if (empty($items2)) {
-            $block['content']['#markup'] = t('No data available.');
-            //$block['content'] = t('No data available.');
-          }
-          else {
-            // Pass data through theme function.
-            //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-            $block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $items2, 'attributes' => array('id' => 'sort-table')));
-            //$block['content'] = theme('item_list', array('items' => $items2));
-          }
-        } // access.
-      break;
-    case 'aob':
-      if (user_access('access content')) {
-      } // if user_access
-      break;
-  } // switch
-  return $block;
+                $header = array(
+                    array('data' => t('Time')),
+                    array('data' => t('Fuel usage')),
+                );
+
+                if (empty($items2)) {
+                    $block['content']['#markup'] = t('No data available.');
+                    //$block['content'] = t('No data available.');
+                } else {
+                    // Pass data through theme function.
+                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+                    $block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $items2, 'attributes' => array('id' => 'sort-table')));
+                    //$block['content'] = theme('item_list', array('items' => $items2));
+                }
+            } // access.
+            break;
+        case 'aob':
+            if (user_access('access content')) {
+                print_r("Unexpected switch");
+            } // if user_access
+            break;
+    } // switch
+    return $block;
 }
 
 /*
@@ -489,272 +476,281 @@ function bgmap_block_view($delta = '') {
 */
 function bedmon_preprocess_views_view(&$vars)
 {
-  //dpm($vars['view']->result);
-  if($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
-    $active_sids = array();
-    foreach($vars['view']->result as $cnum => $cell) {
-      //print_r($cell->node_title);
-      $sid_content = $cell->field_field_sensor_id[0];
-      //$active_nids[] = $sid_content->raw;
-      $active_sids[] = $sid_content['raw']['value'];
+    //dpm($vars['view']->result);
+    if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
+        $active_sids = array();
+        foreach ($vars['view']->result as $cnum => $cell) {
+            //print_r($cell->node_title);
+            $sid_content = $cell->field_field_sensor_id[0];
+            //$active_nids[] = $sid_content->raw;
+            $active_sids[] = $sid_content['raw']['value'];
+        }
+        //print_r($active_nids);
+        //if(!empty(array_filter($active_sids))) {
+        if (count($active_sids) > 0) {
+            drupal_add_js(array('rt' => array('sid_list' => $active_sids)), 'setting');
+        } else {
+            // Indiate the case of empty array to JavaScript.
+            drupal_add_js(array('rt' => array('sid_list' => -1)), 'setting');
+        }
+        //drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap_test.js');
+        // drupal_add_css(drupal_get_path('theme', 'your-theme') .'/your-css.css');
+        /*
+            $vars['view']['#attached']['js'][] = array
+            (
+              'type' => 'file',
+              'data' => drupal_get_path('theme', 'my_theme') . '/my_script.js',
+            );
+        */
     }
-    //print_r($active_nids);
-    //if(!empty(array_filter($active_sids))) {
-    if(count($active_sids) > 0) {
-      drupal_add_js(array('rt' => array('sid_list' => $active_sids)), 'setting');
-    } else {
-      // Indiate the case of empty array to JavaScript.
-      drupal_add_js(array('rt' => array('sid_list' => -1)), 'setting');
-    }
-    //drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap_test.js');
-    // drupal_add_js(drupal_get_path('theme', 'your-theme') . '/your-js.js');
-    // drupal_add_css(drupal_get_path('theme', 'your-theme') .'/your-css.css');
-/*
-    $vars['view']['#attached']['js'][] = array
-    (
-      'type' => 'file',
-      'data' => drupal_get_path('theme', 'my_theme') . '/my_script.js',
-    );
-*/
-  }
+}
+
+function bgmap_get_json()
+{
+    $geojson = array();
+    return drupal_json_output($geojson);
 }
 
 /**
-* Ajax end point function, menu callback.
-*
-* Used by browser JS to retrieve data in real time.
-* saved in that time period.
-*
-* @return
-*   JSON data.
-*/
-function bgmap_get_geojson($reqtype) {
-  //dpm($reqtype);
-  $geojson = 1;
-  return drupal_json_output($geojson);
+ * Ajax end point function, menu callback.
+ *
+ * Used by browser JS to retrieve data in real time.
+ * saved in that time period.
+ *
+ * @return
+ *   JSON data.
+ */
+function bgmap_get_geojson($reqtype)
+{
+    //dpm($reqtype);
+    $geojson = array();
+    return drupal_json_output($geojson);
 }
 
-function _bgmap_get_geojson($reqtype) {
-  //function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
-  //dpm($filter);
-  dpm($reqtype);
-  //print_r($start_time);
-  //retrieve our post value
-  //$nid_list = $_REQUEST['nidList'];
-  $post_data = json_decode($_POST['jsonPost']);
-  $rqtype = $post_data->reqtype;
-  $filter = $post_data->filter;
-  dpm($filter); // This works, but not print_r.
-  print_r($filter);
+function _bgmap_get_geojson($reqtype)
+{
+    //function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
+    //dpm($filter);
+    dpm($reqtype);
+    //print_r($start_time);
+    //retrieve our post value
+    //$nid_list = $_REQUEST['nidList'];
+    $post_data = json_decode($_POST['jsonPost']);
+    $rqtype = $post_data->reqtype;
+    $filter = $post_data->filter;
+    dpm($filter); // This works, but not print_r.
+    print_r($filter);
 
-  $result = _getdata_exdb($reqtype, $filter);
-  //
-  date_default_timezone_set('Asia/Singapore');
-  $geojson = array(
-   'type'      => 'FeatureCollection',
-   'features'  => array()
-  );
+    $result = _getdata_exdb($reqtype, $filter);
+    //
+    date_default_timezone_set('Asia/Singapore');
+    $geojson = array(
+        'type' => 'FeatureCollection',
+        'features' => array()
+    );
 
-  $items2 = array();
-  switch($reqtype) {
-    case 'trc':
-      foreach ($result as $row) {
-        $time = ($row->timestamp);
-        //$noise = round($row->noise_data, 2);
-        $lat = $row->latitude;
-        $lng = $row->longitude;
+    $items2 = array();
+    switch ($reqtype) {
+        case 'trc':
+            foreach ($result as $row) {
+                $time = ($row->timestamp);
+                //$noise = round($row->noise_data, 2);
+                $lat = $row->latitude;
+                $lng = $row->longitude;
 
-        $polygon = array($lat, $lng);
-        //
-      } // foreach
-      $feature = array(
-        'type' => 'Feature',
-        'geometry' => array('type'=> 'Polygon', 'coordinates' => $polygon),
-        'properties' => array(
-          'title' => 'Test2',
-          'line-color' => '#f00',
-          'line-size' => 'small'
-        )
-      );
-      /*
-      'title' => $row['name'],
-      'marker-color' => '#f00',
-      'marker-size' => 'small'
-      */
-      # Add feature arrays to feature collection array
-      array_push($geojson['features'], $feature);
-      break;
-      case 'trcm':
-        // TODO: Assemble Polygon GeoJSON for multiple devices.
-      break;
-
-    case 'rt': // both single and multi.
-      foreach ($result as $row) {
-        $time = ($row->timestamp);
-        //$noise = round($row->noise_data, 2);
-        $lat = $row->latitude;
-        $lng = $row->longitude;
-        //$title = $row->title; //$row['name']
-
-        $feature = array(
-          'type' => 'Feature',
-          'geometry' => array("type" => "Point", "coordinates" => [$lat, $lng]),
-          'properties' => array(
-            'title' => 'Test',
+                $polygon = array($lat, $lng);
+                //
+            } // foreach
+            $feature = array(
+                'type' => 'Feature',
+                'geometry' => array('type' => 'Polygon', 'coordinates' => $polygon),
+                'properties' => array(
+                    'title' => 'Test2',
+                    'line-color' => '#f00',
+                    'line-size' => 'small'
+                )
+            );
+            /*
+            'title' => $row['name'],
             'marker-color' => '#f00',
             'marker-size' => 'small'
-          ),
-        );
-        # Add feature arrays to feature collection array
-        array_push($geojson['features'], $feature);
-        //
-      } // foreach
-      break;
-  }
+            */
+            # Add feature arrays to feature collection array
+            array_push($geojson['features'], $feature);
+            break;
+        case 'trcm':
+            // TODO: Assemble Polygon GeoJSON for multiple devices.
+            break;
 
-  return drupal_json_output($geojson);
-}
+        case 'rt': // both single and multi.
+            foreach ($result as $row) {
+                $time = ($row->timestamp);
+                //$noise = round($row->noise_data, 2);
+                $lat = $row->latitude;
+                $lng = $row->longitude;
+                //$title = $row->title; //$row['name']
 
-
-function _getdata_exdb($reqtype, $filter){
-  // From admin page.
-  $max_num = variable_get('bgmap_max', 3);
-  dpm($filter);
-  print_r($filter);
-  //$sid_list = $filter.sidList;
-  //$sid_list = $filter[sidList];
-  $sid_list = $filter->sidList;
-  $start_time = $filter->start;
-  $end_time = $filter->end;
-  print_r("Test");
-  print_r($sid_list);
-
-  // Sanitize sids array before using in the query statement.
-
-  $bg_db = array(
-    'database' => 'bgmap',
-    'username' => 'bgmap', // assuming this is necessary
-    'password' => 'bgmap%user$1', // assuming this is necessary
-    'host' => 'localhost', // assumes localhost
-    'driver' => 'mysql', // replace with your database driver
-  );
-
-  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
-  db_set_active('BLUGRAPHTECH');
-
-/*
-    $query2 = array();
-    $query2 = db_select('bgmap_obd_node_map', 'm')
-    ->fields('m', array('nid', 'veh_num', 'veh_type'))
-    ->condition('sid', $sid);
-    $result2 = $query2->execute();
-    if($result2->rowCount() > 0) {
-      $row2  = $result2->fetchObject();
-      $nid = $row2->nid;
-      $vnum = $row2->veh_num;
-    } else {
-      // The entry doesn't exist in the node table, invalid sensor-id.
-      // Inform the JS and update web interface accordingly.
-      $nid = -1;
-      $vnum = 'NA';
+                $feature = array(
+                    'type' => 'Feature',
+                    'geometry' => array("type" => "Point", "coordinates" => [$lat, $lng]),
+                    'properties' => array(
+                        'title' => 'Test',
+                        'marker-color' => '#f00',
+                        'marker-size' => 'small'
+                    ),
+                );
+                # Add feature arrays to feature collection array
+                array_push($geojson['features'], $feature);
+                //
+            } // foreach
+            break;
     }
-    // TODO: iF multiple entry match the condition, handle as error?
-*/
 
-  $query = array();
-  if ($reqtype == 'fuel'){
-    $query = db_select('bgmap_obd_fuel', 'a')
-    ->fields('a', array('sid', 'timestamp', 'value'))
-    ->condition('sid', $sid_list, 'IN')
-    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('timestamp', 'DESC')
-    ->groupBy('sid');
-  }
-  if ($reqtype == 'rt'){
-    $query = db_select('bgmap_obd_gps', 'a')
-    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    ->condition('sid', $sid_list, 'IN')
-    ->orderBy('timestamp', 'DESC');
-    // TODO: Can be conditional, different for block and page.
-    //$query->range(0, $max_num);
-    // TODO: Use timestamp condition instead?
-    $query->range(0, 1);
-  }
-  if ($reqtype == 'trc'){
-      $query = db_select('bgmap_obd_gps', 'a')
-    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    // TODO: Currently assumes single sid.
-    ->condition('sid', $sid_list, 'IN')
-    //->condition('sid', array(1,5,7),'IN')
-    //->condition('status', 0,'>')
-    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('datetime', 'DESC');
-  }
-
-  $result = $query->execute();
-  db_set_active();
-  return $result;
+    return drupal_json_output($geojson);
 }
 
 
-function _update_ext_db($nid, $sid, $vnum, $vgroup, $flag) {
-  $bg_db = array(
-    'database' => 'bgmap',
-    'username' => 'bgmap', // assuming this is necessary
-    'password' => 'bgmap%user$1', // assuming this is necessary
-    'host' => 'localhost', // assumes localhost
-    'driver' => 'mysql', // replace with your database driver
-  );
+function _getdata_exdb($reqtype, $filter)
+{
+    // From admin page.
+    $max_num = variable_get('bgmap_max', 3);
+    dpm($filter);
+    print_r($filter);
+    //$sid_list = $filter.sidList;
+    //$sid_list = $filter[sidList];
+    $sid_list = $filter->sidList;
+    $start_time = $filter->start;
+    $end_time = $filter->end;
+    print_r("Test");
+    print_r($sid_list);
 
-  Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
-  db_set_active('BLUGRAPHTECH');
+    // Sanitize sids array before using in the query statement.
 
-  //$query = array();
-  if($flag) {
-    db_insert('bgmap_obd_node_map')
-    ->fields(array(
-      'nid' => $nid,
-      'sid' => $sid,
-      'veh_num' => $vnum,
-      'veh_type' => $vgroup,
-    ))->execute();
-  }
-  else {
-    db_update('bgmap_obd_node_map')
-    ->fields(array(
-      'nid' => $nid,
-      'sid' => $sid,
-      'veh_num' => $vnum,
-      'veh_type' => $vgroup,
-    ))
-    ->condition('nid', $nid)
-    ->execute();
-  }
-  // without the paramater means set back to the default for the site
-  db_set_active();
+    $bg_db = array(
+        'database' => 'bgmap',
+        'username' => 'bgmap', // assuming this is necessary
+        'password' => 'bgmap%user$1', // assuming this is necessary
+        'host' => 'localhost', // assumes localhost
+        'driver' => 'mysql', // replace with your database driver
+    );
+
+    Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+    db_set_active('BLUGRAPHTECH');
+
+    /*
+        $query2 = array();
+        $query2 = db_select('bgmap_obd_node_map', 'm')
+        ->fields('m', array('nid', 'veh_num', 'veh_type'))
+        ->condition('sid', $sid);
+        $result2 = $query2->execute();
+        if($result2->rowCount() > 0) {
+          $row2  = $result2->fetchObject();
+          $nid = $row2->nid;
+          $vnum = $row2->veh_num;
+        } else {
+          // The entry doesn't exist in the node table, invalid sensor-id.
+          // Inform the JS and update web interface accordingly.
+          $nid = -1;
+          $vnum = 'NA';
+        }
+        // TODO: iF multiple entry match the condition, handle as error?
+    */
+
+    $query = array();
+    if ($reqtype == 'fuel') {
+        $query = db_select('bgmap_obd_fuel', 'a')
+            ->fields('a', array('sid', 'timestamp', 'value'))
+            ->condition('sid', $sid_list, 'IN')
+            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+            ->orderBy('timestamp', 'DESC')
+            ->groupBy('sid');
+    }
+    if ($reqtype == 'rt') {
+        $query = db_select('bgmap_obd_gps', 'a')
+            ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+            ->condition('sid', $sid_list, 'IN')
+            ->orderBy('timestamp', 'DESC');
+        // TODO: Can be conditional, different for block and page.
+        //$query->range(0, $max_num);
+        // TODO: Use timestamp condition instead?
+        $query->range(0, 1);
+    }
+    if ($reqtype == 'trc') {
+        $query = db_select('bgmap_obd_gps', 'a')
+            ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+            // TODO: Currently assumes single sid.
+            ->condition('sid', $sid_list, 'IN')
+            //->condition('sid', array(1,5,7),'IN')
+            //->condition('status', 0,'>')
+            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+            ->orderBy('datetime', 'DESC');
+    }
+
+    $result = $query->execute();
+    db_set_active();
+    return $result;
+}
+
+
+function _update_ext_db($nid, $sid, $vnum, $vgroup, $flag)
+{
+    $bg_db = array(
+        'database' => 'bgmap',
+        'username' => 'bgmap', // assuming this is necessary
+        'password' => 'bgmap%user$1', // assuming this is necessary
+        'host' => 'localhost', // assumes localhost
+        'driver' => 'mysql', // replace with your database driver
+    );
+
+    Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
+    db_set_active('BLUGRAPHTECH');
+
+    //$query = array();
+    if ($flag) {
+        db_insert('bgmap_obd_node_map')
+            ->fields(array(
+                'nid' => $nid,
+                'sid' => $sid,
+                'veh_num' => $vnum,
+                'veh_type' => $vgroup,
+            ))->execute();
+    } else {
+        db_update('bgmap_obd_node_map')
+            ->fields(array(
+                'nid' => $nid,
+                'sid' => $sid,
+                'veh_num' => $vnum,
+                'veh_type' => $vgroup,
+            ))
+            ->condition('nid', $nid)
+            ->execute();
+    }
+    // without the paramater means set back to the default for the site
+    db_set_active();
 }
 
 /**
-* Page callback: Module admin settings page.
-*
-* @see current_posts_menu()
-*/
-function bgmap_form($form, &$form_state) {
-  $form['bgmap_max'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Maximum number of entries in the chart'),
-    '#default_value' => variable_get('bgmap_max', 3),
-    '#size' => 2,
-    '#maxlength' => 2,
-    '#description' => t('The maximum number of entries to display in the chart.'),
-    '#required' => TRUE,
-  );
-  return system_settings_form($form);
+ * Page callback: Module admin settings page.
+ *
+ * @see current_posts_menu()
+ */
+function bgmap_form($form, &$form_state)
+{
+    $form['bgmap_max'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Maximum number of entries in the chart'),
+        '#default_value' => variable_get('bgmap_max', 3),
+        '#size' => 2,
+        '#maxlength' => 2,
+        '#description' => t('The maximum number of entries to display in the chart.'),
+        '#required' => TRUE,
+    );
+    return system_settings_form($form);
 }
 
-  //drupal_set_message((string) $query);
-  //while($record = $result->fetchAssoc()) {
-  //print_r($record);
-  //dpm($filter);
-  //$today = getdate();
-  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
+//drupal_set_message((string) $query);
+//while($record = $result->fetchAssoc()) {
+//print_r($record);
+//dpm($filter);
+//$today = getdate();
+//$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
