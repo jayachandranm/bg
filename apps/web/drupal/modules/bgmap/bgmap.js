@@ -2,9 +2,9 @@
   Drupal.behaviors.bgmap = {
     attach: function (context, settings) {
       console.log('JS attach, initialization.');
-      if (Drupal.settings.bgmap) {
+      if (Drupal.settings.rt) {
         // No context parameters are required.
-        //var sid = Drupal.settings.bgmap.sid;
+        var sid = Drupal.settings.rt.sid;
         //var data = Drupal.settings.bgchart.data.data;
         var basepath = Drupal.settings.basePath;
         console.log('Retrieving bgmap settings.');
@@ -58,7 +58,7 @@
         */
         var requestCurrentLoc = (function () {
           console.log('Bgmap: Ajax call.');
-          post_url = basepath + '?q=bgmap/get/' + 'car';
+          post_url = basepath + '?q=bgmap/geoj/' + 'rt';
           var filter = {};
           filter['nidList'] = sid;
           filter['start'] = -1;
@@ -201,20 +201,22 @@
         latlngs.length = 0;
         console.log('Trace: Ajax call: ', startTime, endTime);
         var filter = {};
-        filter['nidList'] = sid;
+        filter['sidList'] = sid;
         filter['start'] = startTime;
         filter['end'] = endTime; // or current time.
         jsonFilter = JSON.stringify(filter);
         console.log(jsonFilter);
-        post_url = basepath + '?q=bgmap/getgeoj/'
+        post_url = basepath + '?q=bgmap/getgeoj/' + 'trc';
+        /*
                  + sid + '/'
                  + startTime + '/'
                  + endTime;
+        */
         $.ajax({
           url: post_url,
           type: 'POST',
           dataType: 'json',
-          data: {sid : sid},
+          data: jsonFilter,
           success: function (jsonData) {
             console.log('Received JSON for Trace=', jsonData);
             for (var i = 0; i < jsonData.length; i++) {

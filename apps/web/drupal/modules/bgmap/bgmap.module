@@ -34,21 +34,19 @@ function bgmap_block_info() {
     'cache' => DRUPAL_CACHE_PER_ROLE,
   );
   $blocks['rtmulti'] = array(
-    // The name that will appear in the block list.
     'info' => t('Location Tracking All'),
-    // Default setting.
     'cache' => DRUPAL_CACHE_PER_ROLE,
   );
   $blocks['trace'] = array(
-    // The name that will appear in the block list.
     'info' => t('Location Trace'),
-    // Default setting.
+    'cache' => DRUPAL_CACHE_PER_ROLE,
+  );
+  $blocks['tracemulti'] = array(
+    'info' => t('Location Trace All'),
     'cache' => DRUPAL_CACHE_PER_ROLE,
   );
   $blocks['fuel'] = array(
-    // The name that will appear in the block list.
     'info' => t('Fuel Usage'),
-    // Default setting.
     'cache' => DRUPAL_CACHE_PER_ROLE,
   );
   return $blocks;
@@ -74,6 +72,7 @@ function bgmap_init() {
   // TODO: drupal_add_library does not work.
   //drupal_add_library('bgmap', 'highcharts');
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
+  /*
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.js');
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.date.js');
   drupal_add_js(drupal_get_path('module', 'bgmap') . '/picker.time.js');
@@ -81,6 +80,7 @@ function bgmap_init() {
   drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.css');
   drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.date.css');
   drupal_add_css(drupal_get_path('module', 'bgmap') . '/classic.time.css');
+  */
 
   //
   drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
@@ -232,7 +232,7 @@ function bgmap_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
   */
-  $items['bgmap/getgeoj'] = array(
+  $items['bgmap/geoj'] = array(
     'title' => 'Retrieve GeoJSON for RT markers or Trace.',
     'page callback' => 'bgmap_get_geojson',
     //'page arguments' => array(1), //get param from URL.
@@ -306,6 +306,7 @@ function bgmap_block_view($delta = '') {
   //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
   $block = array();
   // TODO: exit if it is not a node but a view or something else.
+  // TODO: Move this to init? For the case of view this happens outside.
   if ($node = menu_get_object()) {
       if ($node->type == 'vehicles') {
         //dpm($node);
@@ -328,7 +329,7 @@ function bgmap_block_view($delta = '') {
       // Here will be an array that contains the filter values.
       // if(isset($sid)) {
       // vnum/sid list.
-      drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
+      drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
       $block['subject'] = t('Real Time Location.');
       if (user_access('access content')) {
         $items2 = array();
@@ -353,6 +354,8 @@ function bgmap_block_view($delta = '') {
       break;
       case 'rtmulti':
         // Only appears in a view.
+        // TODO: What if this block is enabled for a node?
+        // TODO: nidList already set in the view preprocess.
         //drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
         $block['subject'] = t('Location Tracking All.');
         if (user_access('access content')) {
@@ -373,7 +376,7 @@ function bgmap_block_view($delta = '') {
         }
         break;
     case 'trace':
-    // TODO: If not a node or if node type is different, don't show the block.
+       // TODO: If not a node or if node type is different, don't show the block.
         //$vgroup = 'car';
         if(isset($sid)) {
           drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
@@ -396,16 +399,41 @@ function bgmap_block_view($delta = '') {
           }
         } // access.
       break;
+      case 'tracemulti':
+         // TODO: If not a node or if node type is different, don't show the block.
+          //$vgroup = 'car';
+          $block['subject'] = t('Real Time Map Trace All');
+          if (user_access('access content')) {
+            $items2 = array();
+            $items2[] = array('Test', '2');
+            // No content in the last week.
+            if (empty($items2)) {
+              $block['content']['#markup'] = t('No data available.');
+              //$block['content'] = t('No data available.');
+            }
+            else {
+              // Pass data through theme function.
+              //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+              $block['content']['#markup'] = theme('table', array('items' => $items2));
+              //$block['content'] = theme('item_list', array('items' => $items2));
+            }
+          } // access.
+        break;
     case 'fuel':
-    // TODO: If not a node, or node type is different, don't show the block.
         //$vgroup = 'car';
+        // TODO: If not a node, or node type is different, don't show the block.
         if(isset($sid)) {
-        drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
+          // TODO: Extend the condition to whole section.
+          drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
         }
 
+        $filter['sidList'] = $sid;
+        //$filter->sidList = $sid;
+        $filter['start'] = -1;
+        $filter['end'] = -1;
         $block['subject'] = t('Fuel Usage Table');
         if (user_access('access content')) {
-          $result = bgmap_getdata_exdb('fuel', $sid);
+          $result = _getdata_exdb('fuel', $filter);
           $items2 = array();
           $items2[] = array('Test', '2');
           // No content in the last week.
@@ -465,10 +493,10 @@ function bedmon_preprocess_views_view(&$vars)
     //print_r($active_nids);
     //if(!empty(array_filter($active_sids))) {
     if(count($active_sids) > 0) {
-      drupal_add_js(array('obdlist' => array('sid_list' => $active_sids)), 'setting');
+      drupal_add_js(array('rt' => array('sid_list' => $active_sids)), 'setting');
     } else {
       // Indiate the case of empty array to JavaScript.
-      drupal_add_js(array('obdlist' => array('sid_list' => -1)), 'setting');
+      drupal_add_js(array('rt' => array('sid_list' => -1)), 'setting');
     }
     //drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap_test.js');
     // drupal_add_js(drupal_get_path('theme', 'your-theme') . '/your-js.js');
@@ -492,23 +520,14 @@ function bedmon_preprocess_views_view(&$vars)
 * @return
 *   JSON data.
 */
-function bgmap_get_geojson($filter, $reqtype) {
+function bgmap_get_geojson($reqtype) {
   //function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
   //dpm($filter);
   //print_r($start_time);
   //retrieve our post value
   //$nid_list = $_REQUEST['nidList'];
-  $uid_list = $_POST['nidList'];
+  $filter = json_decode($_POST['jsonFilter']);
   //dpm($nid_list); // This works, but not print_r.
-
-  $today = getdate();
-  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
-  $end_time = time() * 1000 * 10;
-  $max_num = variable_get('bgmap_max', 3);
-
-  // Start, End times are inside the filter.
-  $filter.startTime =  $starttime;
-  $filter.endTime =  $endtime;
 
   $result = _getdata_exdb($reqtype, $filter);
   //
@@ -520,43 +539,52 @@ function bgmap_get_geojson($filter, $reqtype) {
 
   $items2 = array();
   switch($reqtype) {
-    case 'trace':
+    case 'trc':
       foreach ($result as $row) {
         $time = ($row->timestamp);
         //$noise = round($row->noise_data, 2);
-        $latitude = $row->latitude;
-        $longitude = $row->longitude;
+        $lat = $row->latitude;
+        $lng = $row->longitude;
 
-        $polygon = array($latitude, $longitude);
+        $polygon = array($lat, $lng);
         //
       } // foreach
       $feature = array(
         'type' => 'Feature',
-        'geometry' => {"type": "Polygon", "coordinates": array($latitude, $longitude)},
+        'geometry' => {"type": "Polygon", "coordinates": $polygon},
         'properties' => array(
-          'title' => $row['name'],
-          'marker-color' => '#f00',
-          'marker-size' => 'small'
+          'title' => 'Test2',
+          'line-color' => '#f00',
+          'line-size' => 'small'
         )
       );
+      /*
+      'title' => $row['name'],
+      'marker-color' => '#f00',
+      'marker-size' => 'small'
+      */
       # Add feature arrays to feature collection array
       array_push($geojson['features'], $feature);
-
       break;
-    case 'rt':
+      case 'trcm':
+        // TODO: Assemble Polygon GeoJSON for multiple devices.
+      break;
+
+    case 'rt': // both single and multi.
       foreach ($result as $row) {
         $time = ($row->timestamp);
         //$noise = round($row->noise_data, 2);
-        $longitude = $row->longitude;
-        $latitude = $row->latitude;
+        $lat = $row->latitude;
+        $lng = $row->longitude;
+        //$title = $row->title; //$row['name']
 
         $feature = array(
           'type' => 'Feature',
-          'geometry' => {"type": "Point", "coordinates": [$polygon]},
+          'geometry' => {"type": "Point", "coordinates": [$lat, $lng]},
           'properties' => array(
-            'title' => $row['name'],
-            'line-color' => '#f00',
-            'line-size' => 'small'
+            'title' => 'Test',
+            'marker-color' => '#f00',
+            'marker-size' => 'small'
           ),
         );
         # Add feature arrays to feature collection array
@@ -570,10 +598,14 @@ function bgmap_get_geojson($filter, $reqtype) {
 }
 
 
-function _getdata_exdb($restype, $filter){
-  $sid = $filter.sid;
-  $start_time = $filter.st;
-  $end_time = $filter.et;
+function _getdata_exdb($reqtype, $filter){
+  // From admin page.
+  $max_num = variable_get('bgmap_max', 3);
+
+  //$sid_list = $filter.sidList;
+  $sid_list = $filter->sidList;
+  $start_time = $filter->start;
+  $end_time = $filter->end;
 
   // Sanitize sids array before using in the query statement.
 
@@ -608,26 +640,29 @@ function _getdata_exdb($restype, $filter){
 */
 
   $query = array();
-  if ($restype == 'fuel'){
+  if ($reqtype == 'fuel'){
     $query = db_select('bgmap_obd_fuel', 'a')
     ->fields('a', array('sid', 'timestamp', 'value'))
-    ->condition('sid', $sid)
+    ->condition('sid', $sid_list, 'IN')
     ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-    ->orderBy('datetime', 'DESC')
+    ->orderBy('timestamp', 'DESC')
     ->groupBy('sid');
   }
-  if ($restype == 'rt'){
+  if ($reqtype == 'rt'){
     $query = db_select('bgmap_obd_gps', 'a')
     ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+    ->condition('sid', $sid_list, 'IN')
     ->orderBy('timestamp', 'DESC');
     // TODO: Can be conditional, different for block and page.
     //$query->range(0, $max_num);
+    // TODO: Use timestamp condition instead?
     $query->range(0, 1);
   }
-  if ($restype == 'trace'){
+  if ($reqtype == 'trc'){
       $query = db_select('bgmap_obd_gps', 'a')
     ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-    ->condition('sid', $filter)
+    // TODO: Currently assumes single sid.
+    ->condition('sid', $sid_list, 'IN')
     //->condition('sid', array(1,5,7),'IN')
     //->condition('status', 0,'>')
     ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
@@ -699,3 +734,5 @@ function bgmap_form($form, &$form_state) {
   //while($record = $result->fetchAssoc()) {
   //print_r($record);
   //dpm($filter);
+  //$today = getdate();
+  //$start_time = mktime(0, 0, 0,$today['mon'],($today['mday'] - 20), $today['year']);
