@@ -242,9 +242,12 @@ function bgmap_menu() {
   return $items;
 }
 
-/* Example for creating a page instead of block.
+/* Example for creating a page instead of block. */
+/*
 function _bgmap_page() {
-  return "Hello There!";
+  $items = array();
+  //return "Hello There!";
+  return $items;
 }
 */
 
@@ -421,16 +424,21 @@ function bgmap_block_view($delta = '') {
         break;
     case 'fuel':
         //$vgroup = 'car';
+        // TODO: tmp
+        $sid = 204;
         // TODO: If not a node, or node type is different, don't show the block.
         if(isset($sid)) {
           // TODO: Extend the condition to whole section.
           drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
         }
 
-        $filter['sidList'] = $sid;
-        //$filter->sidList = $sid;
-        $filter['start'] = -1;
-        $filter['end'] = -1;
+        //$filter['sidList'] = array($sid);
+        //$filter['start'] = -1;
+        //$filter['end'] = -1;
+        $filter = new stdClass();
+        $filter->sidList = array($sid);
+        $filter->start = -1;
+        $filter->end = -1;
         $block['subject'] = t('Fuel Usage Table');
         if (user_access('access content')) {
           $result = _getdata_exdb('fuel', $filter);
@@ -521,13 +529,23 @@ function bedmon_preprocess_views_view(&$vars)
 *   JSON data.
 */
 function bgmap_get_geojson($reqtype) {
+  //dpm($reqtype);
+  $geojson = 1;
+  return drupal_json_output($geojson);
+}
+
+function _bgmap_get_geojson($reqtype) {
   //function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
   //dpm($filter);
+  dpm($reqtype);
   //print_r($start_time);
   //retrieve our post value
   //$nid_list = $_REQUEST['nidList'];
-  $filter = json_decode($_POST['jsonFilter']);
-  //dpm($nid_list); // This works, but not print_r.
+  $post_data = json_decode($_POST['jsonPost']);
+  $rqtype = $post_data->reqtype;
+  $filter = $post_data->filter;
+  dpm($filter); // This works, but not print_r.
+  print_r($filter);
 
   $result = _getdata_exdb($reqtype, $filter);
   //
@@ -551,7 +569,7 @@ function bgmap_get_geojson($reqtype) {
       } // foreach
       $feature = array(
         'type' => 'Feature',
-        'geometry' => {"type": "Polygon", "coordinates": $polygon},
+        'geometry' => array('type'=> 'Polygon', 'coordinates' => $polygon),
         'properties' => array(
           'title' => 'Test2',
           'line-color' => '#f00',
@@ -580,7 +598,7 @@ function bgmap_get_geojson($reqtype) {
 
         $feature = array(
           'type' => 'Feature',
-          'geometry' => {"type": "Point", "coordinates": [$lat, $lng]},
+          'geometry' => array("type" => "Point", "coordinates" => [$lat, $lng]),
           'properties' => array(
             'title' => 'Test',
             'marker-color' => '#f00',
@@ -601,11 +619,15 @@ function bgmap_get_geojson($reqtype) {
 function _getdata_exdb($reqtype, $filter){
   // From admin page.
   $max_num = variable_get('bgmap_max', 3);
-
+  dpm($filter);
+  print_r($filter);
   //$sid_list = $filter.sidList;
+  //$sid_list = $filter[sidList];
   $sid_list = $filter->sidList;
   $start_time = $filter->start;
   $end_time = $filter->end;
+  print_r("Test");
+  print_r($sid_list);
 
   // Sanitize sids array before using in the query statement.
 

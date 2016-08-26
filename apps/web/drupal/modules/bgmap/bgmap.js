@@ -59,17 +59,21 @@
         var requestCurrentLoc = (function () {
           console.log('Bgmap: Ajax call.');
           post_url = basepath + '?q=bgmap/geoj/' + 'rt';
+          //post_url = basepath + '?q=bgmap/geoj';
+          var postData = {};
+          postData['reqtype'] = 'rt';
           var filter = {};
-          filter['nidList'] = sid;
+          filter['sidList'] = [sid];
           filter['start'] = -1;
           filter['end'] = -1; // or current time.
-          jsonFilter = JSON.stringify(filter);
-          console.log(jsonFilter);
+          postData['filter'] = filter;
+          jsonPost = JSON.stringify(postData);
+          console.log(jsonPost);
           $.ajax({
             url: post_url,
             type: 'POST',
             dataType: 'json',
-            data: jsonFilter,
+            data: jsonPost,
             success: function (jsonData) {
               console.log('Received JSON for All Veh=', jsonData);
               for (var i = 0; i < jsonData.length; i++) {
@@ -200,23 +204,45 @@
         // Clear the array before getting new values.
         latlngs.length = 0;
         console.log('Trace: Ajax call: ', startTime, endTime);
-        var filter = {};
-        filter['sidList'] = sid;
-        filter['start'] = startTime;
-        filter['end'] = endTime; // or current time.
-        jsonFilter = JSON.stringify(filter);
-        console.log(jsonFilter);
-        post_url = basepath + '?q=bgmap/getgeoj/' + 'trc';
+          var postData = {};
+          postData['reqtype'] = 'trc';
+          var filter = {};
+          filter['sidList'] = [sid];
+          filter['start'] = startTime;
+          filter['end'] = endTime; // or current time.
+          postData['filter'] = filter;
+          jsonPost = JSON.stringify(postData);
+         //post_url = basepath + '?q=bgmap/geoj/' + 'trc';
+          //post_url = basepath + '?q=bgmap/geoj';
+          //console.log(post_url, jsonPost);
         /*
                  + sid + '/'
                  + startTime + '/'
                  + endTime;
         */
+          post_url = basepath + '?q=bgmap/geoj';
+           $.ajax({
+              url: post_url,
+              success: function(jsonData) {
+                console.log(jsonData);
+              },
+              complete: function() {
+                 //setTimeout(requestData, 2000);
+                 console.log('success');
+              },
+              //error: function(xhr, status, error) {
+              error: function() {
+                console.log('Error loading ');
+              }
+            }); // ajax
+
+/*
         $.ajax({
           url: post_url,
-          type: 'POST',
+          type: 'GET',
           dataType: 'json',
-          data: jsonFilter,
+          //data: jsonPost,
+          data: {test : 123 },
           success: function (jsonData) {
             console.log('Received JSON for Trace=', jsonData);
             for (var i = 0; i < jsonData.length; i++) {
@@ -235,10 +261,12 @@
             //setTimeout(requestTraceData, 2000);
           },
           //error: function(xhr, status, error) {
-          error: function () {
-            alert('Error loading ');
+          error: function (xhr, status, error) {
+            console.log("Error in Ajax call", xhr, status, error);
+            //alert('Error loading ');
           }
         }); // ajax
+*/
       }); // requestTraceData
 
       requestTraceData();
