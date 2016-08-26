@@ -521,9 +521,8 @@ function _get_json()
  * @return
  *   JSON data.
  */
-//function _get_geojson()
 
-function _get_geojson($reqtype)
+function test_get_geojson($reqtype)
 {
     //dpm($reqtype);
     //$tst_data = $_POST['jsonPost'];
@@ -540,19 +539,14 @@ function _get_geojson($reqtype)
 }
 
 
-function test_get_geojson($rqtype)
+function _get_geojson($rqtype)
 {
     //function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
-    //dpm($filter);
-    //dpm($reqtype);
-    //print_r($start_time);
-    //retrieve our post value
     //$nid_list = $_REQUEST['nidList'];
-    //$post_data = json_decode($_POST['jsonPost']);
-    $post_data = $_POST['jsonPost'];
+    $post_data = json_decode($_POST['jsonPost']);
     $reqtype = $post_data->reqtype;
     $filter = $post_data->filter;
-    dpm($filter); // This works, but not print_r.
+    //dpm($filter); // This works, but not print_r.
     //print_r($filter);
 
     $result = _getdata_exdb($reqtype, $filter);
@@ -567,17 +561,20 @@ function test_get_geojson($rqtype)
     switch ($reqtype) {
         case 'trc':
             foreach ($result as $row) {
-                $time = ($row->timestamp);
+                // TODO: Or use float/double?
+                $time = intval($row->timestamp);
                 //$noise = round($row->noise_data, 2);
-                $lat = $row->latitude;
-                $lng = $row->longitude;
+                $lat = floatval($row->latitude);
+                $lng = floatval($row->longitude);
 
-                $polygon = array($lat, $lng);
+                //$polygon[] = array($lat, $lng);
+                $polygon[] = array($lng, $lat);
                 //
             } // foreach
+            //dpm($polygon);
             $feature = array(
                 'type' => 'Feature',
-                'geometry' => array('type' => 'Polygon', 'coordinates' => $polygon),
+                'geometry' => array('type' => 'LineString', 'coordinates' => $polygon),
                 'properties' => array(
                     'title' => 'Test2',
                     'line-color' => '#f00',
@@ -619,6 +616,7 @@ function test_get_geojson($rqtype)
             } // foreach
             break;
     }
+    //dpm($geojson);
     return drupal_json_output($geojson);
 }
 
@@ -626,16 +624,16 @@ function test_get_geojson($rqtype)
 function _getdata_exdb($reqtype, $filter)
 {
     // From admin page.
-    $max_num = variable_get('bgmap_max', 3);
+    //$max_num = variable_get('bgmap_max', 3);
     dpm($filter);
-    print_r($filter);
+    //print_r($filter);
     //$sid_list = $filter.sidList;
     //$sid_list = $filter[sidList];
     $sid_list = $filter->sidList;
     $start_time = $filter->start;
     $end_time = $filter->end;
-    print_r("Test");
-    print_r($sid_list);
+    //print_r("Test");
+    //print_r($sid_list);
 
     // Sanitize sids array before using in the query statement.
 

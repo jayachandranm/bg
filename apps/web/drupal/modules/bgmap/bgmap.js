@@ -175,6 +175,7 @@
       var lat = 1.421, lng = 103.829;
       //center: [51.505, -0.09], zoom: 13
       var map2 = L.map('show_map2').setView([lat, lng], 13);
+      var traceGeoJsonLayer = L.geoJson().addTo(map2);
       var date = new Date();
       // Current time. Will be overwritten by datepicker.
       // Set by start time be default to start of previous day.
@@ -197,10 +198,13 @@
       * Real time updates.
       */
       var requestTraceData = (function () {
+/*
         if (typeof polylines != "undefined") {
           console.log("CLEAR TRACE.");
           map2.removeLayer(polylines);
         }
+*/
+        map2.removeLayer(traceGeoJsonLayer);
         // Clear the array before getting new values.
         latlngs.length = 0;
         console.log('Trace: Ajax call: ', startTime, endTime);
@@ -215,31 +219,6 @@
         //post_url = basepath + '?q=bgmap/geoj/' + 'trc';
         post_url = basepath + '?q=bgmap/geoj';
         //console.log(post_url, jsonPost);
-        /*
-        + sid + '/'
-        + startTime + '/'
-        + endTime;
-        */
-/*
-        pst_url = basepath + '?q=bgmap/get';
-        $.ajax({
-          url: pst_url,
-          type: 'POST',
-          dataType: 'json',
-          data: {test : 123 },
-          success: function(jsonData) {
-            console.log(jsonData);
-          },
-          complete: function() {
-            //setTimeout(requestData, 2000);
-            console.log('complete.');
-          },
-          //error: function(xhr, status, error) {
-          error: function() {
-            console.log('Error loading ');
-          }
-        }); // ajax
-*/
         $.ajax({
         url: post_url,
         type: 'POST',
@@ -248,15 +227,20 @@
         //data: {test : 123 },
         success: function (jsonData) {
         console.log('Received JSON for Trace=', jsonData);
+        //console.log('Received JSON for Trace=', JSON.stringify(jsonData));
+/*
         for (var i = 0; i < jsonData.length; i++) {
-        latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
-      }
+          latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
+        }
       console.log(latlngs);
       //var test = JSON.stringify(latlngs);
       //var test2 = [[1.46, 103.83], [1.45, 103.82], [1.43, 103.81]];
       //console.log(test);
       polylines = L.polyline(latlngs, { color: 'blue' });
       polylines.addTo(map2);
+*/
+      traceGeoJsonLayer = L.geoJson().addTo(map2);
+      traceGeoJsonLayer.addData(jsonData);
       //map2.fitBounds(latlngs);
       //var polygon = L.polygon().addTo(map);
     },
