@@ -299,7 +299,7 @@ function bgmap_block_view($delta = '')
     // Set sid invalid by default, means to select all.
     //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
     $block = array();
-    // TODO: exit if it is not a node but a view or something else.
+    // TODO: exit if it is not a node but a view or something else. But should allow selected views.
     // TODO: Move this to init? For the case of view this happens outside.
     if ($node = menu_get_object()) {
         if ($node->type == 'vehicles') {
@@ -310,6 +310,10 @@ function bgmap_block_view($delta = '')
             $vnum = $node->field_vehicle_num['und'][0]['value'];
         } // if node-type.
     } // if node.
+    else {
+        $sid = -1;
+        $vnum = -1;
+    }
 
     switch ($delta) {
         /*
@@ -595,15 +599,15 @@ function _get_geojson($rqtype)
 
         case 'rt': // both single and multi.
             foreach ($result as $row) {
-                $time = ($row->timestamp);
                 //$noise = round($row->noise_data, 2);
-                $lat = $row->latitude;
-                $lng = $row->longitude;
+                $time = intval($row->timestamp);
+                $lat = floatval($row->latitude);
+                $lng = floatval($row->longitude);
                 //$title = $row->title; //$row['name']
 
                 $feature = array(
                     'type' => 'Feature',
-                    'geometry' => array("type" => "Point", "coordinates" => [$lat, $lng]),
+                    'geometry' => array("type" => "Point", "coordinates" => [$lng, $lat]),
                     'properties' => array(
                         'title' => 'Test',
                         'marker-color' => '#f00',
@@ -625,7 +629,7 @@ function _getdata_exdb($reqtype, $filter)
 {
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
-    dpm($filter);
+    //dpm($filter);
     //print_r($filter);
     //$sid_list = $filter.sidList;
     //$sid_list = $filter[sidList];

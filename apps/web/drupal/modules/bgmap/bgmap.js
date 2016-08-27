@@ -11,13 +11,14 @@
         //
         var title = 'Real Time Map';
         // Place a div name correcly.
-        $("#block-bgmap-bgmap").append("<div id='show_report'>Map will display here.....</div>");
-        $("#block-bgmap-bgmap").height(500);
+        $("#block-bgmap-rtsingle").append("<div id='show_report'>Map will display here.....</div>");
+        $("#block-bgmap-rtsingle").height(500);
         $("#show_report").height(400);
 
         var lat = 1.421, lng = 103.829;
         //center: [51.505, -0.09], zoom: 13
-        var map = L.map('show_report').setView([lat, lng], 15);
+        var map = L.map('show_report').setView([lat, lng], 13);
+        var rtGeoJsonLayer = L.geoJson().addTo(map);
 
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -57,9 +58,9 @@
         * Real time updates.
         */
         var requestCurrentLoc = (function () {
-          console.log('Bgmap: Ajax call.');
-          post_url = basepath + '?q=bgmap/geoj/' + 'rt';
-          //post_url = basepath + '?q=bgmap/geoj';
+          console.log('RT: Ajax call.');
+          //post_url = basepath + '?q=bgmap/geoj/' + 'rt';
+          post_url = basepath + '?q=bgmap/geoj';
           var postData = {};
           postData['reqtype'] = 'rt';
           var filter = {};
@@ -69,13 +70,28 @@
           postData['filter'] = filter;
           jsonPost = JSON.stringify(postData);
           console.log(jsonPost);
+          map.removeLayer(rtGeoJsonLayer);
           $.ajax({
             url: post_url,
             type: 'POST',
             dataType: 'json',
-            data: jsonPost,
+            //data: jsonPost,
+            data: { jsonPost : jsonPost },
             success: function (jsonData) {
-              console.log('Received JSON for All Veh=', jsonData);
+              //console.log('Received JSON for All Veh=', jsonData);
+              console.log('Received JSON for RT Single=', JSON.stringify(jsonData));
+              //rtGeoJsonLayer = L.geoJson().addTo(map);
+              rtGeoJsonLayer = L.geoJson(jsonData, {
+                   style: function(feature) {
+                       return feature.properties.style;
+                   },
+                   onEachFeature: function(feature, layer) {
+                       layer.bindPopup(feature.properties.title);
+                   }
+              });
+              rtGeoJsonLayer.addData(jsonData);
+              rtGeoJsonLayer.addTo(map);
+/*
               for (var i = 0; i < jsonData.length; i++) {
                 var newlt = jsonData[i].lt;
                 var newlg = jsonData[i].lg;
@@ -109,15 +125,16 @@
                 var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
                 mymarker.bindPopup(popContent);
               }
+*/
             },
             complete: function () {
               console.log('Ajax processing complete, call again after delay');
-              setTimeout(requestCurrentLoc, 2000);
+              setTimeout(requestCurrentLoc, 5000);
             },
-            //error: function(xhr, status, error) {
-            error: function () {
+            error: function(xhr, status, error) {
+            //error: function () {
               //alert('Error loading ');
-              console.log('Error: Ajax response');
+              console.log('Error: Ajax response', xhr, status, error);
             }
           }); // ajax
         }); // requestData
