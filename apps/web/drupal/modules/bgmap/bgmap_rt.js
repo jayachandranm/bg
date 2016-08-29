@@ -1,7 +1,7 @@
 (function ($) {
     Drupal.behaviors.bgmap = {
         attach: function (context, settings) {
-            console.log('JS attach, initialization.');
+            console.log('JS attach for RT, initialization.');
             if (Drupal.settings.rt) {
                 // No context parameters are required.
                 var sid = Drupal.settings.rt.sid;
@@ -103,39 +103,15 @@
                             //rtGeoJsonLayer.addData(jsonData);
                             rtGeoJsonLayer.addTo(map);
                             /*
-                             for (var i = 0; i < jsonData.length; i++) {
-                             var newlt = jsonData[i].lt;
-                             var newlg = jsonData[i].lg;
-                             var nid = jsonData[i].nid;
-                             var vnum = jsonData[i].vnum;
-                             var mymarker;
-                             var currLtLng = L.latLng(newlt, newlg);
-                             //console.log(newlg, newlt, nid, vnum);
-                             if (nid == -1) {
-                             // delete the entry corresponding to this vnum, that page does not exist.
-                             // TODO:
-                             }
-                             if (!(vnum in markerList)) {
-                             console.log('marker not found in the list.');
-                             //mymarker = L.marker([newlg, newlt], {icon: carIcon_r}).addTo(map);
                              //mymarker = L.marker(currLtLng, { icon: carIcon_r }).addTo(map);
-                             mymarker = L.marker(currLtLng).addTo(map);
-                             markerList[vnum] = mymarker;
-                             } else {
-                             console.log('marker found, update, lt first.', newlt, newlg);
                              mymarker = markerList[vnum];
-                             //markers[i].setLatLng([newlg, newlt]);
-                             //mymarker.setLatLng([newlg, newlt]);
                              mymarker.setLatLng(currLtLng);
                              //var bounds = L.latLngBounds(southWest, northEast);
                              //map.fitBounds(bounds);
                              //map.fitBounds([[1,1],[2,2],[3,3]]);
-                             map.panTo(currLtLng);
-                             }
                              var nodeurl = basepath + '?q=node/' + nid;
                              var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
                              mymarker.bindPopup(popContent);
-                             }
                              */
                         },
                         complete: function () {

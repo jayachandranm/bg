@@ -68,9 +68,8 @@ function bgmap_permission()
 
 function bgmap_init()
 {
-    drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
-    //
-
+    // TODO: Change to attach.
+    drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
 }
 
 /**
@@ -314,7 +313,7 @@ function bgmap_block_view($delta = '')
                           array(
                             'type' => 'setting',
                             'data' => array(
-                              'rtsingle' => array('sid' => $sid),
+                              'rt' => array('sid' => $sid),
                             ),
                           )
                        );
@@ -368,9 +367,11 @@ function bgmap_block_view($delta = '')
                     //$block['content'] = theme('item_list', array('items' => $items2));
                 }
             } // access.
+/*
             $block['content']['#attached']['js'][]
                  = array('data' => 'https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js',
                  'type' => 'external');
+*/
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
