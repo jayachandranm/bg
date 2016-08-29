@@ -68,52 +68,10 @@ function bgmap_permission()
 
 function bgmap_init()
 {
-    libraries_load('leaflet');
-    //libraries_load('moment');
-    //drupal_add_library('bgmap', 'moment');
-    //libraries_load('daterangepicker');
-    //drupal_add_library('bgmap', 'daterangepicker');
-    // TODO: drupal_add_library does not work.
-    //drupal_add_library('bgmap', 'highcharts');
     drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
     //
     drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
-    drupal_add_js(drupal_get_path('module', 'bgmap') . '/daterangepicker.js');
-    drupal_add_css(drupal_get_path('module', 'bgmap') . '/daterangepicker.css');
-    if (($library = libraries_detect('leaflet')) && !empty($library['installed'])) {
-        // The library is installed. Awesome!
-    } else {
-        // Something went wrong. :(
-        // This contains a short status code of what went wrong, such as 'not found'.
-        $error = $library['error'];
-        // This contains a detailed (localized) error message.
-        $error_message = $library['error message'];
-        print_r("Error: Leaflet lib not loaded.");
-    }
 
-    /*
-      if (($library = libraries_detect('moment')) && !empty($library['installed'])) {
-        // The library is installed. Awesome!
-        print_r("Moment lib loaded.");
-      }
-      else {
-        $error = $library['error'];
-        $error_message = $library['error message'];
-        print_r("Moment lib not loaded.");
-      }
-    */
-
-    /*
-      if (($library = libraries_detect('daterangepicker')) && !empty($library['installed'])) {
-        // The library is installed. Awesome!
-        //print_r("Daterange lib loaded.");
-      }
-      else {
-        $error = $library['error'];
-        $error_message = $library['error message'];
-        print_r("Error: Daterange lib not loaded.");
-      }
-    */
 }
 
 /**
@@ -172,7 +130,7 @@ function bgmap_libraries_info()
         ),
     );
 
-    /*
+/*
     $libraries['moment'] = array(
       'name' => 'Moment JS',
       'vendor url' => 'http://www.daterangepicker.com/',
@@ -184,8 +142,7 @@ function bgmap_libraries_info()
       ),
     ),
     );
-    */
-
+*/
     return $libraries;
 }
 
@@ -327,8 +284,8 @@ function bgmap_block_view($delta = '')
             // Here will be an array that contains the filter values.
             // if(isset($sid)) {
             // vnum/sid list.
-            drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
             $block['subject'] = t('Real Time Location.');
+            drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
             if (user_access('access content')) {
                 $items2 = array();
                 $items2[] = array('Test', '2');
@@ -344,6 +301,7 @@ function bgmap_block_view($delta = '')
                     //$block['content'] = theme('item_list', array('items' => $items2));
                 }
             }
+            $block['content']['#attached']['libraries_load'][] = array('leaflet');
             //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
             //$block['content']['#attached']['libraries_load'][] = array('highcharts');
             //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
@@ -393,6 +351,8 @@ function bgmap_block_view($delta = '')
                     //$block['content'] = theme('item_list', array('items' => $items2));
                 }
             } // access.
+            $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             break;
         case 'tracemulti':
             // TODO: If not a node or if node type is different, don't show the block.
@@ -412,6 +372,7 @@ function bgmap_block_view($delta = '')
                     //$block['content'] = theme('item_list', array('items' => $items2));
                 }
             } // access.
+            $block['content']['#attached']['libraries_load'][] = array('leaflet');
             break;
         case 'fuel':
             //$vgroup = 'car';
