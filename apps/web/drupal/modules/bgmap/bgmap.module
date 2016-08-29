@@ -70,7 +70,6 @@ function bgmap_init()
 {
     drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
     //
-    drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
 
 }
 
@@ -112,6 +111,7 @@ function bgmap_libraries_info()
         'vendor url' => 'http://www.leaflet.com/',
         'download url' => 'http://www.leaflet.com/download',
         /*
+        // TODO: automatically get version number from Changelog or readme.
         'version arguments' => array(
         'file' => 'highcharts.js',
         // jQuery FlexSlider v2.1
@@ -285,8 +285,8 @@ function bgmap_block_view($delta = '')
             // if(isset($sid)) {
             // vnum/sid list.
             $block['subject'] = t('Real Time Location.');
-            drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
             if (user_access('access content')) {
+              /*
                 $items2 = array();
                 $items2[] = array('Test', '2');
                 // No content in the last week.
@@ -300,8 +300,24 @@ function bgmap_block_view($delta = '')
                     $block['content']['#markup'] = theme('table', array('items' => $items2));
                     //$block['content'] = theme('item_list', array('items' => $items2));
                 }
+                */
+                $block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
             }
+            $mpath = drupal_get_path('module', 'bgmap');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            // If not in libraries directory,
+            //$block['content']['#attached']['library'][] = array('system','ui.droppable');
+            $block['content']['#attached']['js'][] =
+                          array(
+                            'type' => 'file',
+                            'data' => $mpath . '/bgmap_rt.js',),
+                          array(
+                            'type' => 'setting',
+                            'data' => array(
+                              'rtsingle' => array('sid' => $sid),
+                            ),
+                          );
+            //drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
             //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
             //$block['content']['#attached']['libraries_load'][] = array('highcharts');
             //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
@@ -333,7 +349,7 @@ function bgmap_block_view($delta = '')
             // TODO: If not a node or if node type is different, don't show the block.
             //$vgroup = 'car';
             if (isset($sid)) {
-                drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
+              // TODO.
             }
 
             $block['subject'] = t('Real Time Map Trace');
@@ -351,8 +367,22 @@ function bgmap_block_view($delta = '')
                     //$block['content'] = theme('item_list', array('items' => $items2));
                 }
             } // access.
-            $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            $block['content']['#attached']['js'][]
+                 = array('data' => 'https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js',
+                 'type' => 'external');
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
+            $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
+            $block['content']['#attached']['js'][] =
+                          array(
+                            'type' => 'file',
+                            'data' => $mpath . '/bgmap_trace.js',),
+                          array(
+                            'type' => 'setting',
+                            'data' => array(
+                              'trace' => array('sid' => $sid),
+                            ),
+                          );
             break;
         case 'tracemulti':
             // TODO: If not a node or if node type is different, don't show the block.
@@ -381,7 +411,6 @@ function bgmap_block_view($delta = '')
             // TODO: If not a node, or node type is different, don't show the block.
             if (isset($sid)) {
                 // TODO: Extend the condition to whole section.
-                drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
             }
 
             //$filter['sidList'] = array($sid);
@@ -426,6 +455,18 @@ function bgmap_block_view($delta = '')
                     //$block['content'] = theme('item_list', array('items' => $items2));
                 }
             } // access.
+            //drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
+            // TODO: required?
+            $block['content']['#attached']['js'][] =
+                          array(
+                            'type' => 'file',
+                            'data' => $mpath . '/bgmap_rt.js',),
+                          array(
+                            'type' => 'setting',
+                            'data' => array(
+                              'fuel' => array('sid' => $sid),
+                            ),
+                          );
             break;
         case 'aob':
             if (user_access('access content')) {
@@ -451,22 +492,18 @@ function bedmon_preprocess_views_view(&$vars)
             $active_sids[] = $sid_content['raw']['value'];
         }
         //print_r($active_nids);
-        //if(!empty(array_filter($active_sids))) {
-        if (count($active_sids) > 0) {
-            drupal_add_js(array('rt' => array('sid_list' => $active_sids)), 'setting');
-        } else {
-            // Indiate the case of empty array to JavaScript.
-            drupal_add_js(array('rt' => array('sid_list' => -1)), 'setting');
-        }
-        //drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap_test.js');
-        // drupal_add_css(drupal_get_path('theme', 'your-theme') .'/your-css.css');
-        /*
-            $vars['view']['#attached']['js'][] = array
-            (
-              'type' => 'file',
-              'data' => drupal_get_path('theme', 'my_theme') . '/my_script.js',
-            );
-        */
+        $block['content']['#attached']['js'][] =
+                      array(
+                        'type' => 'file',
+                        'data' => $mpath . '/bgmap_rt.js',),
+                      array(
+                        'type' => 'setting',
+                        'data' => array(
+                          // Can be zero or more elements.
+                          // TODO: Use different variable?
+                          'rt' => array('sid_list' => $active_sids),
+                        ),
+                      );
     }
 }
 
@@ -590,18 +627,12 @@ function _getdata_exdb($reqtype, $filter)
 {
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
-    //dpm($filter);
-    //print_r($filter);
-    //$sid_list = $filter.sidList;
     //$sid_list = $filter[sidList];
     $sid_list = $filter->sidList;
     $start_time = $filter->start;
     $end_time = $filter->end;
-    //print_r("Test");
-    //print_r($sid_list);
 
-    // Sanitize sids array before using in the query statement.
-
+    // TODO: Sanitize sids array before using in the query statement.
     $bg_db = array(
         'database' => 'bgmap',
         'username' => 'bgmap', // assuming this is necessary
@@ -613,24 +644,7 @@ function _getdata_exdb($reqtype, $filter)
     Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
     db_set_active('BLUGRAPHTECH');
 
-    /*
-        $query2 = array();
-        $query2 = db_select('bgmap_obd_node_map', 'm')
-        ->fields('m', array('nid', 'veh_num', 'veh_type'))
-        ->condition('sid', $sid);
-        $result2 = $query2->execute();
-        if($result2->rowCount() > 0) {
-          $row2  = $result2->fetchObject();
-          $nid = $row2->nid;
-          $vnum = $row2->veh_num;
-        } else {
-          // The entry doesn't exist in the node table, invalid sensor-id.
-          // Inform the JS and update web interface accordingly.
-          $nid = -1;
-          $vnum = 'NA';
-        }
-        // TODO: iF multiple entry match the condition, handle as error?
-    */
+    // TODO: iF multiple entry match the condition, handle as error?
 
     $query = array();
     if ($reqtype == 'fuel') {
