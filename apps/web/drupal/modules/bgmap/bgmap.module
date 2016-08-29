@@ -258,6 +258,7 @@ function bgmap_block_view($delta = '')
     $block = array();
     // TODO: exit if it is not a node but a view or something else. But should allow selected views.
     // TODO: Move this to init? For the case of view this happens outside.
+    $mpath = drupal_get_path('module', 'bgmap');
     if ($node = menu_get_object()) {
         if ($node->type == 'vehicles') {
             //dpm($node);
@@ -303,11 +304,10 @@ function bgmap_block_view($delta = '')
                 */
                 $block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
             }
-            $mpath = drupal_get_path('module', 'bgmap');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             // If not in libraries directory,
             //$block['content']['#attached']['library'][] = array('system','ui.droppable');
-            $block['content']['#attached']['js'][] =
+            $block['content']['#attached']['js'] = array(
                           array(
                             'type' => 'file',
                             'data' => $mpath . '/bgmap_rt.js',),
@@ -316,7 +316,8 @@ function bgmap_block_view($delta = '')
                             'data' => array(
                               'rtsingle' => array('sid' => $sid),
                             ),
-                          );
+                          )
+                       );
             //drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
             //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
             //$block['content']['#attached']['libraries_load'][] = array('highcharts');
@@ -373,7 +374,7 @@ function bgmap_block_view($delta = '')
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
-            $block['content']['#attached']['js'][] =
+            $block['content']['#attached']['js'] = array(
                           array(
                             'type' => 'file',
                             'data' => $mpath . '/bgmap_trace.js',),
@@ -382,7 +383,8 @@ function bgmap_block_view($delta = '')
                             'data' => array(
                               'trace' => array('sid' => $sid),
                             ),
-                          );
+                          )
+                       );
             break;
         case 'tracemulti':
             // TODO: If not a node or if node type is different, don't show the block.
@@ -457,7 +459,7 @@ function bgmap_block_view($delta = '')
             } // access.
             //drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
             // TODO: required?
-            $block['content']['#attached']['js'][] =
+            $block['content']['#attached']['js'] = array(
                           array(
                             'type' => 'file',
                             'data' => $mpath . '/bgmap_rt.js',),
@@ -466,7 +468,8 @@ function bgmap_block_view($delta = '')
                             'data' => array(
                               'fuel' => array('sid' => $sid),
                             ),
-                          );
+                          )
+                       );
             break;
         case 'aob':
             if (user_access('access content')) {
@@ -492,7 +495,7 @@ function bedmon_preprocess_views_view(&$vars)
             $active_sids[] = $sid_content['raw']['value'];
         }
         //print_r($active_nids);
-        $block['content']['#attached']['js'][] =
+        $block['content']['#attached']['js'] = array(
                       array(
                         'type' => 'file',
                         'data' => $mpath . '/bgmap_rt.js',),
@@ -503,7 +506,8 @@ function bedmon_preprocess_views_view(&$vars)
                           // TODO: Use different variable?
                           'rt' => array('sid_list' => $active_sids),
                         ),
-                      );
+                      )
+                   );
     }
 }
 

@@ -134,5 +134,5 @@
 requestTraceData();
 } // if settings, trace.
 } // attach
-} // behaviors, bgmap
+//} // behaviors, bgmap
 })(jQuery);
