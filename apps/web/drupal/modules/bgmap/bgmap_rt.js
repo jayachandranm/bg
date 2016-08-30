@@ -9,9 +9,7 @@
                 var basepath = Drupal.settings.basePath;
                 console.log('Retrieving bgmap settings.');
                 //
-                var title = 'Real Time Map';
-                // Place a div name correcly.
-                //$("#block-bgmap-rtsingle").append("<div id='show_report'>Map will display here.....</div>");
+                // TODO: Do this in a theme.
                 $("#block-bgmap-rtsingle").height(500);
                 $("#show_report").height(400);
 
@@ -24,15 +22,12 @@
                     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
 
-                // http://leafletjs.com/examples/geojson.html
-                // add a marker in the given location, attach some popup content to it and open the popup
                 var markerList = {};
                 //var markers = new Array();
 
                 var carIcon_b = L.icon({
                     iconUrl: 'sites/default/files/car_blue.png',
                     //shadowUrl: 'sites/default/car.png',
-
                     iconSize: [32, 37], // size of the icon
                     //shadowSize:   [50, 64], // size of the shadow
                     // point of the icon which will correspond to marker's location
@@ -40,18 +35,6 @@
                     //iconAnchor: [22, 94],
                     shadowAnchor: [4, 62],  // the same for the shadow
                     popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
-                });
-
-                var carIcon_r = L.icon({
-                    iconUrl: 'sites/default/files/car_red.png',
-                    //shadowUrl: 'sites/default/car.png',
-
-                    iconSize: [32, 37],
-                    //shadowSize:   [50, 64],
-                    // Fix: http://gis.stackexchange.com/questions/179734/leaflet-customer-marker-changes-position-with-scale
-                    //iconAnchor: [22, 94],
-                    shadowAnchor: [4, 62],
-                    popupAnchor: [-3, -76]
                 });
 
                 /*
@@ -84,20 +67,20 @@
                             rtGeoJsonLayer = L.geoJson(jsonData, {
                                 pointToLayer: function (feature, latlng) {
                                     map.panTo(latlng);
+                                    //layer.bindPopup(feature.properties.title);
                                     return L.circleMarker(latlng, {
+                                        // Will be overwritten by style function below.
                                         radius: 8,
-                                        fillColor: "#ff7800",
-                                        color: "#000",
-                                        weight: 1,
-                                        opacity: 1,
-                                        fillOpacity: 0.8
                                     });
                                 },
                                 style: function (feature) {
                                     return feature.properties.style;
+                                    //return {fillColor: "#ffff00"};
                                 },
                                 onEachFeature: function (feature, layer) {
-                                    layer.bindPopup(feature.properties.title);
+                                    if (feature.properties && feature.properties.title) {
+                                        layer.bindPopup(feature.properties.title);
+                                    }
                                 }
                             });
                             //rtGeoJsonLayer.addData(jsonData);

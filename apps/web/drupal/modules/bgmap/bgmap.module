@@ -286,21 +286,6 @@ function bgmap_block_view($delta = '')
             // vnum/sid list.
             $block['subject'] = t('Real Time Location.');
             if (user_access('access content')) {
-              /*
-                $items2 = array();
-                $items2[] = array('Test', '2');
-                // No content in the last week.
-                if (empty($items2)) {
-                    $block['content']['#markup'] = t('No data available.');
-                    //$block['content'] = t('No data available.');
-                } else {
-                    // Pass data through theme function.
-                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-                    // TODO: Create empty div here?
-                    $block['content']['#markup'] = theme('table', array('items' => $items2));
-                    //$block['content'] = theme('item_list', array('items' => $items2));
-                }
-                */
                 $block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
             }
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
@@ -317,11 +302,6 @@ function bgmap_block_view($delta = '')
                             ),
                           )
                        );
-            //drupal_add_js(array('rt' => array('sid' => $sid)), 'setting');
-            //$block['content']['#attached']['libraries_load'][] = array('highcharts', 'highcharts');
-            //$block['content']['#attached']['libraries_load'][] = array('highcharts');
-            //$block['content']['#attached']['js'] = drupal_get_path('module', 'bgmap') . '/bgmap.js';
-            //drupal_add_js(drupal_get_path('module', 'module_name') . '/test.js');
             break;
         case 'rtmulti':
             // Only appears in a view.
@@ -354,18 +334,7 @@ function bgmap_block_view($delta = '')
 
             $block['subject'] = t('Real Time Map Trace');
             if (user_access('access content')) {
-                $items2 = array();
-                $items2[] = array('Test', '2');
-                // No content in the last week.
-                if (empty($items2)) {
-                    $block['content']['#markup'] = t('No data available.');
-                    //$block['content'] = t('No data available.');
-                } else {
-                    // Pass data through theme function.
-                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-                    $block['content']['#markup'] = theme('table', array('items' => $items2));
-                    //$block['content'] = theme('item_list', array('items' => $items2));
-                }
+                $block['content']['#markup'] = "<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div> <div class='row> style='margin-top:1em' id='show_map2'>Map will display here.....</div>";
             } // access.
 /*
             $block['content']['#attached']['js'][]
@@ -529,23 +498,6 @@ function _get_json()
  *   JSON data.
  */
 
-function test_get_geojson($reqtype)
-{
-    //dpm($reqtype);
-    //$tst_data = $_POST['jsonPost'];
-    $post_data = json_decode($_POST['jsonPost']);
-    //dpm($tst_data);
-    //$post_data = json_decode($tst_data);
-    dpm($post_data);
-    $reqtype = $post_data->reqtype;
-    $filter = $post_data->filter;
-    dpm($filter); // This works, but not print_r.
-    $geojson = array();
-    $geojson['test'] = 'hello2';
-    return drupal_json_output($geojson);
-}
-
-
 function _get_geojson($rqtype)
 {
     //function bgmap_get_geojson($filter, $reqtype, $starttime, $endtime) {
@@ -613,8 +565,18 @@ function _get_geojson($rqtype)
                     'geometry' => array("type" => "Point", "coordinates" => [$lng, $lat]),
                     'properties' => array(
                         'title' => 'Test',
-                        'marker-color' => '#f00',
-                        'marker-size' => 'small'
+                        'style' => array(
+                            'radius' => '10',
+                            'fillColor' => '#ff7800',
+                            'color' => '#000',
+                            'weight' => '1',
+                            'opacity' => '1',
+                            'fillOpacity' => '0.8',
+                            /*
+                            'marker-color' => '#f00',
+                            'marker-size' => 'small',
+                            */
+                        ),
                     ),
                 );
                 # Add feature arrays to feature collection array
