@@ -14,7 +14,7 @@
                 // TODO: check this.
                 var polylines = new Array();
                 var latlngs = new Array();
-                var sid = Drupal.settings.trace.sid;
+                var sid_list = Drupal.settings.trace.sid_list;
                 //var data = Drupal.settings.bgchart.data.data;
                 console.log('Retrieving (trace) settings.');
                 var basepath = Drupal.settings.basePath;
@@ -90,6 +90,8 @@
                     var postData = {};
                     postData['reqtype'] = 'trc';
                     var filter = {};
+                    console.log(sid_list);
+                    var sid = sid_list[0];
                     filter['sidList'] = [sid];
                     filter['start'] = startTime;
                     filter['end'] = endTime; // or current time.

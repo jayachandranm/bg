@@ -4,7 +4,7 @@
             console.log('JS attach for RT, initialization.');
             if (Drupal.settings.rt) {
                 // No context parameters are required.
-                var sid = Drupal.settings.rt.sid;
+                var sid_list = Drupal.settings.rt.sid_list;
                 //var data = Drupal.settings.bgchart.data.data;
                 var basepath = Drupal.settings.basePath;
                 console.log('Retrieving bgmap settings.');
@@ -13,6 +13,7 @@
                 $("#block-bgmap-rtsingle").height(500);
                 $("#show_report").height(400);
 
+                // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
                 var map = L.map('show_report').setView([lat, lng], 13);
@@ -47,6 +48,8 @@
                     var postData = {};
                     postData['reqtype'] = 'rt';
                     var filter = {};
+                    console.log(sid_list);
+                    var sid = sid_list[0];
                     filter['sidList'] = [sid];
                     filter['start'] = -1;
                     filter['end'] = -1; // or current time.
@@ -79,7 +82,10 @@
                                 },
                                 onEachFeature: function (feature, layer) {
                                     if (feature.properties && feature.properties.title) {
-                                        layer.bindPopup(feature.properties.title);
+                                        var sid = feature.properties.title;
+                                        var nodeurl = basepath + '?q=node/' + sid;
+                                        var popContent = "<a href=" + nodeurl + ">" + sid + "</a>";
+                                        //layer.bindPopup(popContent);
                                     }
                                 }
                             });

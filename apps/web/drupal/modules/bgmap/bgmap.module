@@ -271,6 +271,9 @@ function bgmap_block_view($delta = '')
         $sid = -1;
         $vnum = -1;
     }
+    
+    // Always pass as an array of values, for generic handling at JS side.
+    $sid_list[] = $sid;
 
     switch ($delta) {
         /*
@@ -284,7 +287,7 @@ function bgmap_block_view($delta = '')
             // Here will be an array that contains the filter values.
             // if(isset($sid)) {
             // vnum/sid list.
-            $block['subject'] = t('Real Time Location.');
+            $block['subject'] = t('Location...');
             if (user_access('access content')) {
                 $block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
             }
@@ -298,7 +301,7 @@ function bgmap_block_view($delta = '')
                           array(
                             'type' => 'setting',
                             'data' => array(
-                              'rt' => array('sid' => $sid),
+                              'rt' => array('sid_list' => $sid_list),
                             ),
                           )
                        );
@@ -308,22 +311,16 @@ function bgmap_block_view($delta = '')
             // TODO: What if this block is enabled for a node?
             // TODO: nidList already set in the view preprocess.
             //drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
-            $block['subject'] = t('Location Tracking All.');
+            $block['subject'] = t('Locations...');
             if (user_access('access content')) {
-                $items2 = array();
-                $items2[] = array('Test', '2');
-                // No content in the last week.
-                if (empty($items2)) {
-                    $block['content']['#markup'] = t('No data available.');
-                    //$block['content'] = t('No data available.');
-                } else {
-                    // Pass data through theme function.
-                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-                    // TODO: Create empty div here?
-                    $block['content']['#markup'] = theme('table', array('items' => $items2));
-                    //$block['content'] = theme('item_list', array('items' => $items2));
-                }
+                $block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
             }
+            $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            $block['content']['#attached']['js'] = array(
+                          array(
+                            'type' => 'file',
+                            'data' => $mpath . '/bgmap_rt.js',),
+                       );
             break;
         case 'trace':
             // TODO: If not a node or if node type is different, don't show the block.
@@ -332,7 +329,7 @@ function bgmap_block_view($delta = '')
               // TODO.
             }
 
-            $block['subject'] = t('Real Time Map Trace');
+            $block['subject'] = t('Route History');
             if (user_access('access content')) {
                 $block['content']['#markup'] = "<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div> <div class='row> style='margin-top:1em' id='show_map2'>Map will display here.....</div>";
             } // access.
@@ -343,7 +340,7 @@ function bgmap_block_view($delta = '')
 */
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
-            drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
+            //drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
             $block['content']['#attached']['js'] = array(
                           array(
                             'type' => 'file',
@@ -351,7 +348,7 @@ function bgmap_block_view($delta = '')
                           array(
                             'type' => 'setting',
                             'data' => array(
-                              'trace' => array('sid' => $sid),
+                              'trace' => array('sid_list' => $sid_list),
                             ),
                           )
                        );
@@ -359,7 +356,7 @@ function bgmap_block_view($delta = '')
         case 'tracemulti':
             // TODO: If not a node or if node type is different, don't show the block.
             //$vgroup = 'car';
-            $block['subject'] = t('Real Time Map Trace All');
+            $block['subject'] = t('Route(s) History');
             if (user_access('access content')) {
                 $items2 = array();
                 $items2[] = array('Test', '2');
@@ -392,7 +389,7 @@ function bgmap_block_view($delta = '')
             $filter->sidList = array($sid);
             $filter->start = -1;
             $filter->end = -1;
-            $block['subject'] = t('Fuel Usage Table');
+            $block['subject'] = t('Fuel Usage');
             if (user_access('access content')) {
                 $result = _getdata_exdb('fuel', $filter);
                 $items2 = array();
@@ -436,7 +433,7 @@ function bgmap_block_view($delta = '')
                           array(
                             'type' => 'setting',
                             'data' => array(
-                              'fuel' => array('sid' => $sid),
+                              'fuel' => array('sid_list' => $sid_list),
                             ),
                           )
                        );
@@ -453,9 +450,10 @@ function bgmap_block_view($delta = '')
 /*
 * https://www.drupal.org/node/1993228
 */
-function bedmon_preprocess_views_view(&$vars)
+function bgmap_preprocess_views_view(&$vars)
 {
-    //dpm($vars['view']->result);
+    $mpath = drupal_get_path('module', 'bgmap');
+    dpm($vars['view']);
     if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
         $active_sids = array();
         foreach ($vars['view']->result as $cnum => $cell) {
@@ -465,7 +463,10 @@ function bedmon_preprocess_views_view(&$vars)
             $active_sids[] = $sid_content['raw']['value'];
         }
         //print_r($active_nids);
-        $block['content']['#attached']['js'] = array(
+        //$block['content']['#attached']['js'] = array(
+        drupal_add_js(array('rt' => array('sid_list' => $active_sids)), 'setting');
+/*
+        $vars['view']['#attached']['js'] = array(
                       array(
                         'type' => 'file',
                         'data' => $mpath . '/bgmap_rt.js',),
@@ -478,6 +479,7 @@ function bedmon_preprocess_views_view(&$vars)
                         ),
                       )
                    );
+*/
     }
 }
 
@@ -558,13 +560,14 @@ function _get_geojson($rqtype)
                 $time = intval($row->timestamp);
                 $lat = floatval($row->latitude);
                 $lng = floatval($row->longitude);
+                $sid = floatval($row->sid);
                 //$title = $row->title; //$row['name']
 
                 $feature = array(
                     'type' => 'Feature',
                     'geometry' => array("type" => "Point", "coordinates" => [$lng, $lat]),
                     'properties' => array(
-                        'title' => 'Test',
+                        'title' => $sid,
                         'style' => array(
                             'radius' => '10',
                             'fillColor' => '#ff7800',
@@ -705,6 +708,21 @@ function bgmap_form($form, &$form_state)
     return system_settings_form($form);
 }
 
+/*
+                $items2 = array();
+                $items2[] = array('Test', '2');
+                // No content in the last week.
+                if (empty($items2)) {
+                    $block['content']['#markup'] = t('No data available.');
+                    //$block['content'] = t('No data available.');
+                } else {
+                    // Pass data through theme function.
+                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
+                    // TODO: Create empty div here?
+                    $block['content']['#markup'] = theme('table', array('items' => $items2));
+                    //$block['content'] = theme('item_list', array('items' => $items2));
+                }
+*/
 //drupal_set_message((string) $query);
 //while($record = $result->fetchAssoc()) {
 //print_r($record);
