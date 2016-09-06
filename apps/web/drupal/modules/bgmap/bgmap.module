@@ -453,7 +453,7 @@ function bgmap_block_view($delta = '')
 function bgmap_preprocess_views_view(&$vars)
 {
     $mpath = drupal_get_path('module', 'bgmap');
-    dpm($vars['view']);
+    //dpm($vars['view']);
     if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
         $active_sids = array();
         foreach ($vars['view']->result as $cnum => $cell) {
