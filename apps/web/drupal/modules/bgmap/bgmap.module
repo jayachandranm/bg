@@ -122,9 +122,11 @@ function bgmap_libraries_info()
         'files' => array(
             'js' => array(
                 'leaflet.js',
+                'Control.FullScreen.js',
             ),
             'css' => array(
                 'leaflet.css' => array(),
+                'Control.FullScreen.css' => array(),
             ),
         ),
     );

@@ -51,9 +51,17 @@
                     }
                 );
 
+                var map2 = new L.map('show_map2', {
+                              fullscreenControl: true,
+                              fullscreenControlOptions: {
+                                position: 'topleft'
+                              }
+                           });
+                // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
-                var map2 = L.map('show_map2').setView([lat, lng], 13);
+                map2.setView([lat, lng], 13);
+                //
                 var traceGeoJsonLayer = L.geoJson().addTo(map2);
                 var date = new Date();
                 // Current time. Will be overwritten by datepicker.

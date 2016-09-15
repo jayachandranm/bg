@@ -13,10 +13,17 @@
                 $("#block-bgmap-rtsingle").height(500);
                 $("#show_report").height(400);
 
+                var map = new L.map('show_report', {
+                              fullscreenControl: true,
+                              fullscreenControlOptions: {
+                                position: 'topleft'
+                              }
+                           });
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
-                var map = L.map('show_report').setView([lat, lng], 13);
+                map.setView([lat, lng], 13);
+                //
                 var rtGeoJsonLayer = L.geoJson().addTo(map);
 
                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
