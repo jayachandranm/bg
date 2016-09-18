@@ -13,6 +13,19 @@
                 $("#block-bgmap-rtsingle").height(500);
                 $("#show_report").height(400);
 
+/***  little hack starts here ***/
+L.Map = L.Map.extend({
+    openPopup: function(popup) {
+        //        this.closePopup();  // just comment this
+        this._popup = popup;
+
+        return this.addLayer(popup).fire('popupopen', {
+            popup: this._popup
+        });
+    }
+}); 
+/***  end of hack ***/
+
                 var map = new L.map('show_report', {
                               fullscreenControl: true,
                               fullscreenControlOptions: {
@@ -29,21 +42,6 @@
                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
-
-                var markerList = {};
-                //var markers = new Array();
-
-                var carIcon_b = L.icon({
-                    iconUrl: 'sites/default/files/car_blue.png',
-                    //shadowUrl: 'sites/default/car.png',
-                    iconSize: [32, 37], // size of the icon
-                    //shadowSize:   [50, 64], // size of the shadow
-                    // point of the icon which will correspond to marker's location
-                    // Fix: http://gis.stackexchange.com/questions/179734/leaflet-customer-marker-changes-position-with-scale
-                    //iconAnchor: [22, 94],
-                    shadowAnchor: [4, 62],  // the same for the shadow
-                    popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
-                });
 
                 /*
                  * Real time updates.
@@ -74,41 +72,36 @@
                             //console.log('Received JSON for All Veh=', jsonData);
                             console.log('Received JSON for RT Single=', JSON.stringify(jsonData));
                             //rtGeoJsonLayer = L.geoJson().addTo(map);
+                            var pop;
                             rtGeoJsonLayer = L.geoJson(jsonData, {
                                 pointToLayer: function (feature, latlng) {
                                     map.panTo(latlng);
                                     //layer.bindPopup(feature.properties.title);
                                     return L.circleMarker(latlng, {
                                         // Will be overwritten by style function below.
-                                        radius: 8,
+                                        radius: 10,
                                     });
                                 },
                                 style: function (feature) {
+                                    console.log(feature.properties.style);
                                     return feature.properties.style;
-                                    //return {fillColor: "#ffff00"};
+                                    //return {fillColor: "blue", color: "blue", fillOpacity: 0.5};
                                 },
                                 onEachFeature: function (feature, layer) {
                                     if (feature.properties && feature.properties.title) {
                                         var sid = feature.properties.title;
                                         var nodeurl = basepath + '?q=node/' + sid;
                                         var popContent = "<a href=" + nodeurl + ">" + sid + "</a>";
-                                        //layer.bindPopup(popContent);
+                                        pop = layer.bindPopup(popContent); //.openPopup();
+                                        //layer.bindPopup(popContent).openOn(map);
+                                        //map.addLayer(popContent);
                                     }
                                 }
                             });
                             //rtGeoJsonLayer.addData(jsonData);
                             rtGeoJsonLayer.addTo(map);
-                            /*
-                             //mymarker = L.marker(currLtLng, { icon: carIcon_r }).addTo(map);
-                             mymarker = markerList[vnum];
-                             mymarker.setLatLng(currLtLng);
-                             //var bounds = L.latLngBounds(southWest, northEast);
-                             //map.fitBounds(bounds);
-                             //map.fitBounds([[1,1],[2,2],[3,3]]);
-                             var nodeurl = basepath + '?q=node/' + nid;
-                             var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
-                             mymarker.bindPopup(popContent);
-                             */
+                            // popup need map reference. Open only after adding the layer to map
+                            pop.openPopup();
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
@@ -126,3 +119,47 @@
         } // attach
     } // behaviors, bgmap
 })(jQuery);
+
+/*
+var popup = L.popup()
+    .setLatLng(latlng)
+    .setContent(popContent)
+    .openOn(map);
+*/
+/*
+rtGeoJsonLayer.eachLayer(function(layer) {
+  var popUp = layer._popup;
+  // process popUp, maybe with popUp.setContent("something");
+  //popUp.openPopup();
+  popUp.setContent("Hello");
+});
+*/
+
+                            /*
+                             //mymarker = L.marker(currLtLng, { icon: carIcon_r }).addTo(map);
+                             mymarker = markerList[vnum];
+                             mymarker.setLatLng(currLtLng);
+                             //var bounds = L.latLngBounds(southWest, northEast);
+                             //map.fitBounds(bounds);
+                             //map.fitBounds([[1,1],[2,2],[3,3]]);
+                             var nodeurl = basepath + '?q=node/' + nid;
+                             var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
+                             mymarker.bindPopup(popContent);
+                             */
+/*
+                var markerList = {};
+                //var markers = new Array();
+
+                var carIcon_b = L.icon({
+                    iconUrl: 'sites/default/files/car_blue.png',
+                    //shadowUrl: 'sites/default/car.png',
+                    iconSize: [32, 37], // size of the icon
+                    //shadowSize:   [50, 64], // size of the shadow
+                    // point of the icon which will correspond to marker's location
+                    // Fix: http://gis.stackexchange.com/questions/179734/leaflet-customer-marker-changes-position-with-scale
+                    //iconAnchor: [22, 94],
+                    shadowAnchor: [4, 62],  // the same for the shadow
+                    popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
+                });
+*/
+

@@ -20,9 +20,6 @@
                 var basepath = Drupal.settings.basePath;
                 //
                 var title2 = 'GPS Trace on Map';
-                // Place a div name correcly.
-                //$("#block-bgmap-trace").append("<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div>");
-                //$("#block-bgmap-trace").append("<div class='row' style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
                 $("#block-bgmap-trace").height(600);
                 $("#show_map2").height(400);
                 //
@@ -85,12 +82,6 @@
                  * Real time updates.
                  */
                 var requestTraceData = (function () {
-                    /*
-                     if (typeof polylines != "undefined") {
-                     console.log("CLEAR TRACE.");
-                     map2.removeLayer(polylines);
-                     }
-                     */
                     map2.removeLayer(traceGeoJsonLayer);
                     // Clear the array before getting new values.
                     latlngs.length = 0;
@@ -117,17 +108,6 @@
                         success: function (jsonData) {
                             console.log('Received JSON for Trace=', jsonData);
                             //console.log('Received JSON for Trace=', JSON.stringify(jsonData));
-                            /*
-                             for (var i = 0; i < jsonData.length; i++) {
-                             latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
-                             }
-                             console.log(latlngs);
-                             //var test = JSON.stringify(latlngs);
-                             //var test2 = [[1.46, 103.83], [1.45, 103.82], [1.43, 103.81]];
-                             //console.log(test);
-                             polylines = L.polyline(latlngs, { color: 'blue' });
-                             polylines.addTo(map2);
-                             */
                             traceGeoJsonLayer = L.geoJson().addTo(map2);
                             traceGeoJsonLayer.addData(jsonData);
                             //map2.fitBounds(latlngs);
@@ -150,3 +130,27 @@
     } // behaviors, bgmap
 })
 (jQuery);
+
+                // Place a div name correcly.
+                //$("#block-bgmap-trace").append("<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div>");
+                //$("#block-bgmap-trace").append("<div class='row' style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
+
+                            /*
+                             for (var i = 0; i < jsonData.length; i++) {
+                             latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
+                             }
+                             console.log(latlngs);
+                             //var test = JSON.stringify(latlngs);
+                             //var test2 = [[1.46, 103.83], [1.45, 103.82], [1.43, 103.81]];
+                             //console.log(test);
+                             polylines = L.polyline(latlngs, { color: 'blue' });
+                             polylines.addTo(map2);
+                             */
+
+                    /*
+                     if (typeof polylines != "undefined") {
+                     console.log("CLEAR TRACE.");
+                     map2.removeLayer(polylines);
+                     }
+                     */
+

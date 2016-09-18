@@ -333,7 +333,7 @@ function bgmap_block_view($delta = '')
 
             $block['subject'] = t('Route History');
             if (user_access('access content')) {
-                $block['content']['#markup'] = "<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div> <div class='row> style='margin-top:1em' id='show_map2'>Map will display here.....</div>";
+                $block['content']['#markup'] = "<div class='row'> <div class='col-md-6' style='padding-bottom:1em; padding-top:1em'><input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div> </div> <div class='row> style='margin-top:1em' id='show_map2'>Map will display here.....</div>";
             } // access.
 /*
             $block['content']['#attached']['js'][]
@@ -571,13 +571,13 @@ function _get_geojson($rqtype)
                     'properties' => array(
                         'title' => $sid,
                         'style' => array(
-                            'radius' => '10',
+                            'radius' => 10,
                             'fillColor' => '#ff7800',
+                            'fillOpacity' => 0.8,
                             'color' => '#000',
+                            /*
                             'weight' => '1',
                             'opacity' => '1',
-                            'fillOpacity' => '0.8',
-                            /*
                             'marker-color' => '#f00',
                             'marker-size' => 'small',
                             */
