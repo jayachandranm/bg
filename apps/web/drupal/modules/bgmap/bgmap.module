@@ -265,17 +265,18 @@ function bgmap_block_view($delta = '')
             //dpm($node);
             $nid = $node->nid;
             // TODO: Fix this. Use the correct approach.
-            $sid = $node->field_sensor_id['und'][0]['value'];
+            $sid_tmp = $node->field_sensor_id['und'][0]['value'];
             $vnum = $node->field_vehicle_num['und'][0]['value'];
         } // if node-type.
     } // if node.
     else {
-        $sid = -1;
+        $sid_tmp = -1;
         $vnum = -1;
     }
     
     // Always pass as an array of values, for generic handling at JS side.
-    $sid_list[] = $sid;
+    $sid_list[] = $sid_tmp;
+    $sid = (string)$sid_tmp;
 
     switch ($delta) {
         /*
@@ -303,7 +304,15 @@ function bgmap_block_view($delta = '')
                           array(
                             'type' => 'setting',
                             'data' => array(
-                              'rt' => array('sid_list' => $sid_list),
+                              'rt' => array(
+                                'veh_list' => array(
+                                  $sid => array(
+                                    'sid' => $sid, 
+                                    'nid' => $nid,
+                                    'vnum' => $vnum
+                                  ),
+                                ), 
+                              ),
                             ),
                           )
                        );
@@ -457,17 +466,47 @@ function bgmap_preprocess_views_view(&$vars)
     $mpath = drupal_get_path('module', 'bgmap');
     //dpm($vars['view']);
     if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
-        $active_sids = array();
+        $selected_vehs = array();
+        $veh_details = array();
         foreach ($vars['view']->result as $cnum => $cell) {
             //print_r($cell->node_title);
+            //dpm($cell);
+            $nid = $cell->nid;
+            $vnum_content = $cell->field_field_vehicle_num[0];
+            $vnum = $vnum_content['raw']['value'];
             $sid_content = $cell->field_field_sensor_id[0];
+            $sid_tmp = $sid_content['raw']['value'];
+            $sid = (string)$sid_tmp;
             //$active_nids[] = $sid_content->raw;
-            $active_sids[] = $sid_content['raw']['value'];
+            $veh_details = array('sid' => $sid, 'nid' => $nid, 'vnum' => $vnum);
+            $selected_vehs[$sid] = $veh_details;
+            //$active_sids[] = $sid_content['raw']['value'];
         }
-        //print_r($active_nids);
+        //print_r($visible_vehs);
+        //dpm($active_sids);
         //$block['content']['#attached']['js'] = array(
-        drupal_add_js(array('rt' => array('sid_list' => $active_sids)), 'setting');
+        drupal_add_js(array('rt' => array('veh_list' => $selected_vehs)), 'setting');
+        //drupal_add_js(array('rt' => array('veh_list' => $active_sids)), 'setting');
 /*
+            $block['content']['#attached']['js'] = array(
+                          array(
+                            'type' => 'file',
+                            'data' => $mpath . '/bgmap_rt.js',),
+                          array(
+                            'type' => 'setting',
+                            'data' => array(
+                              'rt' => array(
+                                'veh_list' => array(
+                                  $sid => array(
+                                    'sid' => $sid, 
+                                    'nid' => $nid,
+                                    'vnum' => $vnum
+                                  ),
+                                ), 
+                              ),
+                            ),
+                          )
+                       );
         $vars['view']['#attached']['js'] = array(
                       array(
                         'type' => 'file',

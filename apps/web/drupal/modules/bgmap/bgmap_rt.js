@@ -4,7 +4,19 @@
             console.log('JS attach for RT, initialization.');
             if (Drupal.settings.rt) {
                 // No context parameters are required.
-                var sid_list = Drupal.settings.rt.sid_list;
+                var sid2vehmap = {};
+                var veh_list = Drupal.settings.rt.veh_list;
+                sid2vehmap = veh_list;
+                var num_veh = veh_list.length;
+                var sid_list = [];
+                // ECMAScript 5 and later.
+                sid_list = Object.keys(sid2vehmap);
+                // For older versions of JS.
+                /* 
+                for(var k in sid2vehmap) {
+                    sid_list.push(k);
+                }
+                */
                 //var data = Drupal.settings.bgchart.data.data;
                 var basepath = Drupal.settings.basePath;
                 console.log('Retrieving bgmap settings.');
@@ -54,8 +66,8 @@ L.Map = L.Map.extend({
                     postData['reqtype'] = 'rt';
                     var filter = {};
                     console.log(sid_list);
-                    var sid = sid_list[0];
-                    filter['sidList'] = [sid];
+                    //var sid = veh_list.sid;
+                    filter['sidList'] = sid_list;
                     filter['start'] = -1;
                     filter['end'] = -1; // or current time.
                     postData['filter'] = filter;
@@ -90,8 +102,10 @@ L.Map = L.Map.extend({
                                 onEachFeature: function (feature, layer) {
                                     if (feature.properties && feature.properties.title) {
                                         var sid = feature.properties.title;
-                                        var nodeurl = basepath + '?q=node/' + sid;
-                                        var popContent = "<a href=" + nodeurl + ">" + sid + "</a>";
+                                        var nid = sid2vehmap[sid].nid;
+                                        var vnum = sid2vehmap[sid].vnum;
+                                        var nodeurl = basepath + '?q=node/' + nid;
+                                        var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
                                         pop = layer.bindPopup(popContent); //.openPopup();
                                         //layer.bindPopup(popContent).openOn(map);
                                         //map.addLayer(popContent);
