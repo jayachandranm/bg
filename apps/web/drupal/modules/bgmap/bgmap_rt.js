@@ -106,20 +106,28 @@ L.Map = L.Map.extend({
                                         var vnum = sid2vehmap[sid].vnum;
                                         var nodeurl = basepath + '?q=node/' + nid;
                                         var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
-                                        pop = layer.bindPopup(popContent); //.openPopup();
+                                        var popup = L.popup({
+                                                closeButton: false
+                                                // className: 'popup'
+                                            }).setContent(popContent);
+                                        // TODO: have to be array of pops.
+                                        pop = layer.bindPopup(popup); 
+                                        //pop = layer.bindPopup(popContent); //.openPopup();
                                         //layer.bindPopup(popContent).openOn(map);
                                         //map.addLayer(popContent);
                                     }
                                 }
                             });
                             //rtGeoJsonLayer.addData(jsonData);
+                            // TODO: if valid.
                             rtGeoJsonLayer.addTo(map);
                             // popup need map reference. Open only after adding the layer to map
+                            // TODO: if valid. Enable multiple pops.
                             pop.openPopup();
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestCurrentLoc, 5000);
+                            setTimeout(requestCurrentLoc, 50000);
                         },
                         error: function (xhr, status, error) {
                             //error: function () {

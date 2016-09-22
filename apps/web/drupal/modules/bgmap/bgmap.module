@@ -209,9 +209,9 @@ function _bgmap_page() {
  */
 function bgmap_node_insert($node)
 {
-    if ($node->type == 'vehicles') {
+    if ($node->type == 'vehicle') {
         $nid = $node->nid;
-        $sid = $node->field_sensor_id['und'][0]['value'];
+        $sid = $node->field_obd_id['und'][0]['value'];
         $vnum = $node->field_vehicle_num['und'][0]['value'];
         $vgroup = 'car';
         $flag = true;
@@ -236,10 +236,10 @@ function bgmap_node_insert($node)
 function bgmap_node_update($node)
 {
     //if ($node->type == 'stations' && !isset($node->nid)) {
-    if ($node->type == 'vehicles') {
+    if ($node->type == 'vehicle') {
         //dpm($node);
         $nid = $node->nid;
-        $sid = $node->field_sensor_id['und'][0]['value'];
+        $sid = $node->field_obd_id['und'][0]['value'];
         $vnum = $node->field_vehicle_num['und'][0]['value'];
         $vgroup = 'car';
         $flag = false;
@@ -261,22 +261,22 @@ function bgmap_block_view($delta = '')
     // TODO: Move this to init? For the case of view this happens outside.
     $mpath = drupal_get_path('module', 'bgmap');
     if ($node = menu_get_object()) {
-        if ($node->type == 'vehicles') {
+        if ($node->type == 'vehicle') {
             //dpm($node);
             $nid = $node->nid;
             // TODO: Fix this. Use the correct approach.
-            $sid_tmp = $node->field_sensor_id['und'][0]['value'];
+            $sid = $node->field_obd_id['und'][0]['value'];
             $vnum = $node->field_vehicle_num['und'][0]['value'];
         } // if node-type.
     } // if node.
     else {
-        $sid_tmp = -1;
+        $sid = "Unknown";
         $vnum = -1;
     }
     
     // Always pass as an array of values, for generic handling at JS side.
-    $sid_list[] = $sid_tmp;
-    $sid = (string)$sid_tmp;
+    $sid_list[] = $sid;
+    //$sid = (string)$sid_tmp;
 
     switch ($delta) {
         /*
@@ -474,9 +474,9 @@ function bgmap_preprocess_views_view(&$vars)
             $nid = $cell->nid;
             $vnum_content = $cell->field_field_vehicle_num[0];
             $vnum = $vnum_content['raw']['value'];
-            $sid_content = $cell->field_field_sensor_id[0];
-            $sid_tmp = $sid_content['raw']['value'];
-            $sid = (string)$sid_tmp;
+            $sid_content = $cell->field_field_obd_id[0];
+            $sid = $sid_content['raw']['value'];
+            //$sid = (string)$sid_tmp;
             //$active_nids[] = $sid_content->raw;
             $veh_details = array('sid' => $sid, 'nid' => $nid, 'vnum' => $vnum);
             $selected_vehs[$sid] = $veh_details;
@@ -484,29 +484,10 @@ function bgmap_preprocess_views_view(&$vars)
         }
         //print_r($visible_vehs);
         //dpm($active_sids);
-        //$block['content']['#attached']['js'] = array(
         drupal_add_js(array('rt' => array('veh_list' => $selected_vehs)), 'setting');
-        //drupal_add_js(array('rt' => array('veh_list' => $active_sids)), 'setting');
 /*
-            $block['content']['#attached']['js'] = array(
-                          array(
-                            'type' => 'file',
-                            'data' => $mpath . '/bgmap_rt.js',),
-                          array(
-                            'type' => 'setting',
-                            'data' => array(
-                              'rt' => array(
-                                'veh_list' => array(
-                                  $sid => array(
-                                    'sid' => $sid, 
-                                    'nid' => $nid,
-                                    'vnum' => $vnum
-                                  ),
-                                ), 
-                              ),
-                            ),
-                          )
-                       );
+        This doesn't seem to work for Drupal-7.
+        $vars['#attached']['js'] = array(
         $vars['view']['#attached']['js'] = array(
                       array(
                         'type' => 'file',
@@ -514,9 +495,7 @@ function bgmap_preprocess_views_view(&$vars)
                       array(
                         'type' => 'setting',
                         'data' => array(
-                          // Can be zero or more elements.
-                          // TODO: Use different variable?
-                          'rt' => array('sid_list' => $active_sids),
+                          'rt' => array('veh_list' => $selected_vehs),
                         ),
                       )
                    );

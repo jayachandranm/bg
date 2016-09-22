@@ -383,7 +383,7 @@ var Message = new Parser()
     .uint16('length')
     .uint8('version')
     .string('dev_id', {
-        encoding: 'hex',
+        encoding: 'ascii',
         length: 20
     })
     .uint16be('type')
