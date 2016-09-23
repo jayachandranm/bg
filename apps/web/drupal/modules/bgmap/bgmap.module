@@ -247,6 +247,20 @@ function bgmap_node_update($node)
     }
 }
 
+
+/**
+ * Implements hook_theme().
+ */
+function bgmap_theme() {
+  return array(
+    'bgmap_trace' => array(
+      'template'  => 'bgmap_trace',
+      'arguments' => array('items' => NULL),
+    ),
+  );
+}
+
+
 /**
  * Implements hook_block_view().
  *
@@ -322,9 +336,21 @@ function bgmap_block_view($delta = '')
             // TODO: What if this block is enabled for a node?
             // TODO: nidList already set in the view preprocess.
             //drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
-            $block['subject'] = t('Locations...');
             if (user_access('access content')) {
-                $block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
+                //$block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
+                $block = array
+                (
+                    'subject' => t('Locations...'),
+                    'content' => array 
+                    (
+                        'rtmulti_block' => array
+                        (
+                            '#prefix' => "<div id='show_report'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Map will display here....."),
+                        ),
+                    ),
+                );
             }
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             $block['content']['#attached']['js'] = array(
@@ -342,7 +368,8 @@ function bgmap_block_view($delta = '')
 
             $block['subject'] = t('Route History');
             if (user_access('access content')) {
-                $block['content']['#markup'] = "<div class='row'> <div class='col-md-6' style='padding-bottom:1em; padding-top:1em'><input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div> </div> <div class='row> style='margin-top:1em' id='show_map2'>Map will display here.....</div>";
+                $items2 = array();
+                $block['content']['#markup'] = theme('bgmap_trace', array('items' => $items2));
             } // access.
 /*
             $block['content']['#attached']['js'][]
