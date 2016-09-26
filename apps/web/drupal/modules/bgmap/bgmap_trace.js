@@ -21,7 +21,7 @@
                 //
                 var title2 = 'GPS Trace on Map';
                 $("#block-bgmap-trace").height(600);
-                $("#show_map2").height(400);
+                $("#trace_map").height(400);
                 //
                 var start = moment().subtract(1, 'days');
                 var end = moment();
@@ -48,7 +48,7 @@
                     }
                 );
 
-                var map2 = new L.map('show_map2', {
+                var map2 = new L.map('trace_map', {
                               fullscreenControl: true,
                               fullscreenControlOptions: {
                                 position: 'topleft'

@@ -23,7 +23,7 @@
                 //
                 // TODO: Do this in a theme.
                 $("#block-bgmap-rtsingle").height(500);
-                $("#show_report").height(400);
+                $("#rt_map").height(400);
 
 /***  little hack starts here ***/
 L.Map = L.Map.extend({
@@ -38,7 +38,7 @@ L.Map = L.Map.extend({
 }); 
 /***  end of hack ***/
 
-                var map = new L.map('show_report', {
+                var map = new L.map('rt_map', {
                               fullscreenControl: true,
                               fullscreenControlOptions: {
                                 position: 'topleft'

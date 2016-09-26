@@ -306,7 +306,7 @@ function bgmap_block_view($delta = '')
             // vnum/sid list.
             $block['subject'] = t('Location...');
             if (user_access('access content')) {
-                $block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
+                $block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
             }
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             // If not in libraries directory,
@@ -345,7 +345,7 @@ function bgmap_block_view($delta = '')
                     (
                         'rtmulti_block' => array
                         (
-                            '#prefix' => "<div id='show_report'>",
+                            '#prefix' => "<div id='rt_map'>",
                             '#suffux' => "</div>",
                             '#markup' => t("Map will display here....."),
                         ),
