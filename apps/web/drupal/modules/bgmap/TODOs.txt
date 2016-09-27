@@ -1,2 +1,6 @@
 - Check whether the latest time value is taken while grouping across time range.
 - Consider Organic group membership while displaying the vehicles.
+- Change the default range dynamically to most used range.
+- Disable direct text input.
+- need a map for popups, as they are created from inside onEachFeature in a loop and applied later.
+

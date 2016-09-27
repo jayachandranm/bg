@@ -26,6 +26,7 @@
                 $("#rt_map").height(400);
 
 /***  little hack starts here ***/
+/* TODO: Changed in leaflet 1.0
 L.Map = L.Map.extend({
     openPopup: function(popup) {
         //        this.closePopup();  // just comment this
@@ -36,6 +37,7 @@ L.Map = L.Map.extend({
         });
     }
 }); 
+*/
 /***  end of hack ***/
 
                 var map = new L.map('rt_map', {
@@ -90,7 +92,9 @@ L.Map = L.Map.extend({
                                     map.panTo(latlng);
                                     //layer.bindPopup(feature.properties.title);
                                     return L.circleMarker(latlng, {
+                                    //return L.marker(latlng, {
                                         // Will be overwritten by style function below.
+                                        //icon: L.BeautifyIcon.icon(options),
                                         radius: 10,
                                     });
                                 },
@@ -124,6 +128,7 @@ L.Map = L.Map.extend({
                             // popup need map reference. Open only after adding the layer to map
                             // TODO: if valid. Enable multiple pops.
                             pop.openPopup();
+                            //map.fitBounds(rtGeoJsonLayer.getBounds());
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
@@ -147,6 +152,13 @@ var popup = L.popup()
     .setLatLng(latlng)
     .setContent(popContent)
     .openOn(map);
+*/
+ /* 
+        var options = {
+          icon: 'bus',
+          borderColor: '#b3334f',
+          textColor: '#b3334f'
+        };
 */
 /*
 rtGeoJsonLayer.eachLayer(function(layer) {

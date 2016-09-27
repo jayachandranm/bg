@@ -47,10 +47,6 @@ function bgmap_block_info()
         'info' => t('Location Trace All'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
-    $blocks['fuel'] = array(
-        'info' => t('Fuel Usage'),
-        'cache' => DRUPAL_CACHE_PER_ROLE,
-    );
     return $blocks;
 }
 
@@ -70,6 +66,7 @@ function bgmap_init()
 {
     // TODO: Change to attach.
     drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
+    //drupal_add_css('https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css', 'external');
 }
 
 /**
@@ -123,10 +120,18 @@ function bgmap_libraries_info()
             'js' => array(
                 'leaflet.js',
                 'Control.FullScreen.js',
+                'snake/L.Polyline.SnakeAnim.js',
+/*
+                'beautify/leaflet-beautify-marker-icon.js',
+                'beautify/leaflet-beautify-marker.js',
+*/
             ),
             'css' => array(
                 'leaflet.css' => array(),
                 'Control.FullScreen.css' => array(),
+/*
+                'beautify/leaflet-beautify-marker-icon.js' => array(),
+*/
             ),
         ),
     );
@@ -249,6 +254,8 @@ function bgmap_node_update($node)
 
 
 /**
+ * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3 
+ *
  * Implements hook_theme().
  */
 function bgmap_theme() {
@@ -411,71 +418,6 @@ function bgmap_block_view($delta = '')
             } // access.
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             break;
-        case 'fuel':
-            //$vgroup = 'car';
-            // TODO: tmp
-            $sid = 204;
-            // TODO: If not a node, or node type is different, don't show the block.
-            if (isset($sid)) {
-                // TODO: Extend the condition to whole section.
-            }
-
-            //$filter['sidList'] = array($sid);
-            //$filter['start'] = -1;
-            //$filter['end'] = -1;
-            $filter = new stdClass();
-            $filter->sidList = array($sid);
-            $filter->start = -1;
-            $filter->end = -1;
-            $block['subject'] = t('Fuel Usage');
-            if (user_access('access content')) {
-                $result = _getdata_exdb('fuel', $filter);
-                $items2 = array();
-                $items2[] = array('Test', '2');
-                // No content in the last week.
-                foreach ($result as $row) {
-                    date_default_timezone_set('Asia/Singapore');
-                    $date = new DateTime();
-                    //$timeHr = date('g:i a',($row->timestamp)/1000);
-                    $date->setTimestamp(($row->timestamp) / 1000);
-                    $timeHr = $date->format('g:i a');
-
-                    $fuel = round($row->value, 2);
-                    if ($fuel == -1)
-                        $noise = '-';
-
-                    $items2[] = array($timeHr, $noise);
-                } // foreach
-
-                $header = array(
-                    array('data' => t('Time')),
-                    array('data' => t('Fuel usage')),
-                );
-
-                if (empty($items2)) {
-                    $block['content']['#markup'] = t('No data available.');
-                    //$block['content'] = t('No data available.');
-                } else {
-                    // Pass data through theme function.
-                    //$block['content']['#markup'] = theme('item_list', array('items' => $items2));
-                    $block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $items2, 'attributes' => array('id' => 'sort-table')));
-                    //$block['content'] = theme('item_list', array('items' => $items2));
-                }
-            } // access.
-            //drupal_add_js(array('fuel' => array('sid' => $sid)), 'setting');
-            // TODO: required?
-            $block['content']['#attached']['js'] = array(
-                          array(
-                            'type' => 'file',
-                            'data' => $mpath . '/bgmap_rt.js',),
-                          array(
-                            'type' => 'setting',
-                            'data' => array(
-                              'fuel' => array('sid_list' => $sid_list),
-                            ),
-                          )
-                       );
-            break;
         case 'aob':
             if (user_access('access content')) {
                 print_r("Unexpected switch");
@@ -607,7 +549,7 @@ function _get_geojson($rqtype)
                 $time = intval($row->timestamp);
                 $lat = floatval($row->latitude);
                 $lng = floatval($row->longitude);
-                $sid = floatval($row->sid);
+                $sid = $row->sid;
                 //$title = $row->title; //$row['name']
 
                 $feature = array(
@@ -664,16 +606,8 @@ function _getdata_exdb($reqtype, $filter)
     // TODO: iF multiple entry match the condition, handle as error?
 
     $query = array();
-    if ($reqtype == 'fuel') {
-        $query = db_select('bgmap_obd_fuel', 'a')
-            ->fields('a', array('sid', 'timestamp', 'value'))
-            ->condition('sid', $sid_list, 'IN')
-            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-            ->orderBy('timestamp', 'DESC')
-            ->groupBy('sid');
-    }
     if ($reqtype == 'rt') {
-        $query = db_select('bgmap_obd_gps', 'a')
+        $query = db_select('obd_gps', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
             ->orderBy('timestamp', 'DESC');
@@ -712,20 +646,28 @@ function _update_ext_db($nid, $sid, $vnum, $vgroup, $flag)
     Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
     db_set_active('BLUGRAPHTECH');
 
+    // TODO: consider timezone.
+    $millis = round(microtime(true) * 1000);
+    $dt = date('Y-m-d H:i:s');
+
     //$query = array();
     if ($flag) {
-        db_insert('bgmap_obd_node_map')
+        db_insert('obd_node_map')
             ->fields(array(
-                'nid' => $nid,
+                'timestamp' => $millis,
+                'datetime' => $dt,
                 'sid' => $sid,
+                'nid' => $nid,
                 'veh_num' => $vnum,
                 'veh_type' => $vgroup,
             ))->execute();
     } else {
-        db_update('bgmap_obd_node_map')
+        db_update('obd_node_map')
             ->fields(array(
-                'nid' => $nid,
+                'timestamp' => $millis,
+                'datetime' => $dt,
                 'sid' => $sid,
+                'nid' => $nid,
                 'veh_num' => $vnum,
                 'veh_type' => $vgroup,
             ))

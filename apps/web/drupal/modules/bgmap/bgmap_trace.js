@@ -110,6 +110,7 @@
                             //console.log('Received JSON for Trace=', JSON.stringify(jsonData));
                             traceGeoJsonLayer = L.geoJson().addTo(map2);
                             traceGeoJsonLayer.addData(jsonData);
+                            traceGeoJsonLayer.snakeIn();
                             //map2.fitBounds(latlngs);
                             //var polygon = L.polygon().addTo(map);
                         },
