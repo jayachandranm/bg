@@ -52,12 +52,12 @@ net.createServer(function(sock) {
           console.log("==================");
           console.log(dcMsg);
         } catch (err) {
-          console.log("Error in decoding.");
+          console.log("Error in decoding.", err);
         }
         try {
           processMessage(sock, dcMsg);
         } catch (err) {
-          console.log("Error in processing decoded data.");
+          console.log("Error in processing decoded data.", err);
         }
         //sock.pipe(sock);
     });
@@ -76,12 +76,22 @@ net.createServer(function(sock) {
 console.log('Server listening on ' + HOST +':'+ PORT);
 
 function processMessage(sock, dcMsg) {
+  var _obdID = hex2a(dcMsg.dev_id);
+  // TODO: Ignoring the last 5 bytes now, as they are null (0x00) chars.
+  var obdID = _obdID.substring(0, 15);
+  console.log("OBD ID =>", obdID);
   switch(dcMsg.type) {
       case 0x1001:
-          console.log('Login Message from OBD.');
+          console.log('Process Login Message from OBD.');
           var replyMsg = assemble.loginReply(dcMsg);
           sock.write(replyMsg);
+          // TODO: temporarily adding to 2 DBs for testing. Remove this.
+          //
           dbutil.updateDB(dcMsg.payload.gps_item);
+          var arr_gps_items = []; //[dcMsg.payload.gps_item];
+          arr_gps_items.push(dcMsg.payload.gps_item);
+          //console.log(arr_gps_items);
+          dbutil.add2dbGPS(obdID, arr_gps_items);
           //console.log("DB updated.");
           // TODO: Login reply.
           break;
@@ -91,14 +101,34 @@ function processMessage(sock, dcMsg) {
           sock.write(heartReply);
           break;
       case 0x4001:
-          console.log('GPS data');
+          console.log('Process GPS data');
           if(dcMsg.payload.gps_count > 0) {
+            // TODO: temporarily adding to 2 DBs for testing. Remove this.
             dbutil.updateDB(dcMsg.payload.gps_items[0]);
+            dbutil.add2dbGPS(obdID, dcMsg.payload.gps_items);
           } else {
             console.log("No GPS items available.");
           }
+          break;
       case 0x4004:
-          console.log("Data Flow");
+          console.log("Process Data Flow");
+          break;
+      case 0x4007:
+          console.log('Process Alarm from OBD.');
+          var replyMsg = assemble.alarmConfirmation(dcMsg);
+          sock.write(replyMsg);
+          // TODO: temporarily adding to 2 DBs for testing. Remove this.
+          //
+/*
+          dbutil.updateDB(dcMsg.payload.gps_item);
+          var arr_gps_items = []; //[dcMsg.payload.gps_item];
+          arr_gps_items.push(dcMsg.payload.gps_item);
+          //console.log(arr_gps_items);
+          dbutil.add2dbGPS(obdID, arr_gps_items);
+*/
+          //console.log("DB updated.");
+          // TODO: Login reply.
+          break;
   }
 }
 
@@ -127,4 +157,12 @@ function processMessage2(dcMsg) {
             console.log("Data Flow");
     }
 
+}
+
+function hex2a(hexx) {
+    var hex = hexx.toString();//force conversion
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
 }

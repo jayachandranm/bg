@@ -1,6 +1,7 @@
 var mysql      = require('mysql');
 
 module.exports.updateDB = updateDB;
+module.exports.add2dbGPS = add2dbGPS;
 
 var pool  = mysql.createPool({
     connectionLimit : 10,
@@ -9,6 +10,43 @@ var pool  = mysql.createPool({
     password        : 'bgmap%user$1',
     database        : 'bgmap'
 });
+
+
+function add2dbGPS(obdID, arrGpsVals) {
+  //console.log("add2dbGPS:");
+  for (i = 0; i < arrGpsVals.length; i++) { 
+    var gpsVals = arrGpsVals[i];
+    //console.log(gpsVals);
+    //
+    var LocLong = gpsVals.longitude/3600000;
+    var LocLat = gpsVals.latitude/3600000;
+
+    var dt = gpsVals.date_time;
+    var yr = '20' + dt.year;
+    // NOTE: Month starts from 0.
+    var utime = new Date(yr, dt.month-1, dt.day, dt.hour, dt.minute, dt.second).getTime();
+    console.log("GPS time =>", utime);
+    //
+    var dateNow = new Date();
+    var currTimeMillis = Date.now();
+    var offset = dateNow.getTimezoneOffset();
+    //console.log(offset);
+    var adjTime = utime + (8*60*60*1000);
+    var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
+
+    pool.getConnection(function(err, connection) {
+        // Use the connection
+        connection.query('INSERT INTO obd_gps SET ?',
+                    {sid: obdID, timestamp: utime, datetime: datetime_db, longitude: LocLong, latitude: LocLat},
+                    function(err, result) {
+            connection.release();
+            if (err) throw err;
+
+            //console.log(result.insertId);
+        });
+    });
+  }
+}
 
 function updateDB(gpsVals) {
 
@@ -20,20 +58,20 @@ function updateDB(gpsVals) {
     //console.log(yr, dt.month, dt.day, dt.hour, dt.minute, dt.second);
     // NOTE: Month starts from 0.
     var utime = new Date(yr, dt.month-1, dt.day, dt.hour, dt.minute, dt.second).getTime();
-    console.log(utime);
+    //console.log(utime);
     //console.log(LocLong, LocLat);
    
     var dateNow = new Date();
     var currTimeMillis = Date.now();
     var offset = dateNow.getTimezoneOffset();
-    console.log(offset);
+    //console.log(offset);
     // Use moment.js instead of manually adding +8hrs for SGT.
     var adjTime = utime + (8*60*60*1000);
     // TODO: add server time to DB table.
     //var adjTime = currTimeMillis + (8*60*60*1000);
     //var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
     var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
-    console.log(adjTime, datetime_db);
+    //console.log(adjTime, datetime_db);
 
     pool.getConnection(function(err, connection) {
         // Use the connection
@@ -43,7 +81,7 @@ function updateDB(gpsVals) {
             connection.release();
             if (err) throw err;
 
-            console.log(result.insertId);
+            //console.log(result.insertId);
         });
 
 /*        connection.query( 'SELECT * from location', function(err, rows) {
@@ -56,5 +94,6 @@ function updateDB(gpsVals) {
 
         // Don't use the connection here, it has been returned to the pool.
         });
-*/    });
+*/    
+    });
 }

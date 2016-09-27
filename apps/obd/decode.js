@@ -383,9 +383,21 @@ var Message = new Parser()
     .uint16('length')
     .uint8('version')
     .string('dev_id', {
-        encoding: 'ascii',
+        encoding: 'hex',
         length: 20
     })
+/*
+    .string('dev_id', {
+        encoding: 'ascii',
+        length: 15
+    })
+    // TODO:   length: 20, 
+    // last 5 chars are now ignored (issue -> hex 00=null).
+    .string('dev_id_reserved', {
+        encoding: 'hex',
+        length: 5
+    })
+*/
     .uint16be('type')
     .choice('payload', {
         tag: 'type',
