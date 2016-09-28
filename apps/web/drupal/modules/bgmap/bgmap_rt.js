@@ -104,6 +104,7 @@
                                     //return {fillColor: "blue", color: "blue", fillOpacity: 0.5};
                                 },
                                 onEachFeature: function (feature, layer) {
+                                    // TODO: Check this condition.
                                     if (feature.properties && feature.properties.title) {
                                         var sid = feature.properties.title;
                                         var nid = sid2vehmap[sid].nid;
@@ -127,8 +128,14 @@
                             rtGeoJsonLayer.addTo(map);
                             // popup need map reference. Open only after adding the layer to map
                             // TODO: if valid. Enable multiple pops.
-                            pop.openPopup();
+                            //pop.openPopup();
                             //map.fitBounds(rtGeoJsonLayer.getBounds());
+                            rtGeoJsonLayer.eachLayer(function(layer) {
+                                layer.openPopup();
+                                //var popUp = layer._popup;
+                                // process popUp, maybe with popUp.setContent("something");
+                                //popUp.openPopup();
+                            });
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
