@@ -49,11 +49,11 @@
                 );
 
                 var map2 = new L.map('trace_map', {
-                              fullscreenControl: true,
-                              fullscreenControlOptions: {
-                                position: 'topleft'
-                              }
-                           });
+                    fullscreenControl: true,
+                    fullscreenControlOptions: {
+                        position: 'topleft'
+                    }
+                });
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
@@ -132,26 +132,26 @@
 })
 (jQuery);
 
-                // Place a div name correcly.
-                //$("#block-bgmap-trace").append("<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div>");
-                //$("#block-bgmap-trace").append("<div class='row' style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
+// Place a div name correcly.
+//$("#block-bgmap-trace").append("<div class='row'> <input class='form-control' class='pull-left' type='text' name='daterange' value='01/01/2015 1:30 PM - 01/01/2015 2:00 PM'> </div>");
+//$("#block-bgmap-trace").append("<div class='row' style='margin-top:1em' id='show_map2'>Map will display here.....</div>");
 
-                            /*
-                             for (var i = 0; i < jsonData.length; i++) {
-                             latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
-                             }
-                             console.log(latlngs);
-                             //var test = JSON.stringify(latlngs);
-                             //var test2 = [[1.46, 103.83], [1.45, 103.82], [1.43, 103.81]];
-                             //console.log(test);
-                             polylines = L.polyline(latlngs, { color: 'blue' });
-                             polylines.addTo(map2);
-                             */
+/*
+ for (var i = 0; i < jsonData.length; i++) {
+ latlngs.push([parseFloat(jsonData[i].lt), parseFloat(jsonData[i].lg)]);
+ }
+ console.log(latlngs);
+ //var test = JSON.stringify(latlngs);
+ //var test2 = [[1.46, 103.83], [1.45, 103.82], [1.43, 103.81]];
+ //console.log(test);
+ polylines = L.polyline(latlngs, { color: 'blue' });
+ polylines.addTo(map2);
+ */
 
-                    /*
-                     if (typeof polylines != "undefined") {
-                     console.log("CLEAR TRACE.");
-                     map2.removeLayer(polylines);
-                     }
-                     */
+/*
+ if (typeof polylines != "undefined") {
+ console.log("CLEAR TRACE.");
+ map2.removeLayer(polylines);
+ }
+ */
 

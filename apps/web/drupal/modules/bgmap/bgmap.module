@@ -121,34 +121,34 @@ function bgmap_libraries_info()
                 'leaflet.js',
                 'Control.FullScreen.js',
                 'snake/L.Polyline.SnakeAnim.js',
-/*
-                'beautify/leaflet-beautify-marker-icon.js',
-                'beautify/leaflet-beautify-marker.js',
-*/
+                /*
+                                'beautify/leaflet-beautify-marker-icon.js',
+                                'beautify/leaflet-beautify-marker.js',
+                */
             ),
             'css' => array(
                 'leaflet.css' => array(),
                 'Control.FullScreen.css' => array(),
-/*
-                'beautify/leaflet-beautify-marker-icon.js' => array(),
-*/
+                /*
+                                'beautify/leaflet-beautify-marker-icon.js' => array(),
+                */
             ),
         ),
     );
 
-/*
-    $libraries['moment'] = array(
-      'name' => 'Moment JS',
-      'vendor url' => 'http://www.daterangepicker.com/',
-      'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
-    'version callback' => 'bgmap_short_circuit_version',
-    'files' => array(
-      'js' => array(
-        'moment.js',
-      ),
-    ),
-    );
-*/
+    /*
+        $libraries['moment'] = array(
+          'name' => 'Moment JS',
+          'vendor url' => 'http://www.daterangepicker.com/',
+          'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
+        'version callback' => 'bgmap_short_circuit_version',
+        'files' => array(
+          'js' => array(
+            'moment.js',
+          ),
+        ),
+        );
+    */
     return $libraries;
 }
 
@@ -200,10 +200,11 @@ function bgmap_menu()
     return $items;
 }
 
-function _bgmap_page() {
-  $items = array();
-  //return "Hello There!";
-  return $items;
+function _bgmap_page()
+{
+    $items = array();
+    //return "Hello There!";
+    return $items;
 }
 
 /**
@@ -254,17 +255,18 @@ function bgmap_node_update($node)
 
 
 /**
- * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3 
+ * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3
  *
  * Implements hook_theme().
  */
-function bgmap_theme() {
-  return array(
-    'bgmap_trace' => array(
-      'template'  => 'bgmap_trace',
-      'arguments' => array('items' => NULL),
-    ),
-  );
+function bgmap_theme()
+{
+    return array(
+        'bgmap_trace' => array(
+            'template' => 'bgmap_trace',
+            'arguments' => array('items' => NULL),
+        ),
+    );
 }
 
 
@@ -294,7 +296,7 @@ function bgmap_block_view($delta = '')
         $sid = "Unknown";
         $vnum = -1;
     }
-    
+
     // Always pass as an array of values, for generic handling at JS side.
     $sid_list[] = $sid;
     //$sid = (string)$sid_tmp;
@@ -319,24 +321,24 @@ function bgmap_block_view($delta = '')
             // If not in libraries directory,
             //$block['content']['#attached']['library'][] = array('system','ui.droppable');
             $block['content']['#attached']['js'] = array(
-                          array(
-                            'type' => 'file',
-                            'data' => $mpath . '/bgmap_rt.js',),
-                          array(
-                            'type' => 'setting',
-                            'data' => array(
-                              'rt' => array(
-                                'veh_list' => array(
-                                  $sid => array(
-                                    'sid' => $sid, 
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/bgmap_rt.js',),
+                array(
+                    'type' => 'setting',
+                    'data' => array(
+                        'rt' => array(
+                            'veh_list' => array(
+                                $sid => array(
+                                    'sid' => $sid,
                                     'nid' => $nid,
                                     'vnum' => $vnum
-                                  ),
-                                ), 
-                              ),
+                                ),
                             ),
-                          )
-                       );
+                        ),
+                    ),
+                )
+            );
             break;
         case 'rtmulti':
             // Only appears in a view.
@@ -348,7 +350,7 @@ function bgmap_block_view($delta = '')
                 $block = array
                 (
                     'subject' => t('Locations...'),
-                    'content' => array 
+                    'content' => array
                     (
                         'rtmulti_block' => array
                         (
@@ -361,16 +363,16 @@ function bgmap_block_view($delta = '')
             }
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             $block['content']['#attached']['js'] = array(
-                          array(
-                            'type' => 'file',
-                            'data' => $mpath . '/bgmap_rt.js',),
-                       );
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/bgmap_rt.js',),
+            );
             break;
         case 'trace':
             // TODO: If not a node or if node type is different, don't show the block.
             //$vgroup = 'car';
             if (isset($sid)) {
-              // TODO.
+                // TODO.
             }
 
             $block['subject'] = t('Route History');
@@ -378,25 +380,25 @@ function bgmap_block_view($delta = '')
                 $items2 = array();
                 $block['content']['#markup'] = theme('bgmap_trace', array('items' => $items2));
             } // access.
-/*
-            $block['content']['#attached']['js'][]
-                 = array('data' => 'https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js',
-                 'type' => 'external');
-*/
+            /*
+                        $block['content']['#attached']['js'][]
+                             = array('data' => 'https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js',
+                             'type' => 'external');
+            */
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             //drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
             $block['content']['#attached']['js'] = array(
-                          array(
-                            'type' => 'file',
-                            'data' => $mpath . '/bgmap_trace.js',),
-                          array(
-                            'type' => 'setting',
-                            'data' => array(
-                              'trace' => array('sid_list' => $sid_list),
-                            ),
-                          )
-                       );
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/bgmap_trace.js',),
+                array(
+                    'type' => 'setting',
+                    'data' => array(
+                        'trace' => array('sid_list' => $sid_list),
+                    ),
+                )
+            );
             break;
         case 'tracemulti':
             // TODO: If not a node or if node type is different, don't show the block.
@@ -454,21 +456,21 @@ function bgmap_preprocess_views_view(&$vars)
         //print_r($visible_vehs);
         //dpm($active_sids);
         drupal_add_js(array('rt' => array('veh_list' => $selected_vehs)), 'setting');
-/*
-        This doesn't seem to work for Drupal-7.
-        $vars['#attached']['js'] = array(
-        $vars['view']['#attached']['js'] = array(
-                      array(
-                        'type' => 'file',
-                        'data' => $mpath . '/bgmap_rt.js',),
-                      array(
-                        'type' => 'setting',
-                        'data' => array(
-                          'rt' => array('veh_list' => $selected_vehs),
-                        ),
-                      )
-                   );
-*/
+        /*
+                This doesn't seem to work for Drupal-7.
+                $vars['#attached']['js'] = array(
+                $vars['view']['#attached']['js'] = array(
+                              array(
+                                'type' => 'file',
+                                'data' => $mpath . '/bgmap_rt.js',),
+                              array(
+                                'type' => 'setting',
+                                'data' => array(
+                                  'rt' => array('veh_list' => $selected_vehs),
+                                ),
+                              )
+                           );
+        */
     }
 }
 
@@ -524,16 +526,16 @@ function _get_geojson($rqtype)
             } // foreach
             //dpm($polygon);
             // Add this feature only if there are some values.
-            if($polygon) {
-            $feature = array(
-                'type' => 'Feature',
-                'geometry' => array('type' => 'LineString', 'coordinates' => $polygon),
-                'properties' => array(
-                    'title' => 'Test2',
-                    'line-color' => '#f00',
-                    'line-size' => 'small'
-                )
-            );
+            if ($polygon) {
+                $feature = array(
+                    'type' => 'Feature',
+                    'geometry' => array('type' => 'LineString', 'coordinates' => $polygon),
+                    'properties' => array(
+                        'title' => 'Test2',
+                        'line-color' => '#f00',
+                        'line-size' => 'small'
+                    )
+                );
             }
             /*
             'title' => $row['name'],
@@ -542,8 +544,8 @@ function _get_geojson($rqtype)
             */
             # Add feature arrays to feature collection array
             // Only if not empty.
-            if($feature) {
-            array_push($geojson['features'], $feature);
+            if ($feature) {
+                array_push($geojson['features'], $feature);
             }
             break;
         case 'trcm':
