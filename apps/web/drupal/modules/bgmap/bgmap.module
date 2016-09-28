@@ -660,7 +660,8 @@ function _getdata_exdb($reqtype, $filter)
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
             ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-            ->orderBy('datetime', 'DESC');
+            //->orderBy('datetime', 'DESC');
+            ->orderBy('datetime', 'ASC');
     }
 
     $result = $query->execute();
