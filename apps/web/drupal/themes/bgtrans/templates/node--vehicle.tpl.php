@@ -54,17 +54,26 @@
       ?>
 <?php // jaya add, till render photo ?> 
       <div class="col-md-3">
-        <?php echo $node->field_vehicle_num['und'][0]['value']; ?>
       <?php if ($photo = render($content['field_vehicle_photo'])) { ?>
-        <?php print render($photo); ?>
+        <?php /* print render($photo); */ ?>
+        <?php print render($content['field_vehicle_photo']); ?>
       <?php } ?>
       </div>
       <div class="col-md-9">
-        <?php echo $node->body['und'][0]['value']; ?>
+        <?php print render($content['field_vehicle_num']); ?>
+        <?php print render($content['field_obd_id']); ?>
+        <?php print render($content['field_sector']); ?>
+        <?php print render($content['field_driver']); ?>
+        <?php print render($content['field_assistant']); ?>
+        <?php /* echo $node->field_vehicle_num['und'][0]['value'];*/ ?>
+        <?php /*echo $node->body['und'][0]['value'];*/ ?>
+      </div>
+      <div class="col-md-12">
+        <?php print render($content['body']); ?>
+        <p>
+        <hr>
       </div>
     </div>
-      <p>1
-      <p>2
 
     <?php if ($links = render($content['links'])): ?>
     <footer>

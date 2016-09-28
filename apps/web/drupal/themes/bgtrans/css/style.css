@@ -5,8 +5,11 @@
  * these variables directly from ../bootstrap/less/variables.less to this file.
  */
 /*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
+@import url(http://fonts.googleapis.com/css?family=Playfair+Display+SC | Londrina+Outline);
+@import url(http://fonts.googleapis.com/css?family=Tangerine);
 @import url(http://fonts.googleapis.com/css?family=Open+Sans);
 @import url(http://fonts.googleapis.com/css?family=David+Libre);
+@import url(http://fonts.googleapis.com/css?family=Fjalla+One);
 html {
   font-family: sans-serif;
   -ms-text-size-adjust: 100%;
@@ -7555,9 +7558,49 @@ body {
 .block-title {
   font-family: 'David Libre', serif;
 }
+.navbar-brand {
+  font-family: 'Playfair Display SC', serif;
+}
+.navbar-nav {
+  font-family: 'Fjalla One', sans-serif;
+}
 .region-content {
   padding: 20px 10px 50px 10px;
 }
+.leaflet-popup-content-wrapper,
+.leaflet-popup-content {
+  -webkit-border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
+  border-radius: 0 !important;
+}
+.leaflet-popup-content {
+  margin-top: 5px !important;
+  margin-bottom: 5px !important;
+  margin-left: 10px !important;
+  margin-right: 10px !important;
+}
+/* glyphicon for input */
+.inner-addon {
+  position: relative;
+}
+.inner-addon .glyphicon {
+  position: absolute;
+  padding: 10px;
+  pointer-events: none;
+}
+.left-addon .glyphicon {
+  left: 0px;
+}
+.right-addon .glyphicon {
+  right: 0px;
+}
+.left-addon input {
+  padding-left: 30px;
+}
+.right-addon input {
+  padding-right: 30px;
+}
+/* end glyphicon */
 /*
 .container {
     width: 950px;
