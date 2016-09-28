@@ -24,7 +24,7 @@ function loginReply(dcMsg) {
 
     var crcReply = crc16(dataToDev.result());
 
-    console.log(crcReply.toString(16));
+    //console.log(crcReply.toString(16));
 
     var dataToDev2 = c.uint16(crcReply)
     .uint16('0x0a0d')
@@ -47,7 +47,7 @@ function heartBeatReply(dcMsg) {
 
     var crcReply = crc16(dataToDev.result());
 
-    console.log(crcReply.toString(16));
+    //console.log(crcReply.toString(16));
 
     var dataToDev2 = c.uint16(crcReply)
     .uint16('0x0a0d')
@@ -120,7 +120,7 @@ function alarmConfirmation(dcMsg) {
 
     var crcReply = crc16(dataToDev.result());
 
-    console.log(crcReply.toString(16));
+    //console.log(crcReply.toString(16));
 
     var dataToDev2 = c.uint16(crcReply)
     .uint16('0x0a0d')
