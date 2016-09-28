@@ -514,6 +514,7 @@ function _get_geojson($rqtype)
                 // TODO: Or use float/double?
                 $time = intval($row->timestamp);
                 //$noise = round($row->noise_data, 2);
+                // In DB as double.
                 $lat = floatval($row->latitude);
                 $lng = floatval($row->longitude);
 
@@ -522,6 +523,8 @@ function _get_geojson($rqtype)
                 //
             } // foreach
             //dpm($polygon);
+            // Add this feature only if there are some values.
+            if($polygon) {
             $feature = array(
                 'type' => 'Feature',
                 'geometry' => array('type' => 'LineString', 'coordinates' => $polygon),
@@ -531,13 +534,17 @@ function _get_geojson($rqtype)
                     'line-size' => 'small'
                 )
             );
+            }
             /*
             'title' => $row['name'],
             'marker-color' => '#f00',
             'marker-size' => 'small'
             */
             # Add feature arrays to feature collection array
+            // Only if not empty.
+            if($feature) {
             array_push($geojson['features'], $feature);
+            }
             break;
         case 'trcm':
             // TODO: Assemble Polygon GeoJSON for multiple devices.
@@ -617,7 +624,7 @@ function _getdata_exdb($reqtype, $filter)
         $query->range(0, 1);
     }
     if ($reqtype == 'trc') {
-        $query = db_select('bgmap_obd_gps', 'a')
+        $query = db_select('obd_gps', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             // TODO: Currently assumes single sid.
             ->condition('sid', $sid_list, 'IN')
