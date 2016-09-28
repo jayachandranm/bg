@@ -283,13 +283,40 @@ function bgmap_block_view($delta = '')
     // TODO: exit if it is not a node but a view or something else. But should allow selected views.
     // TODO: Move this to init? For the case of view this happens outside.
     $mpath = drupal_get_path('module', 'bgmap');
+
+/*
+    if (arg(0) == 'node' && is_numeric(arg(1))) {
+       // Get the nid
+       $nid = arg(1);
+
+       // Load the node if you need to
+       $node = node_load($nid);
+    }
+*/
+
     if ($node = menu_get_object()) {
         if ($node->type == 'vehicle') {
             //dpm($node);
             $nid = $node->nid;
-            // TODO: Fix this. Use the correct approach.
+/*
+            // https://www.computerminds.co.uk/articles/rendering-drupal-7-fields-right-way
+            $lng = $node->language;
+            $lng = $form['FIELDNAME']['#language'];
             $sid = $node->field_obd_id['und'][0]['value'];
+            $sid = $node->field_obd_id[LANGUAGE_NONE][0]['value'];
             $vnum = $node->field_vehicle_num['und'][0]['value'];
+*/
+            // 
+            // Always read these fields in English.
+            $field_obd = field_get_items('node', $node, 'field_obd_id', 'en');
+            $sid = $field_obd[0]['safe_value'];
+            $field_vnum = field_get_items('node', $node, 'field_vehicle_num', 'en');
+            $vnum = $field_vnum[0]['safe_value'];
+/*
+            $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
+            $output_render = field_view_field('node', $node, 'field_obd_id');
+*/
+            //dpm($field_obd);
         } // if node-type.
     } // if node.
     else {

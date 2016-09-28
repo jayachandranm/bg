@@ -4,5 +4,7 @@
 - Disable direct text input.
 - need a map for popups, as they are created from inside onEachFeature in a loop and applied later.
 - obd_node_map table is not used now. Instead the required values are grabbed directly from node fields and then stored in JS map.
-- leaflet.js?oe5h0q:8 Uncaught TypeError: Cannot read property 'length' of null => In GeoJSON, geometry.coordinates=null.
+- leaflet.js Uncaught TypeError: Cannot read property 'length' of null => In GeoJSON, geometry.coordinates=null.
+- Proper access of field values from node.
+- Expose Search filter for Views.
 
