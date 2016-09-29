@@ -44,5 +44,8 @@ scripts[] = 'bootstrap/js/scrollspy.js'
 scripts[] = 'bootstrap/js/tab.js'
 scripts[] = 'bootstrap/js/transition.js'
 
+; custom script to hide/show blocks, animate, etc.
+;scripts[] = 'js/myscript.js'
+
 ; Disable the CDN provider so compiled source files can be used.
 settings[bootstrap_cdn] = ''
