@@ -9,7 +9,7 @@
 - Expose Search filter for Views.
 # Use details from Entity Reference in View.
 - Override template for the theme.
-- Per user control of blocks, to enable/disable.
+# Per user control of blocks, to enable/disable.
 - Content input grouping.
 - Color selector.
 - Look for possible null pointer errors.
@@ -18,7 +18,7 @@
 - Enable caching and Ajax for views.
 - New instance for production site.
 - use Elastic IP.
-- Off-canvas sidebar menu.
+- Off-canvas sidebar menu. Sidebar menu will still be inside canvas space.
 - Add navigation menu for end user (Create vehicle, add to group, etc).
 - Auto restart for nodejs, inside crontab.
 - PostGIS for geofence.

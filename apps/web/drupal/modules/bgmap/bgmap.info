@@ -3,4 +3,4 @@ description = Show real time data from custom db table on a map.
 core = 7.x
 dependencies[] = libraries
 ; NEW LINE
-;configure = admin/config/content/bgmap
+configure = admin/config/content/bgmap
