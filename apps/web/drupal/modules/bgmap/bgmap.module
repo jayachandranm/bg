@@ -34,6 +34,7 @@ function bgmap_block_info()
         'info' => t('Location Tracking'),
         // Default setting.
         'cache' => DRUPAL_CACHE_PER_ROLE,
+        //'cache' => DRUPAL_CACHE_GLOBAL,
     );
     $blocks['rtmulti'] = array(
         'info' => t('Location Tracking All'),
@@ -64,9 +65,38 @@ function bgmap_permission()
 
 function bgmap_init()
 {
-    // TODO: Change to attach.
-    drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
+    //drupal_add_js('https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js', 'external');
     //drupal_add_css('https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css', 'external');
+/*
+    $path2moment = libraries_get_path('moment');
+    drupal_add_js($path2moment.'/moment.min.js');
+*/
+/*
+if (($library = libraries_detect('moment')) && !empty($library['installed'])) {
+  // The library is installed. Awesome!
+  dpm($library);
+  print_r("Library moment is installed (2)</br>");
+}
+else {
+  // Something went wrong. :(
+  print_r("Error: Library moment is not installed</br>");
+  // This contains a short status code of what went wrong, such as 'not found'.
+  $error = $library['error'];
+  // This contains a detailed (localized) error message.
+  $error_message = $library['error message'];
+  print_r($error_message);
+}
+
+// Try to load the library and check if that worked.
+if (($library = libraries_load('moment')) && !empty($library['loaded'])) {
+  // Do something with the library here.
+  print_r("Library moment loaded.");
+}
+else {
+  print_r("Error: Library moment is not loaded.");
+}
+*/
+
 }
 
 /**
@@ -76,6 +106,22 @@ function bgmap_libraries_info()
 {
     $libraries = array();
 
+    // TODO: How to handle if the library is missing?
+    //
+    if (($library_path = libraries_get_path('moment'))) {
+        //print_r("Moment lib path OK.");
+        $libraries['moment'] = array(
+          'name' => 'Moment JS',
+          'vendor url' => 'http://momentjs.com/',
+          'download url' => 'http://momentjs.com/downloads/moment.js',
+          'version callback' => 'bgmap_short_circuit_version',
+          'files' => array(
+            'js' => array(
+              'moment.min.js',
+            ),
+          ),
+        );
+    }
     if (($library_path = libraries_get_path('daterangepicker'))) {
         //print_r("Daterange lib path OK.");
 
@@ -93,13 +139,12 @@ function bgmap_libraries_info()
                     'daterangepicker.css',
                 ),
             ),
-            /*
             'dependencies' => array(
                   'moment',
             ),
-            */
         );
     }
+    if (($library_path = libraries_get_path('leaflet'))) {
     $libraries['leaflet'] = array(
         //'title' => 'Vertical Tabs',
         //'website' => 'http://drupal.org/node/323112',
@@ -135,20 +180,8 @@ function bgmap_libraries_info()
             ),
         ),
     );
-
-    /*
-        $libraries['moment'] = array(
-          'name' => 'Moment JS',
-          'vendor url' => 'http://www.daterangepicker.com/',
-          'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
-        'version callback' => 'bgmap_short_circuit_version',
-        'files' => array(
-          'js' => array(
-            'moment.js',
-          ),
-        ),
-        );
-    */
+    }
+    //print_r($libraries);
     return $libraries;
 }
 
@@ -464,6 +497,7 @@ function bgmap_block_view($delta = '')
                 = array('data' => 'https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js',
                              'type' => 'external');
             */
+            $block['content']['#attached']['libraries_load'][] = array('moment');
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             //drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
@@ -478,6 +512,7 @@ function bgmap_block_view($delta = '')
                     ),
                 )
             );
+            //dpm($block);
             break;
         case 'tracemulti':
             // TODO: If not a node or if node type is different, don't show the block.
@@ -505,6 +540,7 @@ function bgmap_block_view($delta = '')
             } // if user_access
             break;
     } // switch
+    //libraries_info('moment');
     return $block;
 }
 

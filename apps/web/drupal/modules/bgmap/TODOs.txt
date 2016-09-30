@@ -1,10 +1,36 @@
 - Check whether the latest time value is taken while grouping across time range.
 - Consider Organic group membership while displaying the vehicles.
 - Change the default range dynamically to most used range.
-- Disable direct text input.
-- need a map for popups, as they are created from inside onEachFeature in a loop and applied later.
+- Disable direct text input (for mobile).
+#need a map/table for popups, as they are created from inside onEachFeature in a loop and applied later.
 - obd_node_map table is not used now. Instead the required values are grabbed directly from node fields and then stored in JS map.
-- leaflet.js Uncaught TypeError: Cannot read property 'length' of null => In GeoJSON, geometry.coordinates=null.
-- Proper access of field values from node.
+# leaflet.js Uncaught TypeError: Cannot read property 'length' of null => In GeoJSON, geometry.coordinates=null.
+# Proper access of field values from node.
 - Expose Search filter for Views.
+# Use details from Entity Reference in View.
+- Override template for the theme.
+- Per user control of blocks, to enable/disable.
+- Content input grouping.
+- Color selector.
+- Look for possible null pointer errors.
+- Theme node-vehicle
+- Bootstrap table for complete listing of vehicles with easy search.
+- Enable caching and Ajax for views.
+- New instance for production site.
+- use Elastic IP.
+- Off-canvas sidebar menu.
+- Add navigation menu for end user (Create vehicle, add to group, etc).
+- Auto restart for nodejs, inside crontab.
+- PostGIS for geofence.
+- Leaflet draw block.
+- Print OBD details in deeper level.
+- Remove access denied message from new site.
+- Check permissions for content type vehicle (or OG module?)
+- Check user subscription options for OG/Group.
+- Consider all permissions in OG context.
+- Use details from Entity Reference in a node.
+- Use bootstrap glyphicon options and remove the extra CSS.
+- Move user/pass of nodejs and Drupal modules to separate file.
+- Create a basic framework package without content (Profile?)
+
 
