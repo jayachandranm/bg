@@ -268,10 +268,14 @@ function bgmap_node_update($node)
  */
 function bgmap_theme()
 {
+    $theme_subfolder = drupal_get_path('module', 'bgmap') . "/theme";
     return array(
         'bgmap_trace' => array(
+            'path' => $theme_subfolder,
             'template' => 'bgmap_trace',
             'arguments' => array('items' => NULL),
+            // All preprocess hooks in .theme.inc.
+            //'file' => 'bgmap.theme.inc',
         ),
     );
 }
