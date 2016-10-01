@@ -42,7 +42,7 @@ function add2dbGPS(obdID, arrGpsVals) {
             connection.release();
             if (err) throw err;
 
-            //console.log(result.insertId);
+            console.log(result.insertId);
         });
     });
   }

@@ -89,9 +89,17 @@ var LoginPackage = new Parser()
         type: statData
     })
     .uint8('gps_active')
-    .nest('gps_item', {
-        // 20 bytes
-        type: gpsItem
+    // Decode as GPS ITEM only if GPS enabled.
+    .choice('gps_item', {
+        tag: 'gps_active',
+        choices: {
+            // Nothing to decode 
+            0x00: new Parser(),
+            // 20 bytes 
+            0x01: gpsItem 
+        },
+        // TODO: Check this.
+        defaultChoice: new Parser()
     })
     .string('sw_version', {
         encoding: 'utf8',
@@ -108,9 +116,17 @@ var LogoutPackage = new Parser()
         type: statData
     })
     .uint8('gps_active')
-    .nest('gps_item', {
-        // 20 bytes
-        type: gpsItem
+    // Decode as GPS ITEM only if GPS enabled.
+    .choice('gps_item', {
+        tag: 'gps_active',
+        choices: {
+            // Nothing to decode 
+            0x00: new Parser(),
+            // 20 bytes 
+            0x01: gpsItem 
+        },
+        // TODO: Check this.
+        defaultChoice: new Parser()
     })
 
 // Nothing to decode. Just need to reply.
@@ -243,9 +259,17 @@ var AlarmsPackage = new Parser()
     })
     // TODO: GPS_DATA not described properly.
     .uint8('gps_active')
-    .nest('gps_item', {
-        // 20 bytes
-        type: gpsItem
+    // Decode as GPS ITEM only if GPS enabled.
+    .choice('gps_item', {
+        tag: 'gps_active',
+        choices: {
+            // Nothing to decode 
+            0x00: new Parser(),
+            // 20 bytes 
+            0x01: gpsItem 
+        },
+        // TODO: Check this.
+        defaultChoice: new Parser()
     })
     .uint8('alarm_count')
     .array('alarms', {
@@ -325,10 +349,18 @@ var CurrentLocation = new Parser()
         type: statData
     })
     .uint8('gps_active')
-    .nest('gps_item', {
-        // 20 bytes
-        type: gpsItem
-    });
+    // Decode as GPS ITEM only if GPS enabled.
+    .choice('gps_item', {
+        tag: 'gps_active',
+        choices: {
+            // Nothing to decode 
+            0x00: new Parser(),
+            // 20 bytes 
+            0x01: gpsItem 
+        },
+        // TODO: Check this.
+        defaultChoice: new Parser()
+    })
 
 var ClearDTCResp = new Parser()
     .endianess('little')
