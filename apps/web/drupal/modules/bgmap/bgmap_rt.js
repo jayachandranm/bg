@@ -2,6 +2,12 @@
     Drupal.behaviors.bgmap = {
         attach: function (context, settings) {
             console.log('JS attach for RT, initialization.');
+            // TODO: Where is the most appropriate place for this code?
+            // Depends on Drupal behaviors.
+            $(document).ready(function() {
+                $('#tbl-dashboard-view').DataTable();
+            });
+            //
             if (Drupal.settings.rt) {
                 // No context parameters are required.
                 var sid2vehmap = {};
@@ -49,7 +55,7 @@
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
-                map.setView([lat, lng], 13);
+                map.setView([lat, lng], 15);
                 //
                 var rtGeoJsonLayer = L.geoJson().addTo(map);
 
@@ -112,7 +118,8 @@
                                         var nodeurl = basepath + '?q=node/' + nid;
                                         var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
                                         var popup = L.popup({
-                                            closeButton: false
+                                            closeButton: false,
+                                            autoClose: false
                                             // className: 'popup'
                                         }).setContent(popContent);
                                         // TODO: have to be array of pops.
@@ -129,7 +136,7 @@
                             // popup need map reference. Open only after adding the layer to map
                             // TODO: if valid. Enable multiple pops.
                             //pop.openPopup();
-                            //map.fitBounds(rtGeoJsonLayer.getBounds());
+                            map.fitBounds(rtGeoJsonLayer.getBounds());
                             rtGeoJsonLayer.eachLayer(function(layer) {
                                 layer.openPopup();
                                 //var popUp = layer._popup;
@@ -139,7 +146,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestCurrentLoc, 50000);
+                            setTimeout(requestCurrentLoc, 5000);
                         },
                         error: function (xhr, status, error) {
                             //error: function () {
@@ -153,54 +160,4 @@
         } // attach
     } // behaviors, bgmap
 })(jQuery);
-
-/*
- var popup = L.popup()
- .setLatLng(latlng)
- .setContent(popContent)
- .openOn(map);
- */
-/*
- var options = {
- icon: 'bus',
- borderColor: '#b3334f',
- textColor: '#b3334f'
- };
- */
-/*
- rtGeoJsonLayer.eachLayer(function(layer) {
- var popUp = layer._popup;
- // process popUp, maybe with popUp.setContent("something");
- //popUp.openPopup();
- popUp.setContent("Hello");
- });
- */
-
-/*
- //mymarker = L.marker(currLtLng, { icon: carIcon_r }).addTo(map);
- mymarker = markerList[vnum];
- mymarker.setLatLng(currLtLng);
- //var bounds = L.latLngBounds(southWest, northEast);
- //map.fitBounds(bounds);
- //map.fitBounds([[1,1],[2,2],[3,3]]);
- var nodeurl = basepath + '?q=node/' + nid;
- var popContent = "<a href=" + nodeurl + ">" + vnum + "</a>";
- mymarker.bindPopup(popContent);
- */
-/*
- var markerList = {};
- //var markers = new Array();
-
- var carIcon_b = L.icon({
- iconUrl: 'sites/default/files/car_blue.png',
- //shadowUrl: 'sites/default/car.png',
- iconSize: [32, 37], // size of the icon
- //shadowSize:   [50, 64], // size of the shadow
- // point of the icon which will correspond to marker's location
- // Fix: http://gis.stackexchange.com/questions/179734/leaflet-customer-marker-changes-position-with-scale
- //iconAnchor: [22, 94],
- shadowAnchor: [4, 62],  // the same for the shadow
- popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
- });
- */
 

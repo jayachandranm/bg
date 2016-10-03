@@ -66,6 +66,31 @@ function bgmap_permission()
 function bgmap_init()
 {
     // Any init code goes here. eg. drupal_add_js.
+if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
+  // The library is installed. Awesome!
+  //dpm($lib_avail);
+}
+else {
+  // Something went wrong. :(
+  print_r("Error: Library datatables is not installed</br>");
+  // This contains a short status code of what went wrong, such as 'not found'.
+  $error = $lib_avail['error'];
+  // This contains a detailed (localized) error message.
+  $error_message = $lib_avail['error message'];
+  print_r($error_message);
+}
+
+// Try to load the library and check if that worked.
+if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
+    //dpm($lib_load);
+  // Do something with the library here.
+  //print_r("Library datatables loaded.");
+}
+else {
+  print_r("Error: Library datatables is not loaded.");
+}
+
+drupal_add_js(drupal_get_path('module', 'bgmap') . '/test.js');
 }
 
 /**
@@ -146,6 +171,24 @@ function bgmap_libraries_info()
                 /*
                                 'beautify/leaflet-beautify-marker-icon.js' => array(),
                 */
+            ),
+        ),
+    );
+    }
+    if (($library_path = libraries_get_path('datatables'))) {
+    $libraries['datatables'] = array(
+        'name' => 'Datatables',
+        'vendor url' => 'http://www.datatables.net/',
+        'download url' => 'http://www.datatables.net/download',
+        'version callback' => 'bgmap_short_circuit_version',
+        'files' => array(
+            'js' => array(
+                'media/js/jquery.dataTables.js',
+                'media/js/dataTables.bootstrap.js',
+            ),
+            'css' => array(
+                //'jquery.dataTables.css' => array(),
+                'media/css/dataTables.bootstrap.css' => array(),
             ),
         ),
     );
