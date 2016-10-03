@@ -25,14 +25,20 @@ function _getdata_exdb($reqtype, $filter)
 
     $query = array();
     if ($reqtype == 'rt') {
-        $query = db_select('obd_gps', 'a')
+        $query_inner = db_select('obd_gps', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
             ->orderBy('timestamp', 'DESC');
+            //$query->addExpression('MAX(id)');
         // TODO: Can be conditional, different for block and page.
         //$query->range(0, $max_num);
         // TODO: Use timestamp condition instead?
-        $query->range(0, 1);
+        $query_inner->range(0, 1000);
+        //
+        $query = db_select($query_inner, 'b')
+            ->fields('b', array('sid', 'timestamp', 'longitude', 'latitude'))
+            ->groupBy('sid');
+        
     }
     if ($reqtype == 'trc') {
         $query = db_select('obd_gps', 'a')
