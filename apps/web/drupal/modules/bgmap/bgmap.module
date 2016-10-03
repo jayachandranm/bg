@@ -90,7 +90,7 @@ else {
   print_r("Error: Library datatables is not loaded.");
 }
 
-drupal_add_js(drupal_get_path('module', 'bgmap') . '/test.js');
+//drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
 }
 
 /**
