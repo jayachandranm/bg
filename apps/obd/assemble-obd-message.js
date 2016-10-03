@@ -30,7 +30,7 @@ function loginReply(dcMsg) {
     .uint16('0x0a0d')
     .result();
 
-    console.log(dataToDev2);
+    //console.log(dataToDev2);
     c.reset();
     return dataToDev2;
 }

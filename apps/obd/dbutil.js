@@ -25,7 +25,6 @@ function add2dbGPS(obdID, arrGpsVals) {
     var yr = '20' + dt.year;
     // NOTE: Month starts from 0.
     var utime = new Date(yr, dt.month-1, dt.day, dt.hour, dt.minute, dt.second).getTime();
-    console.log("GPS time =>", utime);
     //
     var dateNow = new Date();
     var currTimeMillis = Date.now();
@@ -33,6 +32,7 @@ function add2dbGPS(obdID, arrGpsVals) {
     //console.log(offset);
     var adjTime = utime + (8*60*60*1000);
     var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
+    console.log("GPS time :", utime, "=>", datetime_db);
 
     pool.getConnection(function(err, connection) {
         // Use the connection
