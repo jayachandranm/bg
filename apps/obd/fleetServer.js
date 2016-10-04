@@ -56,7 +56,6 @@ net.createServer(function(sock) {
         var base64str = new Buffer(data).toString('hex');
         //console.log('DATA ' + sock.remoteAddress + ': ' + data);
         console.log('DATA(base64) ' + sock.remoteAddress + ': ' + base64str);
-
         //debugger;
         try {
           var dcMsg = decode.decodeMessage(rawData);
@@ -65,6 +64,7 @@ net.createServer(function(sock) {
         } catch (err) {
           console.log("Error in decoding.", err);
         }
+        //
         try {
           processMessage(sock, dcMsg);
         } catch (err) {
@@ -80,6 +80,18 @@ net.createServer(function(sock) {
 
     sock.on('end', function() {
         console.log('client disconnected');
+    });
+
+    sock.on('timeout', function() {
+        console.log('socket timeout');
+    });
+   
+    sock.on('error', function(err) {
+        console.log("Error: " + err);
+    });
+
+    sock.on('uncaughtException', function(err) {
+        console.log('socket:uncaughtException ' + err);
     });
 
 }).listen(PORT);//, HOST);
@@ -179,3 +191,10 @@ function hex2a(hexx) {
         str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
     return str;
 }
+
+/*
+process.on('uncaughtException', function (err) {
+  console.error(err.stack);
+  console.log("Node NOT Exiting...");
+});
+*/
