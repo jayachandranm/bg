@@ -347,6 +347,8 @@ function bgmap_block_view($delta = '')
             $sid = $field_obd[0]['safe_value'];
             $field_vnum = field_get_items('node', $node, 'field_vehicle_num', 'en');
             $vnum = $field_vnum[0]['safe_value'];
+            $field_color = field_get_items('node', $node, 'field_display_color', 'en');
+            $color = $field_color[0]['safe_value'];
 /*
             $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
             $output_render = field_view_field('node', $node, 'field_obd_id');
@@ -394,7 +396,8 @@ function bgmap_block_view($delta = '')
                                 $sid => array(
                                     'sid' => $sid,
                                     'nid' => $nid,
-                                    'vnum' => $vnum
+                                    'vnum' => $vnum,
+                                    'color' => $color
                                 ),
                             ),
                         ),
@@ -512,9 +515,14 @@ function bgmap_preprocess_views_view(&$vars)
             $vnum = $vnum_content['raw']['value'];
             $sid_content = $cell->field_field_obd_id[0];
             $sid = $sid_content['raw']['value'];
+            $color_content = $cell->field_field_display_color[0];
+            $color = $color_content['raw']['value'];
             //$sid = (string)$sid_tmp;
             //$active_nids[] = $sid_content->raw;
-            $veh_details = array('sid' => $sid, 'nid' => $nid, 'vnum' => $vnum);
+            $veh_details = array('sid' => $sid, 
+                                 'nid' => $nid, 
+                                 'vnum' => $vnum,
+                                 'color' => $color);
             $selected_vehs[$sid] = $veh_details;
             //$active_sids[] = $sid_content['raw']['value'];
         }

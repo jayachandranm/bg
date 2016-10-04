@@ -5,7 +5,9 @@
             // TODO: Where is the most appropriate place for this code?
             // Depends on Drupal behaviors.
             $(document).ready(function() {
-                $('#tbl-dashboard-view').DataTable();
+                $('#tbl-dashboard-view').DataTable({
+                    "lengthChange": false
+                });
             });
             //
             if (Drupal.settings.rt) {
@@ -106,7 +108,13 @@
                                 },
                                 style: function (feature) {
                                     console.log(feature.properties.style);
-                                    return feature.properties.style;
+                                    var style_rcvd = feature.properties.style;
+                                    var sid = feature.properties.title;
+                                    var custom_color = sid2vehmap[sid].color;
+                                    style_rcvd.fillColor = custom_color;
+                                    console.log('New Style', style_rcvd);
+                                    return style_rcvd;
+                                    //return feature.properties.style;
                                     //return {fillColor: "blue", color: "blue", fillOpacity: 0.5};
                                 },
                                 onEachFeature: function (feature, layer) {
