@@ -57,7 +57,7 @@
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
-                map.setView([lat, lng], 15);
+                map.setView([lat, lng], 14);
                 //
                 var rtGeoJsonLayer = L.geoJson().addTo(map);
 
