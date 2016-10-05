@@ -1,6 +1,7 @@
   <?php
    //print '<pre>'; 
    //print_r($variables); 
+   //print_r($form);
    //print '</pre>';
    //dpm(get_defined_vars());
    ?>
