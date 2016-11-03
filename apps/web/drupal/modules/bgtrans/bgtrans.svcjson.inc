@@ -67,8 +67,8 @@ function _get_alarmsjson($rqtype)
                 //$title = $row->title; //$row['name']
 
                 # Add feature arrays to feature collection array
-                array_push($geojson['features'], $feature);
-                $alarmsjson = array($time, $sid, $lng, $lat);
+                //array_push($geojson['features'], $feature);
+                $alarmsjson[] = array($time, $sid, $lng, $lat);
                 //
             } // foreach
             break;

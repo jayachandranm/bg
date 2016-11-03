@@ -55,10 +55,17 @@
                         success: function (jsonData) {
                             //console.log('Received JSON for All Veh=', jsonData);
                             console.log('Received JSON for Alarms=', JSON.stringify(jsonData));
+                            var jsonObj = jsonData; //JSON.parse(jsonData);
+                            var ul = $("<ul>");
+                            for(var i = 0, l = jsonObj.length; i < l; ++i) {
+                                ul.append("<li>" + jsonObj[i][1] + "</li>");
+                            }
+                            //$("#rt_alarms").append(ul); 
+                            $("#rt_alarms").html(ul); 
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestCurrentAlarms, 50000);
+                            setTimeout(requestCurrentAlarms, 5000);
                         },
                         error: function (xhr, status, error) {
                             //error: function () {

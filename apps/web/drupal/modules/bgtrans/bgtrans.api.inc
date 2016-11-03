@@ -25,7 +25,7 @@ function _getdata_exdb($reqtype, $filter)
 
     $query = array();
     if ($reqtype == 'alarms') {
-        $query_inner = db_select('obd_alarms', 'a')
+        $query_inner = db_select('obd_gps', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
             ->condition('timestamp', array($start_time, $end_time), 'BETWEEN');
