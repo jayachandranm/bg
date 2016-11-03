@@ -17,7 +17,7 @@ function _get_json()
  *   JSON data.
  */
 
-function _get_geojson($rqtype)
+function _get_alarmsjson($rqtype)
 {
     //function bgtrans_get_geojson($filter, $reqtype, $starttime, $endtime) {
     //$nid_list = $_REQUEST['nidList'];
@@ -31,14 +31,11 @@ function _get_geojson($rqtype)
     $result = _getdata_exdb($reqtype, $filter);
     //
     date_default_timezone_set('Asia/Singapore');
-    $geojson = array(
-        'type' => 'FeatureCollection',
-        'features' => array()
-    );
+    
+    $alarmsjson = array();
 
-    $items2 = array();
     switch ($reqtype) {
-        case 'trc':
+        case 'fuel':
             foreach ($result as $row) {
                 // TODO: Or use float/double?
                 $time = intval($row->timestamp);
@@ -60,7 +57,7 @@ function _get_geojson($rqtype)
             // TODO: Assemble Polygon GeoJSON for multiple devices.
             break;
 
-        case 'rt': // both single and multi.
+        case 'alarms': // both single and multi.
             foreach ($result as $row) {
                 //$noise = round($row->noise_data, 2);
                 $time = intval($row->timestamp);
@@ -71,12 +68,13 @@ function _get_geojson($rqtype)
 
                 # Add feature arrays to feature collection array
                 array_push($geojson['features'], $feature);
+                $alarmsjson = array($time, $sid, $lng, $lat)
                 //
             } // foreach
             break;
     }
-    //dpm($geojson);
-    return drupal_json_output($geojson);
+    //dpm($alarmsjson);
+    return drupal_json_output($alarmsjson);
 }
 
 

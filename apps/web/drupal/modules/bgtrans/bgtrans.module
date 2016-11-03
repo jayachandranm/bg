@@ -140,9 +140,9 @@ function bgtrans_menu()
         'file' => 'bgtrans.admin.inc',
         'type' => MENU_NORMAL_ITEM,
     );
-    $items['bgtrans/get'] = array(
+    $items['bgtrans/get/alarms'] = array(
         'title' => 'Real time alarms',
-        'page callback' => '_get_json',
+        'page callback' => '_get_alarmsjson',
         //'page arguments' => array(1), //get param from URL.
         'access arguments' => array('access bgtrans content'),
         'file' => 'bgtrans.svcjson.inc',
@@ -173,6 +173,7 @@ function bgtrans_block_view($delta = '')
     // TODO: Move this to init? For the case of view this happens outside.
     $mpath = drupal_get_path('module', 'bgtrans');
 
+    // TODO: Move this to different seg? Handle case where it's not a node, but view.
     if ($node = menu_get_object()) {
         // TODO: if($node) {}
         if ($node->type == 'vehicle') {
@@ -233,11 +234,11 @@ function bgtrans_block_view($delta = '')
                     'subject' => t('Alarms...'),
                     'content' => array
                     (
-                        'rtmulti_block' => array
+                        'alarms_block' => array
                         (
-                            '#prefix' => "<div id='rt_map'>",
+                            '#prefix' => "<div id='rt_alarms'>",
                             '#suffux' => "</div>",
-                            '#markup' => t("Map will display here....."),
+                            '#markup' => t("Table will display here....."),
                         ),
                     ),
                 );
@@ -289,6 +290,6 @@ function bgtrans_preprocess_views_view(&$vars)
         }
         //print_r($visible_vehs);
         //dpm($active_sids);
-        drupal_add_js(array('rt' => array('veh_list' => $selected_vehs)), 'setting');
+        drupal_add_js(array('alarms' => array('veh_list' => $selected_vehs)), 'setting');
     }
 }

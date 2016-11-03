@@ -25,10 +25,11 @@ function _getdata_exdb($reqtype, $filter)
 
     $query = array();
     if ($reqtype == 'rt') {
-        $query_inner = db_select('obd_gps', 'a')
+        $query_inner = db_select('obd_alarms', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
-            ->orderBy('timestamp', 'DESC');
+            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+            //->orderBy('timestamp', 'DESC');
             //$query->addExpression('MAX(id)');
         // TODO: Can be conditional, different for block and page.
         //$query->range(0, $max_num);
@@ -40,7 +41,8 @@ function _getdata_exdb($reqtype, $filter)
             ->groupBy('sid');
         
     }
-    if ($reqtype == 'trc') {
+    if ($reqtype == 'fuel') {
+/*
         $query = db_select('obd_gps', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             // TODO: Currently assumes single sid.
@@ -50,6 +52,7 @@ function _getdata_exdb($reqtype, $filter)
             ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
             //->orderBy('datetime', 'DESC');
             ->orderBy('datetime', 'ASC');
+*/
     }
 
     $result = $query->execute();
