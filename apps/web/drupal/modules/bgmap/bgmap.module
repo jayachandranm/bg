@@ -66,29 +66,27 @@ function bgmap_permission()
 function bgmap_init()
 {
     // Any init code goes here. eg. drupal_add_js.
-if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
-  // The library is installed. Awesome!
-  //dpm($lib_avail);
-}
-else {
-  // Something went wrong. :(
-  print_r("Error: Library datatables is not installed</br>");
-  // This contains a short status code of what went wrong, such as 'not found'.
-  $error = $lib_avail['error'];
-  // This contains a detailed (localized) error message.
-  $error_message = $lib_avail['error message'];
-  print_r($error_message);
-}
+    if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
+        // The library is installed. Awesome!
+        //dpm($lib_avail);
+    } else {
+        // Something went wrong. :(
+        print_r("Error: Library datatables is not installed</br>");
+        // This contains a short status code of what went wrong, such as 'not found'.
+        $error = $lib_avail['error'];
+        // This contains a detailed (localized) error message.
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
 
 // Try to load the library and check if that worked.
-if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
-    //dpm($lib_load);
-  // Do something with the library here.
-  //print_r("Library datatables loaded.");
-}
-else {
-  print_r("Error: Library datatables is not loaded.");
-}
+    if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
+        //dpm($lib_load);
+        // Do something with the library here.
+        //print_r("Library datatables loaded.");
+    } else {
+        print_r("Error: Library datatables is not loaded.");
+    }
 
 //drupal_add_js(drupal_get_path('module', 'bgmap') . '/bgmap.js');
 }
@@ -105,15 +103,15 @@ function bgmap_libraries_info()
     if (($library_path = libraries_get_path('moment'))) {
         //print_r("Moment lib path OK.");
         $libraries['moment'] = array(
-          'name' => 'Moment JS',
-          'vendor url' => 'http://momentjs.com/',
-          'download url' => 'http://momentjs.com/downloads/moment.js',
-          'version callback' => 'bgmap_short_circuit_version',
-          'files' => array(
-            'js' => array(
-              'moment.min.js',
+            'name' => 'Moment JS',
+            'vendor url' => 'http://momentjs.com/',
+            'download url' => 'http://momentjs.com/downloads/moment.js',
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'moment.min.js',
+                ),
             ),
-          ),
         );
     }
     if (($library_path = libraries_get_path('daterangepicker'))) {
@@ -134,64 +132,64 @@ function bgmap_libraries_info()
                 ),
             ),
             'dependencies' => array(
-                  'moment',
+                'moment',
             ),
         );
     }
     if (($library_path = libraries_get_path('leaflet'))) {
-    $libraries['leaflet'] = array(
-        //'title' => 'Vertical Tabs',
-        //'website' => 'http://drupal.org/node/323112',
-        'name' => 'Leaflet',
-        'vendor url' => 'http://www.leaflet.com/',
-        'download url' => 'http://www.leaflet.com/download',
-        /*
-        // TODO: automatically get version number from Changelog or readme.
-        'version arguments' => array(
-        'file' => 'highcharts.js',
-        // jQuery FlexSlider v2.1
-        'pattern' => '/Highcharts v(\d+\.+\d+)/',
-        'lines' => 2,
-      ),
-      */
-        'version callback' => 'bgmap_short_circuit_version',
-        'files' => array(
-            'js' => array(
-                'leaflet.js',
-                'fs/Control.FullScreen.js',
-                'snake/L.Polyline.SnakeAnim.js',
-                /*
-                                'beautify/leaflet-beautify-marker-icon.js',
-                                'beautify/leaflet-beautify-marker.js',
-                */
+        $libraries['leaflet'] = array(
+            //'title' => 'Vertical Tabs',
+            //'website' => 'http://drupal.org/node/323112',
+            'name' => 'Leaflet',
+            'vendor url' => 'http://www.leaflet.com/',
+            'download url' => 'http://www.leaflet.com/download',
+            /*
+            // TODO: automatically get version number from Changelog or readme.
+            'version arguments' => array(
+            'file' => 'highcharts.js',
+            // jQuery FlexSlider v2.1
+            'pattern' => '/Highcharts v(\d+\.+\d+)/',
+            'lines' => 2,
+          ),
+          */
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'leaflet.js',
+                    'fs/Control.FullScreen.js',
+                    'snake/L.Polyline.SnakeAnim.js',
+                    /*
+                                    'beautify/leaflet-beautify-marker-icon.js',
+                                    'beautify/leaflet-beautify-marker.js',
+                    */
+                ),
+                'css' => array(
+                    'leaflet.css' => array(),
+                    'fs/Control.FullScreen.css' => array(),
+                    /*
+                                    'beautify/leaflet-beautify-marker-icon.js' => array(),
+                    */
+                ),
             ),
-            'css' => array(
-                'leaflet.css' => array(),
-                'fs/Control.FullScreen.css' => array(),
-                /*
-                                'beautify/leaflet-beautify-marker-icon.js' => array(),
-                */
-            ),
-        ),
-    );
+        );
     }
     if (($library_path = libraries_get_path('datatables'))) {
-    $libraries['datatables'] = array(
-        'name' => 'Datatables',
-        'vendor url' => 'http://www.datatables.net/',
-        'download url' => 'http://www.datatables.net/download',
-        'version callback' => 'bgmap_short_circuit_version',
-        'files' => array(
-            'js' => array(
-                'media/js/jquery.dataTables.js',
-                'media/js/dataTables.bootstrap.js',
+        $libraries['datatables'] = array(
+            'name' => 'Datatables',
+            'vendor url' => 'http://www.datatables.net/',
+            'download url' => 'http://www.datatables.net/download',
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'media/js/jquery.dataTables.js',
+                    'media/js/dataTables.bootstrap.js',
+                ),
+                'css' => array(
+                    //'jquery.dataTables.css' => array(),
+                    'media/css/dataTables.bootstrap.css' => array(),
+                ),
             ),
-            'css' => array(
-                //'jquery.dataTables.css' => array(),
-                'media/css/dataTables.bootstrap.css' => array(),
-            ),
-        ),
-    );
+        );
     }
     //print_r($libraries);
     return $libraries;
@@ -349,10 +347,10 @@ function bgmap_block_view($delta = '')
             $vnum = $field_vnum[0]['safe_value'];
             $field_color = field_get_items('node', $node, 'field_display_color', 'en');
             $color = $field_color[0]['safe_value'];
-/*
-            $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
-            $output_render = field_view_field('node', $node, 'field_obd_id');
-*/
+            /*
+                        $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
+                        $output_render = field_view_field('node', $node, 'field_obd_id');
+            */
             //dpm($field_obd);
         } // if node-type.
     } // if node.
@@ -519,10 +517,10 @@ function bgmap_preprocess_views_view(&$vars)
             $color = $color_content['raw']['value'];
             //$sid = (string)$sid_tmp;
             //$active_nids[] = $sid_content->raw;
-            $veh_details = array('sid' => $sid, 
-                                 'nid' => $nid, 
-                                 'vnum' => $vnum,
-                                 'color' => $color);
+            $veh_details = array('sid' => $sid,
+                'nid' => $nid,
+                'vnum' => $vnum,
+                'color' => $color);
             $selected_vehs[$sid] = $veh_details;
             //$active_sids[] = $sid_content['raw']['value'];
         }
