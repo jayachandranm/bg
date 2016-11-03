@@ -1,0 +1,6 @@
+name = Transport related functions.
+description = Show various transport related results.
+core = 7.x
+dependencies[] = libraries
+; NEW LINE
+;configure = admin/config/content/bgtrans

@@ -1,7 +1,8 @@
 var mysql      = require('mysql');
 
-module.exports.updateDB = updateDB;
+//module.exports.updateDB = updateDB;
 module.exports.add2dbGPS = add2dbGPS;
+module.exports.add2dbAlarms = add2dbAlarms;
 
 var pool  = mysql.createPool({
     connectionLimit : 10,
@@ -48,6 +49,51 @@ function add2dbGPS(obdID, arrGpsVals) {
   }
 }
 
+
+function add2dbAlarms(obdID, arrAlarmVals, gpsVals) {
+  //console.log("add2dbGPS:");
+    //
+    var LocLong = gpsVals.longitude/3600000;
+    var LocLat = gpsVals.latitude/3600000;
+
+    var dt = gpsVals.date_time;
+    var yr = '20' + dt.year;
+    // NOTE: Month starts from 0.
+    var utime = new Date(yr, dt.month-1, dt.day, dt.hour, dt.minute, dt.second).getTime();
+    //
+    var dateNow = new Date();
+    var currTimeMillis = Date.now();
+    var offset = dateNow.getTimezoneOffset();
+    //console.log(offset);
+    var adjTime = utime + (8*60*60*1000);
+    var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
+    //console.log(gpsVals);
+    console.log("GPS time :", utime, "=>", datetime_db);
+    //
+  for (i = 0; i < arrAlarmVals.length; i++) { 
+    var alarmVals = arrAlarmVals[i];
+    var alarmType = alarmVals.alarm_type;
+  
+    console.log("Alarm type: ", alarmType);
+    if(alarmType == 0x06) {
+
+    pool.getConnection(function(err, connection) {
+        // Use the connection
+        connection.query('INSERT INTO obd_alarms SET ?',
+                    {sid: obdID, timestamp: utime, datetime: datetime_db, longitude: LocLong, latitude: LocLat, alarm_type: alarmType},
+                    function(err, result) {
+            connection.release();
+            if (err) throw err;
+
+            console.log(result.insertId);
+        });
+    });
+    
+    }
+  }
+}
+
+/*
 function updateDB(gpsVals) {
 
     var LocLong = gpsVals.longitude/3600000;
@@ -94,6 +140,7 @@ function updateDB(gpsVals) {
 
         // Don't use the connection here, it has been returned to the pool.
         });
-*/    
+*    
     });
 }
+*/

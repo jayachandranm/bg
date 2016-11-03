@@ -257,7 +257,9 @@ var AlarmsPackage = new Parser()
         // 34 bytes
         type: statData
     })
-    // TODO: GPS_DATA not described properly.
+    // TODO: GPS_DATA not described properly, count-flag/enabled-flag?.
+    // Currently treated as enabled-flag, with zero or one GPS item.
+    // 0 -> disabled or 0 items
     .uint8('gps_active')
     // Decode as GPS ITEM only if GPS enabled.
     .choice('gps_item', {

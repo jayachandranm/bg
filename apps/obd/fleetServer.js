@@ -105,7 +105,7 @@ function processMessage(sock, dcMsg) {
   console.log("OBD ID =>", obdID);
   switch(dcMsg.type) {
       case 0x1001:
-          console.log('Process Login Message from OBD.');
+          console.log('0x1001: Process Login Message from OBD.');
           var replyMsg = assemble.loginReply(dcMsg);
           sock.write(replyMsg);
           // TODO: temporarily adding to 2 DBs for testing. Remove this.
@@ -121,12 +121,12 @@ function processMessage(sock, dcMsg) {
           // TODO: Login reply.
           break;
       case 0x1003:
-          console.log('HeartBeatPackage received, send reply.')
+          console.log('0x1003: HeartBeatPackage received, send reply.')
           var heartReply = assemble.heartBeatReply(dcMsg);
           sock.write(heartReply);
           break;
       case 0x4001:
-          console.log('Process GPS data');
+          console.log('0x4001: Process GPS data');
           if(dcMsg.payload.gps_count > 0) {
             // TODO: temporarily adding to 2 DBs for testing. Remove this.
             //dbutil.updateDB(dcMsg.payload.gps_items[0]);
@@ -136,12 +136,18 @@ function processMessage(sock, dcMsg) {
           }
           break;
       case 0x4004:
-          console.log("Process Data Flow");
+          console.log("0x4004: PID Types supported.");
           break;
       case 0x4007:
-          console.log('Process Alarm from OBD.');
+          console.log('0x4007: Process Alarm from OBD.');
           var replyMsg = assemble.alarmConfirmation(dcMsg);
           sock.write(replyMsg);
+          // TODO: Currently only use Alarms when GPS active.
+          if((dcMsg.payload.alarm_count > 0) && dcMsg.payload.gps_active) {
+          //if((dcMsg.payload.alarm_count > 0) && (dcMsg.payload.gps_count >0)) {
+              console.log('Alarm with GPS, update DB. ');
+              dbutil.add2dbAlarms(obdID, dcMsg.payload.alarms, dcMsg.payload.gps_item);
+          } 
           // TODO: temporarily adding to 2 DBs for testing. Remove this.
           //
 /*
@@ -154,11 +160,48 @@ function processMessage(sock, dcMsg) {
           //console.log("DB updated.");
           // TODO: Login reply.
           break;
+      case 0x1002:
+          console.log("0x1002: Logout.");
+          break;
+      case 0x4002:
+          console.log("0x4002: PID.");
+          break;
+      case 0x4003:
+          console.log("0x4003: GSensor.");
+          break;
+      case 0x4005:
+          console.log("0x4005: Snapshot frame.");
+          break;
+      case 0x4006:
+          console.log("0x4006: DTCs.");
+          break;
+      case 0x400B:
+          console.log("0x400B: DTCs commercial.");
+          break;
+      case 0x4008:
+          console.log("0x4008: Cell IDs.");
+          break;
+      case 0x4009:
+          console.log("0x4009: GPS in sleep.");
+          break;
+      case 0x400C:
+          console.log("0x400C: Driver card ID.");
+          break;
+      case 0x5101:
+          console.log("0x5101: AGPS request.");
+          break;
+      case 0xA001:
+          console.log("0xA001: Settings response.");
+          break;
+      default:
+          console.log("Unhandled messsage from OBD.");
+          break;
   }
 }
 
 
 // TODO: for test
+/*
 function processMessage2(dcMsg) {
     switch(dcMsg.type) {
         case 0x1001:
@@ -183,6 +226,7 @@ function processMessage2(dcMsg) {
     }
 
 }
+*/
 
 function hex2a(hexx) {
     var hex = hexx.toString();//force conversion

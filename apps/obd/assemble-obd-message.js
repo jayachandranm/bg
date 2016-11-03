@@ -10,11 +10,13 @@ var c = Concentrate();
 
 function loginReply(dcMsg) {
     var devID = dcMsg.dev_id;
+    var ver = dcMsg.version;
     var currTime = Date.now() / 1000 | 0;
-    console.log('Server time: ', currTime);
+    console.log('0x9001: Login reply, Server time: ', currTime);
     var dataToDev = c.uint16le('0x4040')
     .uint16le('0x29')
-    .uint8('0x03')
+    //.uint8('0x03')
+    .uint8(ver)
     .string(devID, 'hex')
     .uint16be('0x9001')
     .uint32le('0xffffffff')
@@ -38,9 +40,12 @@ function loginReply(dcMsg) {
 // Heart Beat.
 function heartBeatReply(dcMsg) {
     var devID = dcMsg.dev_id;
+    var ver = dcMsg.version;
+    console.log('0x9003: Heartbeat reply: ');
     var dataToDev = c.uint16le('0x4040')
     .uint16le('0x1F')
-    .uint8('0x03')
+    //.uint8('0x03')
+    .uint8(ver)
     .string(devID, 'hex')
     .uint16be('0x9003')
     .copy();
@@ -68,6 +73,7 @@ function setMessage(dcMsg) {
   //
   var dataToDev = c.uint16le('0x4040')
   .uint16le(msgSize)
+  // var ver = dcMsg.version;
   .uint8('0x03')
   .string(devID, 'hex')
   .uint16be('0x2001')
@@ -109,10 +115,13 @@ function sendTextInfo(dcMsg) {
 function alarmConfirmation(dcMsg) {
   // 0xC007
     var devID = dcMsg.dev_id;
+    var ver = dcMsg.version;
     var alarm_seq_num = dcMsg.payload.alarm_seq_num;
+    console.log('0xC007: Alarm reply, seq num: ', alarm_seq_num);
     var dataToDev = c.uint16le('0x4040')
     .uint16le('0x23')
-    .uint8('0x03')
+    //.uint8('0x03')
+    .uint8(ver)
     .string(devID, 'hex')
     .uint16be('0xC007')
     .uint32le(alarm_seq_num, 'hex')
