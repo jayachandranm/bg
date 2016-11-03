@@ -11,9 +11,9 @@ function _getdata_exdb($reqtype, $filter)
 
     // TODO: Sanitize sids array before using in the query statement.
     $bg_db = array(
-        'database' => 'bgtrans',
-        'username' => 'bgtrans', // assuming this is necessary
-        'password' => 'bgtrans%user$1', // assuming this is necessary
+        'database' => 'bgmap',
+        'username' => 'bgmap', // assuming this is necessary
+        'password' => 'bgmap%user$1', // assuming this is necessary
         'host' => 'localhost', // assumes localhost
         'driver' => 'mysql', // replace with your database driver
     );
@@ -24,11 +24,11 @@ function _getdata_exdb($reqtype, $filter)
     // TODO: iF multiple entry match the condition, handle as error?
 
     $query = array();
-    if ($reqtype == 'rt') {
+    if ($reqtype == 'alarms') {
         $query_inner = db_select('obd_alarms', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
-            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN');
             //->orderBy('timestamp', 'DESC');
             //$query->addExpression('MAX(id)');
         // TODO: Can be conditional, different for block and page.
