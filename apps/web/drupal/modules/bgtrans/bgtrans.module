@@ -59,29 +59,27 @@ function bgtrans_permission()
 function bgtrans_init()
 {
     // Any init code goes here. eg. drupal_add_js.
-if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
-  // The library is installed. Awesome!
-  //dpm($lib_avail);
-}
-else {
-  // Something went wrong. :(
-  print_r("Error: Library datatables is not installed</br>");
-  // This contains a short status code of what went wrong, such as 'not found'.
-  $error = $lib_avail['error'];
-  // This contains a detailed (localized) error message.
-  $error_message = $lib_avail['error message'];
-  print_r($error_message);
-}
+    if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
+        // The library is installed. Awesome!
+        //dpm($lib_avail);
+    } else {
+        // Something went wrong. :(
+        print_r("Error: Library datatables is not installed</br>");
+        // This contains a short status code of what went wrong, such as 'not found'.
+        $error = $lib_avail['error'];
+        // This contains a detailed (localized) error message.
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
 
 // Try to load the library and check if that worked.
-if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
-    //dpm($lib_load);
-  // Do something with the library here.
-  //print_r("Library datatables loaded.");
-}
-else {
-  print_r("Error: Library datatables is not loaded.");
-}
+    if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
+        //dpm($lib_load);
+        // Do something with the library here.
+        //print_r("Library datatables loaded.");
+    } else {
+        print_r("Error: Library datatables is not loaded.");
+    }
 
 //drupal_add_js(drupal_get_path('module', 'bgtrans') . '/bgtrans.js');
 }
@@ -95,26 +93,26 @@ function bgtrans_libraries_info()
 
     // TODO: How to handle if the library is missing?
     //
-/*
-    if (($library_path = libraries_get_path('datatables'))) {
-    $libraries['datatables'] = array(
-        'name' => 'Datatables',
-        'vendor url' => 'http://www.datatables.net/',
-        'download url' => 'http://www.datatables.net/download',
-        'version callback' => 'bgtrans_short_circuit_version',
-        'files' => array(
-            'js' => array(
-                'media/js/jquery.dataTables.js',
-                'media/js/dataTables.bootstrap.js',
+    /*
+        if (($library_path = libraries_get_path('datatables'))) {
+        $libraries['datatables'] = array(
+            'name' => 'Datatables',
+            'vendor url' => 'http://www.datatables.net/',
+            'download url' => 'http://www.datatables.net/download',
+            'version callback' => 'bgtrans_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'media/js/jquery.dataTables.js',
+                    'media/js/dataTables.bootstrap.js',
+                ),
+                'css' => array(
+                    //'jquery.dataTables.css' => array(),
+                    'media/css/dataTables.bootstrap.css' => array(),
+                ),
             ),
-            'css' => array(
-                //'jquery.dataTables.css' => array(),
-                'media/css/dataTables.bootstrap.css' => array(),
-            ),
-        ),
-    );
-    }
-*/
+        );
+        }
+    */
     //print_r($libraries);
     return $libraries;
 }
@@ -190,10 +188,10 @@ function bgtrans_block_view($delta = '')
             $vnum = $field_vnum[0]['safe_value'];
             $field_color = field_get_items('node', $node, 'field_display_color', 'en');
             $color = $field_color[0]['safe_value'];
-/*
-            $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
-            $output_render = field_view_field('node', $node, 'field_obd_id');
-*/
+            /*
+                        $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
+                        $output_render = field_view_field('node', $node, 'field_obd_id');
+            */
             //dpm($field_obd);
         } // if node-type.
     } // if node.
@@ -216,39 +214,39 @@ function bgtrans_block_view($delta = '')
         case 'alarms':
             $block['subject'] = t('Alarm History...');
             if (user_access('access content')) {
-    $reqtype = 'alarms';
-    $filter = new stdClass(); // (object) [];
-    //$filter = new stdObject();
-    $end_time = round(microtime(true) * 1000);
-    $start_time = $end_time - (24*60*60*1000); // 1 day
-    //$filter = $post_data->filter;
-    //$filter['start'] = $start_time;
-    //$filter['end'] = $end_time;
-    $filter->start = $start_time;
-    $filter->end = $end_time;
-    //$sid_list = $filter->sidList;
-    $sid_list = array();
-    $sid_list[] = $sid;
-    //$filter['sidList'] = $sid_list;
-    $filter->sidList = $sid_list;
-    //dpm($filter); 
+                $reqtype = 'alarms';
+                $filter = new stdClass(); // (object) [];
+                //$filter = new stdObject();
+                $end_time = round(microtime(true) * 1000);
+                $start_time = $end_time - (24 * 60 * 60 * 1000); // 1 day
+                //$filter = $post_data->filter;
+                //$filter['start'] = $start_time;
+                //$filter['end'] = $end_time;
+                $filter->start = $start_time;
+                $filter->end = $end_time;
+                //$sid_list = $filter->sidList;
+                $sid_list = array();
+                $sid_list[] = $sid;
+                //$filter['sidList'] = $sid_list;
+                $filter->sidList = $sid_list;
+                //dpm($filter);
 
-    module_load_include("api.inc", "bgtrans");
-    $result = _getdata_exdb($reqtype, $filter);
-    //dpm($result); 
-    //
-    date_default_timezone_set('Asia/Singapore');
-    
-    $alarms = array();
-            foreach ($result as $row) {
-                $time = intval($row->timestamp);
-                $lat = floatval($row->latitude);
-                $lng = floatval($row->longitude);
-                $sid = $row->sid;
+                module_load_include("api.inc", "bgtrans");
+                $result = _getdata_exdb($reqtype, $filter);
+                //dpm($result);
                 //
-                $alarms[] = array($time, $sid, $lng, $lat);
-            } // foreach
-            dpm($alarms); 
+                date_default_timezone_set('Asia/Singapore');
+
+                $alarms = array();
+                foreach ($result as $row) {
+                    $time = intval($row->timestamp);
+                    $lat = floatval($row->latitude);
+                    $lng = floatval($row->longitude);
+                    $sid = $row->sid;
+                    //
+                    $alarms[] = array($time, $sid, $lng, $lat);
+                } // foreach
+                dpm($alarms);
                 //$block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
                 $block['content']['#markup'] = theme('item_list', array('items' => $alarms[0]));
             }
@@ -325,10 +323,10 @@ function bgtrans_preprocess_views_view(&$vars)
             $color = $color_content['raw']['value'];
             //$sid = (string)$sid_tmp;
             //$active_nids[] = $sid_content->raw;
-            $veh_details = array('sid' => $sid, 
-                                 'nid' => $nid, 
-                                 'vnum' => $vnum,
-                                 'color' => $color);
+            $veh_details = array('sid' => $sid,
+                'nid' => $nid,
+                'vnum' => $vnum,
+                'color' => $color);
             $selected_vehs[$sid] = $veh_details;
             //$active_sids[] = $sid_content['raw']['value'];
         }

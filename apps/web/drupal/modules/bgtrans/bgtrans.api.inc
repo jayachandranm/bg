@@ -31,7 +31,7 @@ function _getdata_exdb($reqtype, $filter)
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
             ->condition('timestamp', array($start_time, $end_time), 'BETWEEN');
-            //->orderBy('timestamp', 'DESC');
+        //->orderBy('timestamp', 'DESC');
         // Limit to a max.
         $query_inner->range(0, 1000);
         //
@@ -45,8 +45,8 @@ function _getdata_exdb($reqtype, $filter)
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
             ->condition('timestamp', array($start_time, $end_time), 'BETWEEN');
-            //->orderBy('timestamp', 'DESC');
-            //$query->addExpression('MAX(id)');
+        //->orderBy('timestamp', 'DESC');
+        //$query->addExpression('MAX(id)');
         // TODO: Can be conditional, different for block and page.
         //$query->range(0, $max_num);
         // TODO: Use timestamp condition instead?
@@ -55,20 +55,20 @@ function _getdata_exdb($reqtype, $filter)
         $query = db_select($query_inner, 'b')
             ->fields('b', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->groupBy('sid');
-        
+
     }
     if ($reqtype == 'fuel') {
-/*
-        $query = db_select('obd_gps', 'a')
-            ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-            // TODO: Currently assumes single sid.
-            ->condition('sid', $sid_list, 'IN')
-            //->condition('sid', array(1,5,7),'IN')
-            //->condition('status', 0,'>')
-            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
-            //->orderBy('datetime', 'DESC');
-            ->orderBy('datetime', 'ASC');
-*/
+        /*
+                $query = db_select('obd_gps', 'a')
+                    ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+                    // TODO: Currently assumes single sid.
+                    ->condition('sid', $sid_list, 'IN')
+                    //->condition('sid', array(1,5,7),'IN')
+                    //->condition('status', 0,'>')
+                    ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+                    //->orderBy('datetime', 'DESC');
+                    ->orderBy('datetime', 'ASC');
+        */
     }
 
     $result = $query->execute();

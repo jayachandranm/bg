@@ -31,7 +31,7 @@ function _get_alarmsjson($rqtype)
     $result = _getdata_exdb($reqtype, $filter);
     //
     date_default_timezone_set('Asia/Singapore');
-    
+
     $alarmsjson = array();
 
     switch ($reqtype) {
