@@ -34,7 +34,7 @@
                     //post_url = basepath + '?q=bgtrans/geoj/' + 'rt';
                     post_url = basepath + '?q=bgtrans/get/alarms';
                     var postData = {};
-                    postData['reqtype'] = 'alarms';
+                    postData['reqtype'] = 'alarms_rt';
                     var filter = {};
                     console.log(sid_list);
                     //var sid = veh_list.sid;

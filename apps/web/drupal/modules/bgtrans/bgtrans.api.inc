@@ -9,6 +9,8 @@ function _getdata_exdb($reqtype, $filter)
     $start_time = $filter->start;
     $end_time = $filter->end;
 
+    //dpm($sid_list); 
+    //dpm($reqtype); 
     // TODO: Sanitize sids array before using in the query statement.
     $bg_db = array(
         'database' => 'bgmap',
@@ -25,6 +27,20 @@ function _getdata_exdb($reqtype, $filter)
 
     $query = array();
     if ($reqtype == 'alarms') {
+        $query_inner = db_select('obd_gps', 'a')
+            ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
+            ->condition('sid', $sid_list, 'IN')
+            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN');
+            //->orderBy('timestamp', 'DESC');
+        // Limit to a max.
+        $query_inner->range(0, 1000);
+        //
+        $query = db_select($query_inner, 'b')
+            ->fields('b', array('sid', 'timestamp', 'longitude', 'latitude'))
+            //->groupBy('sid');
+            ->orderBy('timestamp', 'DESC');
+    }
+    if ($reqtype == 'alarms_rt') {
         $query_inner = db_select('obd_gps', 'a')
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')

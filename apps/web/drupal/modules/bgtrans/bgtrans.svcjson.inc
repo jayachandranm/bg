@@ -57,7 +57,7 @@ function _get_alarmsjson($rqtype)
             // TODO: Assemble Polygon GeoJSON for multiple devices.
             break;
 
-        case 'alarms': // both single and multi.
+        case 'alarms_rt': // both single and multi.
             foreach ($result as $row) {
                 //$noise = round($row->noise_data, 2);
                 $time = intval($row->timestamp);

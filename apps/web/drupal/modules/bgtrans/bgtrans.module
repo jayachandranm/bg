@@ -29,8 +29,12 @@ function bgtrans_help($path, $arg)
 function bgtrans_block_info()
 {
     $blocks = array();
+    $blocks['alarms_rt'] = array(
+        'info' => t('Current Alarm Listing'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
     $blocks['alarms'] = array(
-        'info' => t('Alarm Listing'),
+        'info' => t('Alarm History'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
     $blocks['fuel'] = array(
@@ -209,6 +213,46 @@ function bgtrans_block_view($delta = '')
         * presented as a JSON, where some parameters may be missing, if some fields on the page
         * is missing (eg. sensor_id).
         */
+        case 'alarms':
+            $block['subject'] = t('Alarm History...');
+            if (user_access('access content')) {
+    $reqtype = 'alarms';
+    $filter = new stdClass(); // (object) [];
+    //$filter = new stdObject();
+    $end_time = round(microtime(true) * 1000);
+    $start_time = $end_time - (24*60*60*1000); // 1 day
+    //$filter = $post_data->filter;
+    //$filter['start'] = $start_time;
+    //$filter['end'] = $end_time;
+    $filter->start = $start_time;
+    $filter->end = $end_time;
+    //$sid_list = $filter->sidList;
+    $sid_list = array();
+    $sid_list[] = $sid;
+    //$filter['sidList'] = $sid_list;
+    $filter->sidList = $sid_list;
+    //dpm($filter); 
+
+    module_load_include("api.inc", "bgtrans");
+    $result = _getdata_exdb($reqtype, $filter);
+    //dpm($result); 
+    //
+    date_default_timezone_set('Asia/Singapore');
+    
+    $alarms = array();
+            foreach ($result as $row) {
+                $time = intval($row->timestamp);
+                $lat = floatval($row->latitude);
+                $lng = floatval($row->longitude);
+                $sid = $row->sid;
+                //
+                $alarms[] = array($time, $sid, $lng, $lat);
+            } // foreach
+            dpm($alarms); 
+                //$block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
+                $block['content']['#markup'] = theme('item_list', array('items' => $alarms[0]));
+            }
+            break;
         case 'fuel':
             // Pass any node related parameters here, which can then be used by the JS during Ajax.
             // Here will be an array that contains the filter values.
@@ -222,7 +266,7 @@ function bgtrans_block_view($delta = '')
             // If not in libraries directory,
             //$block['content']['#attached']['library'][] = array('system','ui.droppable');
             break;
-        case 'alarms':
+        case 'alarms_rt':
             // Only appears in a view.
             // TODO: What if this block is enabled for a node?
             // TODO: nidList already set in the view preprocess.
@@ -231,7 +275,7 @@ function bgtrans_block_view($delta = '')
                 //$block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
                 $block = array
                 (
-                    'subject' => t('Alarms...'),
+                    'subject' => t('Current Alarms...'),
                     'content' => array
                     (
                         'alarms_block' => array
