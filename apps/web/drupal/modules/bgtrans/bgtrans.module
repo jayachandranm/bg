@@ -246,9 +246,11 @@ function bgtrans_block_view($delta = '')
                     //
                     $alarms[] = array($time, $sid, $lng, $lat);
                 } // foreach
-                dpm($alarms);
+                //dpm($alarms);
+                $header = array('Timestamp', 'OBD ID', 'Longitude', 'Latitude');
                 //$block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
-                $block['content']['#markup'] = theme('item_list', array('items' => $alarms[0]));
+                //$block['content']['#markup'] = theme('item_list', array('items' => $alarms[0]));
+                $block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $alarms));
             }
             break;
         case 'fuel':
