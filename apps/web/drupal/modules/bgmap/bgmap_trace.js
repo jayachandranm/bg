@@ -15,8 +15,9 @@
                 var polylines = new Array();
                 var latlngs = new Array();
                 var sid_list = Drupal.settings.trace.sid_list;
+                var trace_anim = Drupal.settings.trace.trace_anim;
                 //var data = Drupal.settings.bgchart.data.data;
-                console.log('Retrieving (trace) settings.');
+                console.log('Retrieving (trace) settings. trace_anim=', trace_anim);
                 var basepath = Drupal.settings.basePath;
                 //
                 var title2 = 'GPS Trace on Map';
@@ -27,6 +28,7 @@
                 var end = moment();
                 startTime = start.valueOf();
                 endTime = end.valueOf();
+                //
                 $('input[name="daterange"]').daterangepicker({
                         timePicker: true,
                         timePickerIncrement: 30,
@@ -48,6 +50,10 @@
                     }
                 );
 
+                $('#trc_play').click( function(){
+                    $('#trc_play').toggleClass('glyphicon-play').toggleClass('glyphicon-pause');
+                });
+                //
                 var map2 = new L.map('trace_map', {
                     fullscreenControl: true,
                     fullscreenControlOptions: {
@@ -75,6 +81,11 @@
                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map2);
+
+                // Restart trace on button press.
+                $('#trc_restart').click( function(){
+                    traceGeoJsonLayer.snakeIn();
+                });
 
                 // http://leafletjs.com/examples/geojson.html
 
@@ -110,7 +121,9 @@
                             //console.log('Received JSON for Trace=', JSON.stringify(jsonData));
                             traceGeoJsonLayer = L.geoJson().addTo(map2);
                             traceGeoJsonLayer.addData(jsonData);
-                            traceGeoJsonLayer.snakeIn();
+                            if(trace_anim) {
+                                traceGeoJsonLayer.snakeIn();
+                            }
                             //map2.fitBounds(latlngs);
                             //var polygon = L.polygon().addTo(map);
                         },

@@ -434,6 +434,7 @@ function bgmap_block_view($delta = '')
         case 'trace':
             // TODO: If not a node or if node type is different, don't show the block.
             //$vgroup = 'car';
+            $trace_anim = variable_get('bgmap_trace_anim', 1);
             if (isset($sid)) {
                 // TODO.
             }
@@ -459,7 +460,9 @@ function bgmap_block_view($delta = '')
                 array(
                     'type' => 'setting',
                     'data' => array(
-                        'trace' => array('sid_list' => $sid_list),
+                        'trace' => array('sid_list' => $sid_list, 
+                                   'trace_anim' => $trace_anim,
+                        ),
                     ),
                 )
             );
