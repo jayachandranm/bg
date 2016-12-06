@@ -29,8 +29,12 @@ function bgtrans_help($path, $arg)
 function bgtrans_block_info()
 {
     $blocks = array();
+    $blocks['alarms_rt'] = array(
+        'info' => t('Current Alarm Listing'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
     $blocks['alarms'] = array(
-        'info' => t('Alarm Listing'),
+        'info' => t('Alarm History'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
     $blocks['fuel'] = array(
@@ -55,29 +59,27 @@ function bgtrans_permission()
 function bgtrans_init()
 {
     // Any init code goes here. eg. drupal_add_js.
-if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
-  // The library is installed. Awesome!
-  //dpm($lib_avail);
-}
-else {
-  // Something went wrong. :(
-  print_r("Error: Library datatables is not installed</br>");
-  // This contains a short status code of what went wrong, such as 'not found'.
-  $error = $lib_avail['error'];
-  // This contains a detailed (localized) error message.
-  $error_message = $lib_avail['error message'];
-  print_r($error_message);
-}
+    if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
+        // The library is installed. Awesome!
+        //dpm($lib_avail);
+    } else {
+        // Something went wrong. :(
+        print_r("Error: Library datatables is not installed</br>");
+        // This contains a short status code of what went wrong, such as 'not found'.
+        $error = $lib_avail['error'];
+        // This contains a detailed (localized) error message.
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
 
 // Try to load the library and check if that worked.
-if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
-    //dpm($lib_load);
-  // Do something with the library here.
-  //print_r("Library datatables loaded.");
-}
-else {
-  print_r("Error: Library datatables is not loaded.");
-}
+    if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
+        //dpm($lib_load);
+        // Do something with the library here.
+        //print_r("Library datatables loaded.");
+    } else {
+        print_r("Error: Library datatables is not loaded.");
+    }
 
 //drupal_add_js(drupal_get_path('module', 'bgtrans') . '/bgtrans.js');
 }
@@ -91,26 +93,26 @@ function bgtrans_libraries_info()
 
     // TODO: How to handle if the library is missing?
     //
-/*
-    if (($library_path = libraries_get_path('datatables'))) {
-    $libraries['datatables'] = array(
-        'name' => 'Datatables',
-        'vendor url' => 'http://www.datatables.net/',
-        'download url' => 'http://www.datatables.net/download',
-        'version callback' => 'bgtrans_short_circuit_version',
-        'files' => array(
-            'js' => array(
-                'media/js/jquery.dataTables.js',
-                'media/js/dataTables.bootstrap.js',
+    /*
+        if (($library_path = libraries_get_path('datatables'))) {
+        $libraries['datatables'] = array(
+            'name' => 'Datatables',
+            'vendor url' => 'http://www.datatables.net/',
+            'download url' => 'http://www.datatables.net/download',
+            'version callback' => 'bgtrans_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'media/js/jquery.dataTables.js',
+                    'media/js/dataTables.bootstrap.js',
+                ),
+                'css' => array(
+                    //'jquery.dataTables.css' => array(),
+                    'media/css/dataTables.bootstrap.css' => array(),
+                ),
             ),
-            'css' => array(
-                //'jquery.dataTables.css' => array(),
-                'media/css/dataTables.bootstrap.css' => array(),
-            ),
-        ),
-    );
-    }
-*/
+        );
+        }
+    */
     //print_r($libraries);
     return $libraries;
 }
@@ -140,9 +142,9 @@ function bgtrans_menu()
         'file' => 'bgtrans.admin.inc',
         'type' => MENU_NORMAL_ITEM,
     );
-    $items['bgtrans/get'] = array(
+    $items['bgtrans/get/alarms'] = array(
         'title' => 'Real time alarms',
-        'page callback' => '_get_json',
+        'page callback' => '_get_alarmsjson',
         //'page arguments' => array(1), //get param from URL.
         'access arguments' => array('access bgtrans content'),
         'file' => 'bgtrans.svcjson.inc',
@@ -173,6 +175,7 @@ function bgtrans_block_view($delta = '')
     // TODO: Move this to init? For the case of view this happens outside.
     $mpath = drupal_get_path('module', 'bgtrans');
 
+    // TODO: Move this to different seg? Handle case where it's not a node, but view.
     if ($node = menu_get_object()) {
         // TODO: if($node) {}
         if ($node->type == 'vehicle') {
@@ -185,10 +188,10 @@ function bgtrans_block_view($delta = '')
             $vnum = $field_vnum[0]['safe_value'];
             $field_color = field_get_items('node', $node, 'field_display_color', 'en');
             $color = $field_color[0]['safe_value'];
-/*
-            $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
-            $output_render = field_view_field('node', $node, 'field_obd_id');
-*/
+            /*
+                        $output1 = field_view_value('node', $node, 'field_obd_id', $field_obd[0]);
+                        $output_render = field_view_field('node', $node, 'field_obd_id');
+            */
             //dpm($field_obd);
         } // if node-type.
     } // if node.
@@ -208,6 +211,48 @@ function bgtrans_block_view($delta = '')
         * presented as a JSON, where some parameters may be missing, if some fields on the page
         * is missing (eg. sensor_id).
         */
+        case 'alarms':
+            $block['subject'] = t('Alarm History...');
+            if (user_access('access content')) {
+                $reqtype = 'alarms';
+                $filter = new stdClass(); // (object) [];
+                //$filter = new stdObject();
+                $end_time = round(microtime(true) * 1000);
+                $start_time = $end_time - (24 * 60 * 60 * 1000); // 1 day
+                //$filter = $post_data->filter;
+                //$filter['start'] = $start_time;
+                //$filter['end'] = $end_time;
+                $filter->start = $start_time;
+                $filter->end = $end_time;
+                //$sid_list = $filter->sidList;
+                $sid_list = array();
+                $sid_list[] = $sid;
+                //$filter['sidList'] = $sid_list;
+                $filter->sidList = $sid_list;
+                //dpm($filter);
+
+                module_load_include("api.inc", "bgtrans");
+                $result = _getdata_exdb($reqtype, $filter);
+                //dpm($result);
+                //
+                date_default_timezone_set('Asia/Singapore');
+
+                $alarms = array();
+                foreach ($result as $row) {
+                    $time = intval($row->timestamp);
+                    $lat = floatval($row->latitude);
+                    $lng = floatval($row->longitude);
+                    $sid = $row->sid;
+                    //
+                    $alarms[] = array($time, $sid, $lng, $lat);
+                } // foreach
+                //dpm($alarms);
+                $header = array('Timestamp', 'OBD ID', 'Longitude', 'Latitude');
+                //$block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
+                //$block['content']['#markup'] = theme('item_list', array('items' => $alarms[0]));
+                $block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $alarms));
+            }
+            break;
         case 'fuel':
             // Pass any node related parameters here, which can then be used by the JS during Ajax.
             // Here will be an array that contains the filter values.
@@ -221,7 +266,7 @@ function bgtrans_block_view($delta = '')
             // If not in libraries directory,
             //$block['content']['#attached']['library'][] = array('system','ui.droppable');
             break;
-        case 'alarms':
+        case 'alarms_rt':
             // Only appears in a view.
             // TODO: What if this block is enabled for a node?
             // TODO: nidList already set in the view preprocess.
@@ -230,14 +275,14 @@ function bgtrans_block_view($delta = '')
                 //$block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
                 $block = array
                 (
-                    'subject' => t('Alarms...'),
+                    'subject' => t('Current Alarms...'),
                     'content' => array
                     (
-                        'rtmulti_block' => array
+                        'alarms_block' => array
                         (
-                            '#prefix' => "<div id='rt_map'>",
+                            '#prefix' => "<div id='rt_alarms'>",
                             '#suffux' => "</div>",
-                            '#markup' => t("Map will display here....."),
+                            '#markup' => t("Table will display here....."),
                         ),
                     ),
                 );
@@ -280,15 +325,15 @@ function bgtrans_preprocess_views_view(&$vars)
             $color = $color_content['raw']['value'];
             //$sid = (string)$sid_tmp;
             //$active_nids[] = $sid_content->raw;
-            $veh_details = array('sid' => $sid, 
-                                 'nid' => $nid, 
-                                 'vnum' => $vnum,
-                                 'color' => $color);
+            $veh_details = array('sid' => $sid,
+                'nid' => $nid,
+                'vnum' => $vnum,
+                'color' => $color);
             $selected_vehs[$sid] = $veh_details;
             //$active_sids[] = $sid_content['raw']['value'];
         }
         //print_r($visible_vehs);
         //dpm($active_sids);
-        drupal_add_js(array('rt' => array('veh_list' => $selected_vehs)), 'setting');
+        drupal_add_js(array('alarms' => array('veh_list' => $selected_vehs)), 'setting');
     }
 }
