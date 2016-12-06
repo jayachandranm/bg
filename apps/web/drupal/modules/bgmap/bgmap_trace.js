@@ -124,6 +124,17 @@
                             if(trace_anim) {
                                 traceGeoJsonLayer.snakeIn();
                             }
+                            if(jsonData.features.length > 0) {
+                                var playBackData = jsonData.features[0];
+                                playBackData.geometry.type = "MultiPoint";
+                                console.log('Mod JSON for Playback=', playBackData);
+                                // Initialize playback
+                                var playbackOptions = {};
+                                var playback = new L.Playback(map2, playBackData, null, playbackOptions);
+                                var control = new L.Playback.Control(playback);
+                                control.addTo(map2); 
+                            }
+                            // Initialize custom control
                             //map2.fitBounds(latlngs);
                             //var polygon = L.polygon().addTo(map);
                         },

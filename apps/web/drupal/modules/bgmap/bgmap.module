@@ -136,6 +136,23 @@ function bgmap_libraries_info()
             ),
         );
     }
+    if (($library_path = libraries_get_path('bootstrap-slider'))) {
+        $libraries['bootstrap-slider'] = array(
+            'library path' => $library_path,
+            'name' => 'Bootstrap Slider',
+            'vendor url' => 'https://github.com/seiyria/bootstrap-slider',
+            'download url' => 'https://github.com/seiyria/bootstrap-slider/archive/master.zip',
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'bootstrap-slider.js',
+                ),
+                'css' => array(
+                    'css/bootstrap-slider.css',
+                ),
+            ),
+        );
+    }
     if (($library_path = libraries_get_path('leaflet'))) {
         $libraries['leaflet'] = array(
             //'title' => 'Vertical Tabs',
@@ -158,9 +175,10 @@ function bgmap_libraries_info()
                     'leaflet.js',
                     'fs/Control.FullScreen.js',
                     'snake/L.Polyline.SnakeAnim.js',
+                    'playback/LeafletPlayback.js',
                     /*
-                                    'beautify/leaflet-beautify-marker-icon.js',
-                                    'beautify/leaflet-beautify-marker.js',
+                        'beautify/leaflet-beautify-marker-icon.js',
+                        'beautify/leaflet-beautify-marker.js',
                     */
                 ),
                 'css' => array(
@@ -452,11 +470,15 @@ function bgmap_block_view($delta = '')
             $block['content']['#attached']['libraries_load'][] = array('moment');
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            $block['content']['#attached']['libraries_load'][] = array('bootstrap-slider');
             //drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
             $block['content']['#attached']['js'] = array(
                 array(
                     'type' => 'file',
                     'data' => $mpath . '/bgmap_trace.js',),
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/bgmap_trace_control.js',),
                 array(
                     'type' => 'setting',
                     'data' => array(

@@ -11,9 +11,9 @@ function _getdata_exdb($reqtype, $filter)
 
     // TODO: Sanitize sids array before using in the query statement.
     $bg_db = array(
-        'database' => 'bgmap',
-        'username' => 'bgmap', // assuming this is necessary
-        'password' => 'bgmap%user$1', // assuming this is necessary
+        'database' => 'bgtrans_obd',
+        'username' => 'ubgtrans', // assuming this is necessary
+        'password' => 'drinkNdrive$4god', // assuming this is necessary
         'host' => 'localhost', // assumes localhost
         'driver' => 'mysql', // replace with your database driver
     );
