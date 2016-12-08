@@ -153,6 +153,24 @@ function bgmap_libraries_info()
             ),
         );
     }
+    if (($library_path = libraries_get_path('ion-rangeslider'))) {
+        $libraries['ion-rangeslider'] = array(
+            'library path' => $library_path,
+            'name' => 'Ion RangeSlider',
+            'vendor url' => 'https://github.com/IonDen/ion.rangeSlider',
+            'download url' => 'https://github.com/IonDen/ion.rangeSlider/archive/master.zip',
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'js/ion.rangeSlider.js',
+                ),
+                'css' => array(
+                    'css/ion.rangeSlider.css',
+                    'css/ion.rangeSlider.skinModern.css',
+                ),
+            ),
+        );
+    }
     if (($library_path = libraries_get_path('leaflet'))) {
         $libraries['leaflet'] = array(
             //'title' => 'Vertical Tabs',
@@ -471,6 +489,7 @@ function bgmap_block_view($delta = '')
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
             $block['content']['#attached']['libraries_load'][] = array('bootstrap-slider');
+            $block['content']['#attached']['libraries_load'][] = array('ion-rangeslider');
             //drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
             $block['content']['#attached']['js'] = array(
                 array(

@@ -11,6 +11,7 @@
                 var selectedEndDateVal = 0;
                 var selectedEndTimeVal = 0;
                 //
+                var playback = null;
                 // TODO: check this.
                 var polylines = new Array();
                 var latlngs = new Array();
@@ -52,6 +53,9 @@
 
                 $('#trc_play').click( function(){
                     $('#trc_play').toggleClass('glyphicon-play').toggleClass('glyphicon-pause');
+                    if(playback != null) {
+                        playback.start();
+                    }
                 });
                 //
                 var map2 = new L.map('trace_map', {
@@ -129,10 +133,10 @@
                                 playBackData.geometry.type = "MultiPoint";
                                 console.log('Mod JSON for Playback=', playBackData);
                                 // Initialize playback
-                                var playbackOptions = {};
-                                var playback = new L.Playback(map2, playBackData, null, playbackOptions);
-                                var control = new L.Playback.Control(playback);
-                                control.addTo(map2); 
+                                var playbackOptions = { playControl: true, dateControl: true, sliderControl: true};
+                                playback = new L.Playback(map2, playBackData, null, playbackOptions);
+                                //var control = new L.Playback.Control(playback);
+                                //control.addTo(map2); 
                             }
                             // Initialize custom control
                             //map2.fitBounds(latlngs);

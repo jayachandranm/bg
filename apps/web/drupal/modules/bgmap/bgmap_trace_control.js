@@ -5,7 +5,32 @@
             // If trace array is set, happens inside trace block.
             if (Drupal.settings.trace) {
                 L.Playback = L.Playback || {};
-                L.Playback.Control = L.Control.extend({
+                L.Playback.SliderControl = L.Control.extend({
+
+_html2:
+'  <div>' +
+'            <input type="text" id="example_id" name="example_name" value="">' +
+'            </input>' +
+'  </div>' ,
+    options : {
+        position : 'bottomleft'
+    },
+    initialize : function (playback) {
+        this.playback = playback;
+    },
+    onAdd : function (map) {
+        var html = this._html2;
+    $('#trace_map').after(html);
+        $("#example_id").ionRangeSlider();
+        //return html;
+    return L.DomUtil.create('div');
+    },
+
+
+                });
+                //
+/*
+                L.Playback.PlayControl = L.Control.extend({
                     _html: 
 '<footer>' +
 '  <div>' +
@@ -57,6 +82,7 @@ _clockCallback: function(ms) {
 
 
                 });
+*/
 /*
                 // Globals, will get updated through datetime picker.
                 var selectedStartDateVal = 0;
