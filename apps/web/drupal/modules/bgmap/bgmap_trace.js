@@ -66,6 +66,25 @@
                         position: 'topleft'
                     }
                 });
+
+// Create additional Control placeholders
+function addControlPlaceholders(map) {
+	var corners = map._controlCorners,
+        l = 'leaflet-',
+        container = map._controlContainer;
+
+    function createCorner(vSide, hSide) {
+        var className = l + vSide + ' ' + l + hSide;
+
+        corners[vSide + hSide] = L.DomUtil.create('div', className, container);
+    }
+
+    createCorner('horizcenter', 'top');
+    createCorner('horizcenter', 'bottom');
+}
+addControlPlaceholders(map2);
+
+
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
@@ -87,6 +106,8 @@
                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map2);
+//
+//map2.zoomControl.setPosition('horizcenterbottom');
 
                 // Restart trace on button press.
                 $('#trc_restart').click( function(){
@@ -135,10 +156,30 @@
                                 playBackData.geometry.type = "MultiPoint";
                                 console.log('Mod JSON for Playback=', playBackData);
                                 // Initialize playback
-                                var playbackOptions = { playControl: true, dateControl: true, sliderControl: false, tracksLayer: false };
+                                var playbackOptions = { playControl: false, dateControl: true, sliderControl: false, tracksLayer: false };
                                 var playback = new L.Playback(map2, playBackData, null, playbackOptions);
                                 var control = new L.Playback.Control(playback);
                                 control.addTo(map2); 
+    var minVal = playback.getStartTime();
+    var maxVal = playback.getEndTime();
+    var stepLen = playback.getTickLen();
+    var currVal = playback.getTime();
+    
+    var st = moment(minVal).format("X"); 
+    var ed = moment(maxVal).format("X"); 
+
+    var trSlider = $("#example_id").ionRangeSlider({
+    min: st,
+    max: ed,
+    type: 'single',
+    grid: true,
+    keyboard: true,
+    //grid_num: 10,
+    prettify: function (num) {
+        return moment(num, "X").format("lll");
+    }
+});
+//map2.zoomControl.setPosition('horizcenterbottom');
                             }
                             // Initialize custom control
                             //map2.fitBounds(latlngs);

@@ -8,10 +8,9 @@
                 L.Playback.Control = L.Control.extend({
 
   _html: 
-
-'<div>' +
-'Hellllllooooo Therere...' +
-'</div>',
+//'<div style="width:500px; background-color:darkslategray";>' +
+'<input type="text" id="example_id" name="example_name" value="" />' ,
+//'</div>',
 
 
 /*
@@ -38,7 +37,9 @@
 */
 
     options : {
-        position : 'bottomleft'
+        position : 'horizcenterbottom'
+        //position : 'bottomright'
+//map2.zoomControl.setPosition('horizcenterbottom');
     },
 
   initialize: function(playback) {
@@ -47,10 +48,37 @@
   },
 
   onAdd: function(map) {
-    var controlDiv = L.DomUtil.create('div');
+    var controlDiv = L.DomUtil.create('div', 'tr-slider');
+/*
+    this._slider = L.DomUtil.create('input', 'example_id', controlDiv);
+    this._slider.type = 'text';
+    this._slider.id = 'example_id';
+    this._slider.name = 'example_name';
+    this._slider.value = '';
+*/
+    //_slider = this._html;
     controlDiv.innerHTML = this._html;
+    //$("#example_id").ionRangeSlider();
     //$('#trace_map').after(html);
     //this._setup();
+    //var stop = L.DomEvent.stopPropagation;
+    L.DomEvent.disableClickPropagation(controlDiv);
+
+/*
+        L.DomEvent
+        .on(this._slider, 'click', stop)
+        .on(this._slider, 'mousedown', stop)
+        .on(this._slider, 'dblclick', stop)
+        .on(this._slider, 'click', L.DomEvent.preventDefault)
+        //.on(this._slider, 'mousemove', L.DomEvent.preventDefault)
+        .on(this._slider, 'change', onSliderChange, this)
+        .on(this._slider, 'mousemove', onSliderChange, this);           
+*/
+
+        function onSliderChange(e) {
+            //var val = Number(e.target.value);
+            //playback.setCursor(val);
+        }
 
     // just an empty container
     // TODO: dont do this
