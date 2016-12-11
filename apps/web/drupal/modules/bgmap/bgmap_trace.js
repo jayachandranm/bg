@@ -156,10 +156,12 @@ addControlPlaceholders(map2);
                                 playBackData.geometry.type = "MultiPoint";
                                 console.log('Mod JSON for Playback=', playBackData);
                                 // Initialize playback
-                                var playbackOptions = { playControl: false, dateControl: true, sliderControl: false, tracksLayer: false };
+                                var playbackOptions = { playControl: true, dateControl: true, sliderControl: false, tracksLayer: false };
                                 var playback = new L.Playback(map2, playBackData, null, playbackOptions);
                                 var control = new L.Playback.Control(playback);
                                 control.addTo(map2); 
+                                control._setup();
+/*
     var minVal = playback.getStartTime();
     var maxVal = playback.getEndTime();
     var stepLen = playback.getTickLen();
@@ -178,6 +180,28 @@ addControlPlaceholders(map2);
     prettify: function (num) {
         return moment(num, "X").format("lll");
     }
+});
+
+var slider = $("#example_id").data("ionRangeSlider");
+*/
+/*
+slider.update({
+    min: 100,
+    max: 500,
+    from: 150,
+    to: 450,
+    value: 400,
+    step: 50
+    // etc.
+});
+*/
+
+$("#example_id").on("change", function () {
+    var $this = $(this),
+        value = $this.prop("value");
+
+    console.log("Value: " + value);
+    playback.setCursor(value*1000);
 });
 //map2.zoomControl.setPosition('horizcenterbottom');
                             }

@@ -44,7 +44,7 @@
 
   initialize: function(playback) {
     this.playback = playback;
-    //playback.addCallback(this._clockCallback);
+    playback.addCallback(this._clockCallback);
   },
 
   onAdd: function(map) {
@@ -60,9 +60,9 @@
     controlDiv.innerHTML = this._html;
     //$("#example_id").ionRangeSlider();
     //$('#trace_map').after(html);
-    //this._setup();
     //var stop = L.DomEvent.stopPropagation;
     L.DomEvent.disableClickPropagation(controlDiv);
+    this._setup();
 
 /*
         L.DomEvent
@@ -73,12 +73,12 @@
         //.on(this._slider, 'mousemove', L.DomEvent.preventDefault)
         .on(this._slider, 'change', onSliderChange, this)
         .on(this._slider, 'mousemove', onSliderChange, this);           
-*/
 
         function onSliderChange(e) {
             //var val = Number(e.target.value);
             //playback.setCursor(val);
         }
+*/
 
     // just an empty container
     // TODO: dont do this
@@ -86,6 +86,45 @@
     return controlDiv;
   },
 
+
+_setup: function() {
+    var self = this;
+    var playback = this.playback;
+    //playback.addCallback(this._clockCallback);
+
+    var minVal = playback.getStartTime();
+    var maxVal = playback.getEndTime();
+    var stepLen = playback.getTickLen();
+    var currVal = playback.getTime();
+    
+    var st = moment(minVal).format("X"); 
+    var ed = moment(maxVal).format("X"); 
+    var trSlider = $("#example_id").ionRangeSlider({
+    min: st,
+    max: ed,
+    type: 'single',
+    grid: true,
+    keyboard: true,
+    //grid_num: 10,
+    prettify: function (num) {
+        return moment(num, "X").format("lll");
+    }
+});
+},
+ 
+_clockCallback: function(ms) {
+    //$('#cursor-date').html(L.Playback.Util.DateStr(ms));
+    //$('#cursor-time').html(L.Playback.Util.TimeStr(ms));
+    //$('#time-slider').slider('value', ms);
+    var slider = $("#example_id").data("ionRangeSlider");
+    var val = moment(ms).format("X"); 
+    //console.log("Time update:", val);
+/*
+slider.update({
+    from: val,
+});
+*/    
+  },
 
 
                 });
