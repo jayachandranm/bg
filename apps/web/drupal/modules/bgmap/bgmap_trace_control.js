@@ -4,6 +4,7 @@
             // If trace array is set, happens inside trace block.
             if (Drupal.settings.trace) {
                 console.log('JS attach, trace_control.');
+                var isSliding = false;
                 L.Playback = L.Playback || {};
                 L.Playback.Control = L.Control.extend({
 
@@ -102,13 +103,22 @@ _setup: function() {
     var trSlider = $("#example_id").ionRangeSlider({
     min: st,
     max: ed,
+    from: currVal,
     type: 'single',
     grid: true,
     keyboard: true,
     //grid_num: 10,
     prettify: function (num) {
         return moment(num, "X").format("lll");
-    }
+    },
+    onUpdate: function (data) {
+        //console.log("onUpdate", data);
+    },
+    onChange: function (data) {
+        //console.log("onChange", data.from);
+        isSliding = true;
+        playback.setCursor(data.from * 1000);
+    },
 });
 },
  
@@ -118,12 +128,14 @@ _clockCallback: function(ms) {
     //$('#time-slider').slider('value', ms);
     var slider = $("#example_id").data("ionRangeSlider");
     var val = moment(ms).format("X"); 
-    //console.log("Time update:", val);
-/*
+    //console.log("Callback, playback moved:", ms);
+    if(!isSliding) {
+      //console.log("Not due to slider, but play button press:");
 slider.update({
     from: val,
 });
-*/    
+}
+  isSliding = false;
   },
 
 

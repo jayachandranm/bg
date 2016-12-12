@@ -161,41 +161,8 @@ addControlPlaceholders(map2);
                                 var control = new L.Playback.Control(playback);
                                 control.addTo(map2); 
                                 control._setup();
+
 /*
-    var minVal = playback.getStartTime();
-    var maxVal = playback.getEndTime();
-    var stepLen = playback.getTickLen();
-    var currVal = playback.getTime();
-    
-    var st = moment(minVal).format("X"); 
-    var ed = moment(maxVal).format("X"); 
-
-    var trSlider = $("#example_id").ionRangeSlider({
-    min: st,
-    max: ed,
-    type: 'single',
-    grid: true,
-    keyboard: true,
-    //grid_num: 10,
-    prettify: function (num) {
-        return moment(num, "X").format("lll");
-    }
-});
-
-var slider = $("#example_id").data("ionRangeSlider");
-*/
-/*
-slider.update({
-    min: 100,
-    max: 500,
-    from: 150,
-    to: 450,
-    value: 400,
-    step: 50
-    // etc.
-});
-*/
-
 $("#example_id").on("change", function () {
     var $this = $(this),
         value = $this.prop("value");
@@ -203,6 +170,7 @@ $("#example_id").on("change", function () {
     console.log("Value: " + value);
     playback.setCursor(value*1000);
 });
+*/
 //map2.zoomControl.setPosition('horizcenterbottom');
                             }
                             // Initialize custom control
