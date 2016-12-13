@@ -51,13 +51,13 @@
                     }
                 );
 
-                $('#trc_play').click( function(){
+                $('#trc_play').click(function () {
                     $('#trc_play').toggleClass('glyphicon-play').toggleClass('glyphicon-pause');
-/*
-                    if(playback != null) {
-                        playback.start();
-                    }
-*/
+                    /*
+                     if(playback != null) {
+                     playback.start();
+                     }
+                     */
                 });
                 //
                 var map2 = new L.map('trace_map', {
@@ -67,23 +67,23 @@
                     }
                 });
 
-// Create additional Control placeholders
-function addControlPlaceholders(map) {
-	var corners = map._controlCorners,
-        l = 'leaflet-',
-        container = map._controlContainer;
+                // Create additional Control placeholders
+                function addControlPlaceholders(map) {
+                    var corners = map._controlCorners,
+                        l = 'leaflet-',
+                        container = map._controlContainer;
 
-    function createCorner(vSide, hSide) {
-        var className = l + vSide + ' ' + l + hSide;
+                    function createCorner(vSide, hSide) {
+                        var className = l + vSide + ' ' + l + hSide;
 
-        corners[vSide + hSide] = L.DomUtil.create('div', className, container);
-    }
+                        corners[vSide + hSide] = L.DomUtil.create('div', className, container);
+                    }
 
-    createCorner('horizcenter', 'top');
-    createCorner('horizcenter', 'bottom');
-}
-addControlPlaceholders(map2);
+                    createCorner('horizcenter', 'top');
+                    createCorner('horizcenter', 'bottom');
+                }
 
+                addControlPlaceholders(map2);
 
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
@@ -106,11 +106,9 @@ addControlPlaceholders(map2);
                 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map2);
-//
-//map2.zoomControl.setPosition('horizcenterbottom');
 
                 // Restart trace on button press.
-                $('#trc_restart').click( function(){
+                $('#trc_restart').click(function () {
                     traceGeoJsonLayer.snakeIn();
                 });
 
@@ -148,30 +146,34 @@ addControlPlaceholders(map2);
                             //console.log('Received JSON for Trace=', JSON.stringify(jsonData));
                             traceGeoJsonLayer = L.geoJson().addTo(map2);
                             traceGeoJsonLayer.addData(jsonData);
-                            if(trace_anim) {
+                            if (trace_anim) {
                                 traceGeoJsonLayer.snakeIn();
                             }
-                            if(jsonData.features.length > 0) {
+                            if (jsonData.features.length > 0) {
                                 var playBackData = jsonData.features[0];
                                 playBackData.geometry.type = "MultiPoint";
                                 console.log('Mod JSON for Playback=', playBackData);
                                 // Initialize playback
-                                var playbackOptions = { playControl: true, dateControl: true, sliderControl: false, tracksLayer: false };
+                                var playbackOptions = {
+                                    playControl: true,
+                                    dateControl: true,
+                                    sliderControl: false,
+                                    tracksLayer: false
+                                };
                                 var playback = new L.Playback(map2, playBackData, null, playbackOptions);
                                 var control = new L.Playback.Control(playback);
-                                control.addTo(map2); 
+                                control.addTo(map2);
                                 control._setup();
 
-/*
-$("#example_id").on("change", function () {
-    var $this = $(this),
-        value = $this.prop("value");
+                                /*
+                                 $("#example_id").on("change", function () {
+                                 var $this = $(this),
+                                 value = $this.prop("value");
 
-    console.log("Value: " + value);
-    playback.setCursor(value*1000);
-});
-*/
-//map2.zoomControl.setPosition('horizcenterbottom');
+                                 console.log("Value: " + value);
+                                 playback.setCursor(value*1000);
+                                 });
+                                 */
                             }
                             // Initialize custom control
                             //map2.fitBounds(latlngs);
@@ -217,4 +219,3 @@ $("#example_id").on("change", function () {
  map2.removeLayer(polylines);
  }
  */
-
