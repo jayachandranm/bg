@@ -49,6 +49,7 @@ function _get_geojson($rqtype)
 
                 //$polygon[] = array($lat, $lng);
                 $polygon[] = array($lng, $lat);
+                $timestamps[] = $time;
                 //
             } // foreach
             //dpm($polygon);
@@ -57,7 +58,9 @@ function _get_geojson($rqtype)
                 $feature = array(
                     'type' => 'Feature',
                     'geometry' => array('type' => 'LineString', 'coordinates' => $polygon),
+                    //'geometry' => array('type' => 'MultiPoint', 'coordinates' => $polygon),
                     'properties' => array(
+                        'time' => $timestamps,
                         'title' => 'Test2',
                         'line-color' => '#f00',
                         'line-size' => 'small'

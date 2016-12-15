@@ -136,6 +136,42 @@ function bgmap_libraries_info()
             ),
         );
     }
+    if (($library_path = libraries_get_path('bootstrap-slider'))) {
+        $libraries['bootstrap-slider'] = array(
+            'library path' => $library_path,
+            'name' => 'Bootstrap Slider',
+            'vendor url' => 'https://github.com/seiyria/bootstrap-slider',
+            'download url' => 'https://github.com/seiyria/bootstrap-slider/archive/master.zip',
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'bootstrap-slider.js',
+                ),
+                'css' => array(
+                    'css/bootstrap-slider.css',
+                ),
+            ),
+        );
+    }
+    if (($library_path = libraries_get_path('ion-rangeslider'))) {
+        $libraries['ion-rangeslider'] = array(
+            'library path' => $library_path,
+            'name' => 'Ion RangeSlider',
+            'vendor url' => 'https://github.com/IonDen/ion.rangeSlider',
+            'download url' => 'https://github.com/IonDen/ion.rangeSlider/archive/master.zip',
+            'version callback' => 'bgmap_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'js/ion.rangeSlider.js',
+                ),
+                'css' => array(
+                    'css/ion.rangeSlider.css',
+                    'css/ion.rangeSlider.skinModern.css',
+                    //'css/ion.rangeSlider.skinFlat.css',
+                ),
+            ),
+        );
+    }
     if (($library_path = libraries_get_path('leaflet'))) {
         $libraries['leaflet'] = array(
             //'title' => 'Vertical Tabs',
@@ -158,17 +194,15 @@ function bgmap_libraries_info()
                     'leaflet.js',
                     'fs/Control.FullScreen.js',
                     'snake/L.Polyline.SnakeAnim.js',
-                    /*
-                                    'beautify/leaflet-beautify-marker-icon.js',
-                                    'beautify/leaflet-beautify-marker.js',
-                    */
+                    'playback/LeafletPlayback.js',
+                    'beautify/leaflet-beautify-marker-icon.js',
+                    'beautify/leaflet-beautify-marker.js',
                 ),
                 'css' => array(
                     'leaflet.css' => array(),
                     'fs/Control.FullScreen.css' => array(),
-                    /*
-                                    'beautify/leaflet-beautify-marker-icon.js' => array(),
-                    */
+                    'beautify/leaflet-beautify-marker-icon.css' => array(),
+                    
                 ),
             ),
         );
@@ -434,6 +468,7 @@ function bgmap_block_view($delta = '')
         case 'trace':
             // TODO: If not a node or if node type is different, don't show the block.
             //$vgroup = 'car';
+            $trace_anim = variable_get('bgmap_trace_anim', 1);
             if (isset($sid)) {
                 // TODO.
             }
@@ -451,15 +486,24 @@ function bgmap_block_view($delta = '')
             $block['content']['#attached']['libraries_load'][] = array('moment');
             $block['content']['#attached']['libraries_load'][] = array('daterangepicker');
             $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            $block['content']['#attached']['libraries_load'][] = array('bootstrap-slider');
+            $block['content']['#attached']['libraries_load'][] = array('ion-rangeslider');
             //drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
+            // TODO:/ sid_list not required for trace single.
             $block['content']['#attached']['js'] = array(
                 array(
                     'type' => 'file',
                     'data' => $mpath . '/bgmap_trace.js',),
                 array(
+                    'type' => 'file',
+                    'data' => $mpath . '/bgmap_trace_control.js',),
+                array(
                     'type' => 'setting',
                     'data' => array(
-                        'trace' => array('sid_list' => $sid_list),
+                        'trace' => array('sid_list' => $sid_list, 
+                                   'trace_anim' => $trace_anim,
+                                   'color' => $color,
+                        ),
                     ),
                 )
             );
