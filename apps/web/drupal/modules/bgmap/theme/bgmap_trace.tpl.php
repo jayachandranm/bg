@@ -9,8 +9,8 @@
                 </button> 
             </span> 
             <span class="input-group-btn">
-                <button type="button" class="btn btn-default">
-                    <span id="trc_play" class="glyphicon glyphicon-play" aria-hidden="true"></span>
+                <button type="button" id="trc_play" class="btn btn-default">
+                    <span id="trc_play_icon" class="glyphicon glyphicon-play" aria-hidden="true"></span>
                 </button> 
             </span> 
             <input class='form-control' class='pull-left' type='text' name='daterange'

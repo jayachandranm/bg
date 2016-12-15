@@ -22,6 +22,7 @@
 
                     onAdd: function (map) {
                         var controlDiv = L.DomUtil.create('div', 'tr-slider');
+                        //var controlDiv = L.DomUtil.create('div', 'col-md-6');
                         /*
                          this._slider = L.DomUtil.create('input', 'example_id', controlDiv);
                          this._slider.type = 'text';
@@ -59,6 +60,9 @@
                         return controlDiv;
                     },
 
+                    onRemove: function(map) {
+                    },
+
 
                     _setup: function () {
                         var self = this;
@@ -75,7 +79,7 @@
                         var trSlider = $("#example_id").ionRangeSlider({
                             min: st,
                             max: ed,
-                            from: currVal,
+                            from: st,
                             type: 'single',
                             grid: true,
                             keyboard: true,
@@ -116,6 +120,16 @@
     } // behaviors, bgmap
 })
 (jQuery);
+
+                                /*
+                                 $("#example_id").on("change", function () {
+                                 var $this = $(this),
+                                 value = $this.prop("value");
+
+                                 console.log("Value: " + value);
+                                 playback.setCursor(value*1000);
+                                 });
+                                 */
 
 /*
  // Globals, will get updated through datetime picker.
