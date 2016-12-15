@@ -99,11 +99,18 @@
                                 pointToLayer: function (feature, latlng) {
                                     map.panTo(latlng);
                                     //layer.bindPopup(feature.properties.title);
-                                    return L.circleMarker(latlng, {
-                                        //return L.marker(latlng, {
+                                    //return L.circleMarker(latlng, {
+                                    var sid = feature.properties.title;
+                                    var custom_color = sid2vehmap[sid].color;
+                                    var options = {  
+                                        icon: 'bus',  
+                                        borderColor: custom_color, textColor: custom_color
+                                    };
+                                    //var options = {};
+                                    return L.marker(latlng, {
                                         // Will be overwritten by style function below.
-                                        //icon: L.BeautifyIcon.icon(options),
-                                        radius: 10,
+                                        icon: L.BeautifyIcon.icon(options),
+                                        //radius: 10,
                                     });
                                 },
                                 style: function (feature) {

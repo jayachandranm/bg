@@ -12,10 +12,10 @@ function _getdata_exdb($reqtype, $filter)
     // TODO: Sanitize sids array before using in the query statement.
     $bg_db = array(
         'database' => 'bgtrans_obd',
-        'username' => 'ubgtrans', // assuming this is necessary
-        'password' => 'drinkNdrive$4god', // assuming this is necessary
-        'host' => 'localhost', // assumes localhost
-        'driver' => 'mysql', // replace with your database driver
+        'username' => 'ubgtrans', 
+        'password' => 'drinkNdrive$4god',  
+        'host' => 'localhost',  
+        'driver' => 'mysql',  
     );
 
     Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
@@ -61,11 +61,11 @@ function _getdata_exdb($reqtype, $filter)
 function _update_ext_db($nid, $sid, $vnum, $vgroup, $flag)
 {
     $bg_db = array(
-        'database' => 'bgmap',
-        'username' => 'bgmap', // assuming this is necessary
-        'password' => 'bgmap%user$1', // assuming this is necessary
-        'host' => 'localhost', // assumes localhost
-        'driver' => 'mysql', // replace with your database driver
+        'database' => 'bgtrans_obd',
+        'username' => 'ubgtrans', 
+        'password' => 'drinkNdrive$4god',  
+        'host' => 'localhost',  
+        'driver' => 'mysql',  
     );
 
     Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
