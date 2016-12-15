@@ -9,7 +9,7 @@
                 L.Playback.Control = L.Control.extend({
 
                     _html:
-                        '<input type="text" id="example_id" name="example_name" value="" />',
+                        '<input type="text" id="ion_range" name="trace_range" value="" />',
 
                     options: {
                         position: 'horizcenterbottom'
@@ -24,19 +24,19 @@
                         var controlDiv = L.DomUtil.create('div', 'tr-slider');
                         //var controlDiv = L.DomUtil.create('div', 'col-md-6');
                         /*
-                         this._slider = L.DomUtil.create('input', 'example_id', controlDiv);
+                         this._slider = L.DomUtil.create('input', 'ion_range', controlDiv);
                          this._slider.type = 'text';
-                         this._slider.id = 'example_id';
-                         this._slider.name = 'example_name';
+                         this._slider.id = 'ion_range';
+                         this._slider.name = 'trace_range';
                          this._slider.value = '';
                          */
                         //_slider = this._html;
                         controlDiv.innerHTML = this._html;
-                        //$("#example_id").ionRangeSlider();
+                        //$("#ion_range").ionRangeSlider();
                         //$('#trace_map').after(html);
                         //var stop = L.DomEvent.stopPropagation;
                         L.DomEvent.disableClickPropagation(controlDiv);
-                        this._setup();
+                        this.setup();
 
                         /*
                          L.DomEvent
@@ -64,7 +64,7 @@
                     },
 
 
-                    _setup: function () {
+                    setup: function () {
                         var self = this;
                         var playback = this.playback;
                         //playback.addCallback(this._clockCallback);
@@ -76,7 +76,7 @@
 
                         var st = moment(minVal).format("X");
                         var ed = moment(maxVal).format("X");
-                        var trSlider = $("#example_id").ionRangeSlider({
+                        var trSlider = $("#ion_range").ionRangeSlider({
                             min: st,
                             max: ed,
                             from: st,
@@ -102,7 +102,7 @@
                         //$('#cursor-date').html(L.Playback.Util.DateStr(ms));
                         //$('#cursor-time').html(L.Playback.Util.TimeStr(ms));
                         //$('#time-slider').slider('value', ms);
-                        var slider = $("#example_id").data("ionRangeSlider");
+                        var slider = $("#ion_range").data("ionRangeSlider");
                         var val = moment(ms).format("X");
                         //console.log("Callback, playback moved:", ms);
                         if (!isSliding) {
@@ -122,7 +122,7 @@
 (jQuery);
 
                                 /*
-                                 $("#example_id").on("change", function () {
+                                 $("#ion_range").on("change", function () {
                                  var $this = $(this),
                                  value = $this.prop("value");
 

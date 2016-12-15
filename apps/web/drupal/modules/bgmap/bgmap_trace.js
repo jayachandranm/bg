@@ -190,7 +190,7 @@
                                 playback.setSpeed(100);
                                 playbackControl = new L.Playback.Control(playback);
                                 playbackControl.addTo(map2);
-                                playbackControl._setup();
+                                playbackControl.setup();
                             }
                             // Initialize custom control
                             //map2.fitBounds(latlngs);
