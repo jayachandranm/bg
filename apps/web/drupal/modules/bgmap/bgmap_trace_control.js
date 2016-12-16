@@ -8,8 +8,7 @@
                 L.Playback = L.Playback || {};
                 L.Playback.Control = L.Control.extend({
 
-                    _html:
-                        '<input type="text" id="ion_range" name="trace_range" value="" />',
+                    _html: '<input type="text" id="ion_range" name="trace_range" value="" />',
 
                     options: {
                         position: 'horizcenterbottom'
@@ -60,7 +59,7 @@
                         return controlDiv;
                     },
 
-                    onRemove: function(map) {
+                    onRemove: function (map) {
                     },
 
 
@@ -121,15 +120,15 @@
 })
 (jQuery);
 
-                                /*
-                                 $("#ion_range").on("change", function () {
-                                 var $this = $(this),
-                                 value = $this.prop("value");
+/*
+ $("#ion_range").on("change", function () {
+ var $this = $(this),
+ value = $this.prop("value");
 
-                                 console.log("Value: " + value);
-                                 playback.setCursor(value*1000);
-                                 });
-                                 */
+ console.log("Value: " + value);
+ playback.setCursor(value*1000);
+ });
+ */
 
 /*
  // Globals, will get updated through datetime picker.

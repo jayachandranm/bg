@@ -6,27 +6,26 @@
                 console.log('JS attach, trace_top_control.');
                 L.Control.Calendar = L.Control.extend({
 
-                    _html:
-//'<div class="row">' +
-'    <div class="col-md-6 tr-cal">' +
-'        <div class="form-group has-feedback">' +
-'        <div class="input-group">' +
-'            <span class="input-group-btn">' +
-'                <button id="trc_restart" type="button" class="btn btn-default">' +
-'                    <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>' +
-'                </button> ' +
-'            </span> ' +
-'            <span class="input-group-btn">' +
-'                <button type="button" id="trc_play" class="btn btn-default">' +
-'                    <span id="trc_play_icon" class="glyphicon glyphicon-play" aria-hidden="true"></span>' +
-'                </button> ' +
-'            </span> ' +
-'            <input class="form-control" class="pull-left" type="text" name="daterange"' +
-'                   value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM">' +
-'        </div> <!-- input-group -->' +
-'        <span class="form-control-feedback glyphicon glyphicon-calendar"></span>' +
-'        </div> <!-- form-group -->' +
-'    </div>' ,
+                    _html: //'<div class="row">' +
+                    '    <div class="col-md-6 tr-cal">' +
+                    '        <div class="form-group has-feedback">' +
+                    '        <div class="input-group">' +
+                    '            <span class="input-group-btn">' +
+                    '                <button id="trc_restart" type="button" class="btn btn-default">' +
+                    '                    <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>' +
+                    '                </button> ' +
+                    '            </span> ' +
+                    '            <span class="input-group-btn">' +
+                    '                <button type="button" id="trc_play" class="btn btn-default">' +
+                    '                    <span id="trc_play_icon" class="glyphicon glyphicon-play" aria-hidden="true"></span>' +
+                    '                </button> ' +
+                    '            </span> ' +
+                    '            <input class="form-control" class="pull-left" type="text" name="daterange"' +
+                    '                   value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM">' +
+                    '        </div> <!-- input-group -->' +
+                    '        <span class="form-control-feedback glyphicon glyphicon-calendar"></span>' +
+                    '        </div> <!-- form-group -->' +
+                    '    </div>',
 //'</div>' ,
 
                     options: {
@@ -68,47 +67,47 @@
                         return controlDiv;
                     },
 
-                    onRemove: function(map) {
+                    onRemove: function (map) {
                     },
 
 
                     setup: function () {
                         //var self = this;
                         var callback = this._callback;
-                var start = moment().subtract(1, 'days');
-                var end = moment();
-                startTime = start.valueOf();
-                endTime = end.valueOf();
-                //
-                $('input[name="daterange"]').daterangepicker({
-                        timePicker: true,
-                        timePickerIncrement: 30,
-                        locale: {
-                            format: 'MM/DD/YYYY h:mm A'
-                        },
-                        startDate: start,
-                        endDate: end,
-                        ranges: {
-                            'Today': [moment().subtract(3, 'hours'), moment()],
-                            'Yesterday': [moment().subtract(2, 'days'), moment().subtract(1, 'days')]
-                        }
-                    },
-                    function (start, end, label) {
-                        console.log('Apply datetime: ', start.format('x'), end.valueOf());
+                        var start = moment().subtract(1, 'days');
+                        var end = moment();
                         startTime = start.valueOf();
                         endTime = end.valueOf();
-                        //pref.requestTraceData();
-                        callback();
-                    }
-                );
+                        //
+                        $('input[name="daterange"]').daterangepicker({
+                                timePicker: true,
+                                timePickerIncrement: 30,
+                                locale: {
+                                    format: 'MM/DD/YYYY h:mm A'
+                                },
+                                startDate: start,
+                                endDate: end,
+                                ranges: {
+                                    'Today': [moment().subtract(3, 'hours'), moment()],
+                                    'Yesterday': [moment().subtract(2, 'days'), moment().subtract(1, 'days')]
+                                }
+                            },
+                            function (start, end, label) {
+                                console.log('Apply datetime: ', start.format('x'), end.valueOf());
+                                startTime = start.valueOf();
+                                endTime = end.valueOf();
+                                //pref.requestTraceData();
+                                callback();
+                            }
+                        );
 //
                     },
 
                 });
- 
- L.control.calendar = function(pref) {
-    return new L.Control.Calendar(pref);
-}
+
+                L.control.calendar = function (pref) {
+                    return new L.Control.Calendar(pref);
+                }
 
             } // if settings, trace.
         } // attach
