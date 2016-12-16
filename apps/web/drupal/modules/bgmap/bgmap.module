@@ -192,7 +192,8 @@ function bgmap_libraries_info()
             'files' => array(
                 'js' => array(
                     'leaflet.js',
-                    'fs/Control.FullScreen.js',
+                    //'fs/Control.FullScreen.js',
+                    'leaflet-fullscreen/Leaflet.fullscreen.js',
                     'snake/L.Polyline.SnakeAnim.js',
                     'playback/LeafletPlayback.js',
                     'beautify/leaflet-beautify-marker-icon.js',
@@ -200,9 +201,9 @@ function bgmap_libraries_info()
                 ),
                 'css' => array(
                     'leaflet.css' => array(),
-                    'fs/Control.FullScreen.css' => array(),
+                    //'fs/Control.FullScreen.css' => array(),
+                    'leaflet-fullscreen/leaflet.fullscreen.css' => array(),
                     'beautify/leaflet-beautify-marker-icon.css' => array(),
-                    
                 ),
             ),
         );
@@ -491,6 +492,9 @@ function bgmap_block_view($delta = '')
             //drupal_add_js(array('trace' => array('sid' => $sid)), 'setting');
             // TODO:/ sid_list not required for trace single.
             $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/bgmap_trace_top_control.js',),
                 array(
                     'type' => 'file',
                     'data' => $mpath . '/bgmap_trace.js',),

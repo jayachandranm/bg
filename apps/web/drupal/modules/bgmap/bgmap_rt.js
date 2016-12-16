@@ -50,9 +50,11 @@
 
                 var map = new L.map('rt_map', {
                     fullscreenControl: true,
+/*
                     fullscreenControlOptions: {
                         position: 'topleft'
                     }
+*/
                 });
                 // Default home location.
                 var lat = 1.421, lng = 103.829;

@@ -4,17 +4,9 @@
             console.log('JS attach, initialization.');
             // If trace array is set, happens inside trace block.
             if (Drupal.settings.trace) {
-                // Globals, will get updated through datetime picker.
-                var selectedStartDateVal = 0;
-                var selectedStartTimeVal = 0;
-                //
-                var selectedEndDateVal = 0;
-                var selectedEndTimeVal = 0;
                 //
                 //var playback = null;
                 // TODO: check this.
-                var polylines = new Array();
-                var latlngs = new Array();
                 var sid_list = Drupal.settings.trace.sid_list;
                 var trace_anim = Drupal.settings.trace.trace_anim;
                 var custom_color = Drupal.settings.trace.color;
@@ -31,6 +23,7 @@
                 startTime = start.valueOf();
                 endTime = end.valueOf();
                 //
+/*
                 $('input[name="daterange"]').daterangepicker({
                         timePicker: true,
                         timePickerIncrement: 30,
@@ -51,12 +44,20 @@
                         requestTraceData();
                     }
                 );
-                $('#trc_play').addClass('disabled');
+*/
                 //
+/*
                 var map2 = new L.map('trace_map', {
                     fullscreenControl: true,
                     fullscreenControlOptions: {
                         position: 'topleft'
+                    }
+                });
+*/
+                var map2 = new L.map('trace_map', {
+                    //fullscreenControl: true,
+                    fullscreenControl: {
+                        pseudoFullscreen: false
                     }
                 });
 
@@ -80,11 +81,20 @@
                 }
 
                 addControlPlaceholders(map2);
+                //L.control.calendar(this).addTo(map);
+                calControl = new L.Control.Calendar(requestTraceData);
+                calControl.addTo(map2);
+                calControl.setup();
+
+                $('#trc_play').addClass('disabled');
 
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
                 map2.setView([lat, lng], 13);
+                L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map2);
                 //
                 var traceGeoJsonLayer = L.geoJson().addTo(map2);
                 var playbackControl;
@@ -100,10 +110,6 @@
                 // From 2 days back.
                 var startTime = endTime - (3600 * 24 * 2 * 1000);
                 console.log('Initial start time: ', startTimeOfDay);
-
-                L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                }).addTo(map2);
 
                 // Restart trace on button press.
                 $('#trc_restart').click(function () {
@@ -130,7 +136,6 @@
                         $('#trc_play').addClass('disabled');
                     }
                     // Clear the array before getting new values.
-                    latlngs.length = 0;
                     console.log('Trace: Ajax call: ', startTime, endTime);
                     var postData = {};
                     postData['reqtype'] = 'trc';
@@ -192,9 +197,6 @@
                                 playbackControl.addTo(map2);
                                 playbackControl.setup();
                             }
-                            // Initialize custom control
-                            //map2.fitBounds(latlngs);
-                            //var polygon = L.polygon().addTo(map);
                         },
                         complete: function () {
                             //setTimeout(requestTraceData, 2000);
