@@ -96,7 +96,7 @@
                                 console.log('Apply datetime: ', start.format('x'), end.valueOf());
                                 startTime = start.valueOf();
                                 endTime = end.valueOf();
-                                //pref.requestTraceData();
+                                pref.requestTraceData();
                                 callback();
                             }
                         );

@@ -22,6 +22,10 @@
                 var end = moment();
                 startTime = start.valueOf();
                 endTime = end.valueOf();
+/*
+                var date = new Date(); date.setHours(0); date.setMinutes(0); date.setSeconds(0);
+                var endTime = date.getTime();
+*/
                 //
                 /*
                  var map2 = new L.map('trace_map', {
@@ -59,13 +63,10 @@
 
                 addControlPlaceholders(map2);
 
-                var traceReq = new TraceReq();
-                traceReq.init();
-                clearData();
-                var jsonData = traceReq.requestTraceData();
+                var jsonData = Local.requestTraceData();
 
                 //L.control.calendar(this).addTo(map);
-                calControl = new L.Control.Calendar(requestTraceData);
+                calControl = new L.Control.Calendar(Local);
                 calControl.addTo(map2);
                 calControl.setup();
 
