@@ -32,8 +32,8 @@
                         position: 'horizcentertop'
                     },
 
-                    initialize: function (callback) {
-                        this._callback = callback;
+                    initialize: function () {
+                        //this._callback = callback;
                         //playback.addCallback(this._clockCallback);
                     },
 
@@ -73,7 +73,6 @@
 
                     setup: function () {
                         //var self = this;
-                        var callback = this._callback;
                         var start = moment().subtract(1, 'days');
                         var end = moment();
                         startTime = start.valueOf();
@@ -96,17 +95,15 @@
                                 console.log('Apply datetime: ', start.format('x'), end.valueOf());
                                 startTime = start.valueOf();
                                 endTime = end.valueOf();
-                                pref.requestTraceData();
-                                callback();
+                                BGMAP.requestTraceData(startTime, endTime);
                             }
                         );
-//
                     },
 
                 });
 
-                L.control.calendar = function (pref) {
-                    return new L.Control.Calendar(pref);
+                L.control.calendar = function () {
+                    return new L.Control.Calendar();
                 }
 
             } // if settings, trace.

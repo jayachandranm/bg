@@ -1,5 +1,5 @@
 (function ($) {
-    Drupal.behaviors.bgmap = {
+    Drupal.behaviors.bgmap1 = {
         attach: function (context, settings) {
             console.log('JS attach for RT, initialization.');
             // TODO: Where is the most appropriate place for this code?
