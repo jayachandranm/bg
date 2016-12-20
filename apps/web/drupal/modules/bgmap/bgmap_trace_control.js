@@ -1,4 +1,5 @@
-(function ($) {
+var BGMAP = (function (me, $, Drupal, undefined) {
+//(function ($) {
     Drupal.behaviors.bgmap3 = {
         attach: function (context, settings) {
             // If trace array is set, happens inside trace block.
@@ -117,8 +118,10 @@
             } // if settings, trace.
         } // attach
     } // behaviors, bgmap
+    return me;
 })
-(jQuery);
+//(jQuery);
+(BGMAP || {}, jQuery, Drupal);
 
 /*
  $("#ion_range").on("change", function () {

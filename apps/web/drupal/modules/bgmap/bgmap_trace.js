@@ -75,7 +75,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
                     // TODO: check this, overwrite playbackControl?
                     playbackControl = new L.Playback.Control(playback);
                     playbackControl.addTo(map2);
-                    playbackControl._setup();
+                    playbackControl.setup();
                 }
                 // Initialize custom control
                 //map2.fitBounds(latlngs);
@@ -140,7 +140,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
          }
          });
          */
-        var map2 = new L.map('trace_map', {
+        map2 = new L.map('trace_map', {
             //fullscreenControl: true,
             fullscreenControl: {
                 pseudoFullscreen: false
@@ -177,7 +177,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
         addControlPlaceholders(map2);
 
         //L.control.calendar(this).addTo(map);
-        calControl = new L.Control.Calendar(Local);
+        calControl = new L.Control.Calendar();
         calControl.addTo(map2);
         calControl.setup();
 
@@ -217,6 +217,8 @@ var BGMAP = (function (me, $, Drupal, undefined) {
             } // if settings, trace.
         } // attach
     } // behaviors, bgmap
+    
+    return me;
 })
 (BGMAP || {}, jQuery, Drupal);
 

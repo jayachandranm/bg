@@ -1,4 +1,5 @@
-(function ($) {
+var BGMAP = (function (me, $, Drupal, undefined) {
+//(function ($) {
     Drupal.behaviors.bgmap4 = {
         attach: function (context, settings) {
             // If trace array is set, happens inside trace block.
@@ -79,6 +80,7 @@
                         endTime = end.valueOf();
                         //
                         $('input[name="daterange"]').daterangepicker({
+                                parentEl: '#trace_map',
                                 timePicker: true,
                                 timePickerIncrement: 30,
                                 locale: {
@@ -95,7 +97,7 @@
                                 console.log('Apply datetime: ', start.format('x'), end.valueOf());
                                 startTime = start.valueOf();
                                 endTime = end.valueOf();
-                                BGMAP.requestTraceData(startTime, endTime);
+                                me.requestTraceData(startTime, endTime);
                             }
                         );
                     },
@@ -109,6 +111,8 @@
             } // if settings, trace.
         } // attach
     } // behaviors, bgmap
+    return me;
 })
-(jQuery);
+//(jQuery);
+(BGMAP || {}, jQuery, Drupal);
 
