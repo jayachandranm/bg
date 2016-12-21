@@ -100,7 +100,6 @@
     hide($content['comments']);
     hide($content['links']);
     hide($content['field_tags']);
-    // jaya commented.
     //print render($content);
     //dpm($content);
   ?>
