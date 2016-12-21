@@ -26,13 +26,20 @@ function bgtrans_theme()
 
     );
     //print_r($items);
-    dpm($items);
+    //dpm($items);
     return $items;
 }
 
 function bgtrans_preprocess_user_login(&$vars)
 {
     $vars['intro_text'] = t(' Login');
+    // TODO: To remove warnings.
+    // http://drupal.stackexchange.com/questions/206819/custom-user-login-template-error
+    //print drupal_render_children($form);
+    $vars['content_attributes_array']['class'][] = 'content';
+    $vars['title_attributes_array']['class'][] = 'content';
+    $vars['attributes_array']['class'][] = 'content';
+    $vars['classes_array'] = array('content');
 }
 
 /*
