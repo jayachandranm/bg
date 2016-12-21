@@ -303,8 +303,11 @@ function bgmap_node_insert($node)
         $vgroup = 'car';
         $flag = true;
         //$vgroup = $node->field_vehicle_group['und'][0]['value'];
+        module_load_include("config.inc", "bgmap");
+        // TODO: Improve the config option.
+        $bg_db = getExtDBConfig();
         module_load_include("api.inc", "bgmap");
-        _update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
+        _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag);
     }
     /*
     if (variable_get('bglight_node_type_' . $node->type, FALSE)) {
@@ -331,8 +334,10 @@ function bgmap_node_update($node)
         $vnum = $node->field_vehicle_num['und'][0]['value'];
         $vgroup = 'car';
         $flag = false;
+        module_load_include("config.inc", "bgmap");
+        $bg_db = getExtDBConfig();
         module_load_include("api.inc", "bgmap");
-        _update_ext_db($nid, $sid, $vnum, $vgroup, $flag);
+        _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag);
     }
 }
 

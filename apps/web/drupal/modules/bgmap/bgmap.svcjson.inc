@@ -27,8 +27,10 @@ function _get_geojson($rqtype)
     //dpm($filter); // This works, but not print_r.
     //print_r($filter);
 
+    module_load_include("config.inc", "bgmap");
+    $bg_db = getExtDBConfig();
     module_load_include("api.inc", "bgmap");
-    $result = _getdata_exdb($reqtype, $filter);
+    $result = _getdata_exdb($bg_db, $reqtype, $filter);
     //
     date_default_timezone_set('Asia/Singapore');
     $geojson = array(

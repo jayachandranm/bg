@@ -1,6 +1,6 @@
 <?php
 
-function _getdata_exdb($reqtype, $filter)
+function _getdata_exdb($bg_db, $reqtype, $filter)
 {
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
@@ -9,18 +9,20 @@ function _getdata_exdb($reqtype, $filter)
     $start_time = $filter->start;
     $end_time = $filter->end;
 
-    // TODO: Sanitize sids array before using in the query statement.
+/*
     $bg_db = array(
-        'database' => 'bgtrans_obd',
-        'username' => 'ubgtrans', 
-        'password' => 'drinkNdrive$4god',  
+        'database' => 'db',
+        'username' => 'user', 
+        'password' => 'pass',  
         'host' => 'localhost',  
         'driver' => 'mysql',  
     );
+*/
 
     Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
     db_set_active('BLUGRAPHTECH');
 
+    // TODO: Sanitize sids array before using in the query statement.
     // TODO: iF multiple entry match the condition, handle as error?
 
     $query = array();
@@ -58,16 +60,8 @@ function _getdata_exdb($reqtype, $filter)
 }
 
 
-function _update_ext_db($nid, $sid, $vnum, $vgroup, $flag)
+function _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag)
 {
-    $bg_db = array(
-        'database' => 'bgtrans_obd',
-        'username' => 'ubgtrans', 
-        'password' => 'drinkNdrive$4god',  
-        'host' => 'localhost',  
-        'driver' => 'mysql',  
-    );
-
     Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
     db_set_active('BLUGRAPHTECH');
 
