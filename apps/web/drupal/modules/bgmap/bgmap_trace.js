@@ -48,6 +48,9 @@ var BGMAP = (function (me, $, Drupal, undefined) {
                     var color = playBackData.properties["line-color"];
                     console.log('Mod JSON for Playback=', playBackData, color);
                     // Initialize playback
+                    if($('#trc_restart').hasClass('disabled')) {
+                        $('#trc_restart').removeClass('disabled');
+                    }
                     if($('#trc_play').hasClass('disabled')) {
                         $('#trc_play').removeClass('disabled');
                     }
@@ -60,7 +63,12 @@ var BGMAP = (function (me, $, Drupal, undefined) {
                         marker: function (featureData) {
                             var options = {
                                 icon: 'bus',
-                                borderColor: custom_color, textColor: custom_color
+                                //iconSize: [30, 30],
+                                //iconAnchor: [22, 20],
+                                //innerIconAnchor: [22, 20],
+                                //innerIconStyle: 'font-size:9px;padding-top:1px;',
+                                borderColor: custom_color, 
+                                textColor: custom_color
                             };
                             return {
                                 icon: L.BeautifyIcon.icon(options)
@@ -104,6 +112,9 @@ var BGMAP = (function (me, $, Drupal, undefined) {
             playback.destroy();
             playback = null;
         }
+        if (!$('#trc_restart').hasClass('disabled')) {
+            $('#trc_restart').addClass('disabled');
+        }
         if (!$('#trc_play').hasClass('disabled')) {
             $('#trc_play').addClass('disabled');
         }
@@ -121,7 +132,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
         //
         var title2 = 'GPS Trace on Map';
         $("#block-bgmap-trace").height(600);
-        $("#trace_map").height(400);
+        $("#trace_map").height(520);
         //
         var start = moment().subtract(1, 'days');
         var end = moment();
@@ -132,14 +143,6 @@ var BGMAP = (function (me, $, Drupal, undefined) {
          var endTime = date.getTime();
          */
         //
-        /*
-         var map2 = new L.map('trace_map', {
-         fullscreenControl: true,
-         fullscreenControlOptions: {
-         position: 'topleft'
-         }
-         });
-         */
         map2 = new L.map('trace_map', {
             //fullscreenControl: true,
             fullscreenControl: {
@@ -157,9 +160,9 @@ var BGMAP = (function (me, $, Drupal, undefined) {
 
         // Create additional Control placeholders
         function addControlPlaceholders(map) {
-            var corners = map._controlCorners,
-                l = 'leaflet-',
-                container = map._controlContainer;
+            var corners = map._controlCorners;
+            var l = 'leaflet-';
+            var container = map._controlContainer;
 
             function createCorner(vSide, hSide) {
                 //var className = l + vSide + ' ' + l + hSide;
@@ -169,11 +172,10 @@ var BGMAP = (function (me, $, Drupal, undefined) {
 
                 corners[vSide + hSide] = L.DomUtil.create('div', className, container);
             }
-
             createCorner('horizcenter', 'top');
             createCorner('horizcenter', 'bottom');
         }
-
+        //
         addControlPlaceholders(map2);
 
         //L.control.calendar(this).addTo(map);
@@ -182,9 +184,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
         calControl.setup();
 
         $('#trc_play').addClass('disabled');
-
-        //
-        // http://leafletjs.com/examples/geojson.html
+        $('#trc_restart').addClass('disabled');
 
         // Restart trace on button press.
         $('#trc_restart').click(function () {
