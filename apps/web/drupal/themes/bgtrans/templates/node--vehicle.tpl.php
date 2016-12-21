@@ -100,14 +100,15 @@
     hide($content['comments']);
     hide($content['links']);
     hide($content['field_tags']);
-    // jaya commented.
     //print render($content);
+    //dpm($content);
   ?>
     <div class="row" style="padding-bottom:20px">
-      <div class="col-md-3">
-        <? // TODO: handle if exists ?>
-        <?php print render($content['field_vehicle_photo']); ?>
-      </div>
+      <?php if (!empty($content['field_vehicle_photo'])): ?>
+        <div class="col-md-3">
+          <?php print render($content['field_vehicle_photo']); ?>
+        </div>
+      <?php endif; ?>
       <div class="col-md-9">
         <?php print render($content['field_vehicle_num']); ?>
         <?php print render($content['field_obd_id']); ?>

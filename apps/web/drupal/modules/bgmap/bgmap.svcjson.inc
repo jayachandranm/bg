@@ -27,8 +27,10 @@ function _get_geojson($rqtype)
     //dpm($filter); // This works, but not print_r.
     //print_r($filter);
 
+    module_load_include("config.inc", "bgmap");
+    $bg_db = getExtDBConfig();
     module_load_include("api.inc", "bgmap");
-    $result = _getdata_exdb($reqtype, $filter);
+    $result = _getdata_exdb($bg_db, $reqtype, $filter);
     //
     date_default_timezone_set('Asia/Singapore');
     $geojson = array(
@@ -49,6 +51,7 @@ function _get_geojson($rqtype)
 
                 //$polygon[] = array($lat, $lng);
                 $polygon[] = array($lng, $lat);
+                $timestamps[] = $time;
                 //
             } // foreach
             //dpm($polygon);
@@ -57,7 +60,9 @@ function _get_geojson($rqtype)
                 $feature = array(
                     'type' => 'Feature',
                     'geometry' => array('type' => 'LineString', 'coordinates' => $polygon),
+                    //'geometry' => array('type' => 'MultiPoint', 'coordinates' => $polygon),
                     'properties' => array(
+                        'time' => $timestamps,
                         'title' => 'Test2',
                         'line-color' => '#f00',
                         'line-size' => 'small'

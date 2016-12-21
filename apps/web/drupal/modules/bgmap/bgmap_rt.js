@@ -1,5 +1,5 @@
 (function ($) {
-    Drupal.behaviors.bgmap = {
+    Drupal.behaviors.bgmap1 = {
         attach: function (context, settings) {
             console.log('JS attach for RT, initialization.');
             // TODO: Where is the most appropriate place for this code?
@@ -50,9 +50,11 @@
 
                 var map = new L.map('rt_map', {
                     fullscreenControl: true,
+/*
                     fullscreenControlOptions: {
                         position: 'topleft'
                     }
+*/
                 });
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
@@ -99,11 +101,18 @@
                                 pointToLayer: function (feature, latlng) {
                                     map.panTo(latlng);
                                     //layer.bindPopup(feature.properties.title);
-                                    return L.circleMarker(latlng, {
-                                        //return L.marker(latlng, {
+                                    //return L.circleMarker(latlng, {
+                                    var sid = feature.properties.title;
+                                    var custom_color = sid2vehmap[sid].color;
+                                    var options = {  
+                                        icon: 'bus',  
+                                        borderColor: custom_color, textColor: custom_color
+                                    };
+                                    //var options = {};
+                                    return L.marker(latlng, {
                                         // Will be overwritten by style function below.
-                                        //icon: L.BeautifyIcon.icon(options),
-                                        radius: 10,
+                                        icon: L.BeautifyIcon.icon(options),
+                                        //radius: 10,
                                     });
                                 },
                                 style: function (feature) {

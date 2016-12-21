@@ -1,4 +1,5 @@
 var mysql      = require('mysql');
+var config = require('./config');
 
 //module.exports.updateDB = updateDB;
 module.exports.add2dbGPS = add2dbGPS;
@@ -6,10 +7,10 @@ module.exports.add2dbAlarms = add2dbAlarms;
 
 var pool  = mysql.createPool({
     connectionLimit : 10,
-     host            : 'localhost',
-     user            : 'bgmap',
-    password        : 'bgmap%user$1',
-    database        : 'bgmap'
+    host            : config.mysql.host,
+    user            : config.mysql.user,
+    password        : config.mysql.pass,
+    database        : config.mysql.db
 });
 
 
