@@ -1,0 +1,138 @@
+<?php
+
+  /**
+   * @file
+   * Sample mysite.aliases.drushrc.php.
+   */
+
+  // Define the development environment.
+  $aliases['dev'] = array(
+
+    // The path to your drupal base.
+    'root' => '/Users/skh/Dropbox/Private/Sites/mysite',
+
+    // The development URL.
+    'uri'  => 'mysite.dev.e9p.net',
+
+    // Path aliases to common directories.
+    'path-aliases' => array(
+
+      // Where to dump temporary files.
+      '%dump-dir' => '/tmp',
+
+      // The path to our default's directory.
+      '%default' => 'sites/default',
+
+      // Options for specific commands.
+      'command-specific' => array (
+
+        // When running 'drush sql-sync'.
+        'sql-sync' => array (
+
+          // Setting simulate to 1 is the equivalent of doing a dry-run.  This becomes more useful in the prod alias below.
+          'simulate' => '0',
+        ),
+      ),
+    ),
+  );
+
+
+  // Define the staging environment.
+  $aliases['stage'] = array(
+
+    // Setting a parent will inherit all the values, unless explicitly overridden below.
+    'parent' => '@local',
+
+    // The path to your drupal base.
+    'root' => '/var/www/html/mysite.net',
+
+    // The staging URL.
+    'uri' => 'mysite.stage.e9p.net',
+
+    // The staging box hostname.
+    'remote-host' => 'stage.e9p.net',
+
+    // The user your would use to connect to the box by SSH.  Since we setup SSH keys, no passwords will be necessary.
+    'remote-user' => 'skh',
+
+    // Any additional SSH options, such as specifying a specific port.
+    'ssh-options' => '-p 2046',
+
+    // Allow unknown options to proceed and warn rather than fail.
+    'strict' => 0,
+
+    // Define the staging databases.  Take this from your settings.php file on the stage box.
+    'databases' => array (
+      'default' =>
+      array (
+        'default' =>
+        array (
+          'database' => 'mysite_v1',
+          'username' => 'mysite',
+          'password' => 'mysite_localhost',
+          'host' => 'localhost',
+          'port' => '',
+          'driver' => 'mysql',
+          'prefix' => '',
+        ),
+      ),
+    ),
+  );
+
+
+  // Define the staging environment.
+  $aliases['prod'] = array(
+
+    // Setting a parent will inherit all the values, unless explicitly overridden below.
+    'parent' => '@local',
+
+    // The path to your drupal base.
+    'root' => '/var/www/html/mysite.net',
+
+    // The staging URL.
+    'uri' => 'mysite.net',
+
+    // Path aliases to common directories.
+    'path-aliases' => array(
+
+      // Options for specific commands.
+      'command-specific' => array (
+
+        // When running 'drush sql-sync'.
+        'sql-sync' => array (
+
+          // Setting simulate to 1 is the equivalent of doing a dry-run.
+          'simulate' => '1',
+        ),
+      ),
+    ),
+
+    // The staging box hostname.
+    'remote-host' => 'prod.e9p.net',
+
+    // The user your would use to connect to the box by SSH.  Since we setup SSH keys, no passwords will be necessary.
+    'remote-user' => 'skh',
+
+    // Any additional SSH options, such as specifying a specific port.
+    'ssh-options' => '-p 2046',
+
+    // Allow unknown options to proceed and warn rather than fail.
+    'strict' => 0,
+
+    // Define the staging databases.  Take this from your settings.php file on the stage box.
+    'databases' => array (
+      'default' =>
+      array (
+        'default' =>
+        array (
+          'database' => 'mysite_v1',
+          'username' => 'mysite',
+          'password' => 'mysite_localhost',
+          'host' => 'localhost',
+          'port' => '',
+          'driver' => 'mysql',
+          'prefix' => '',
+        ),
+      ),
+    ),
+  );
