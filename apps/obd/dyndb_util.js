@@ -43,34 +43,18 @@ function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     var params = {
         TableName: table,
         Item: items
+        //"stat_data":  stat_data == null ? null : stat_data,
     };
 
-    /*
-     var params = {
-     TableName: table,
-     Item: {
-     "obd_dev_id":  obdID,
-     "timestamp": timestamp,
-     //"stat_data":  stat_data == null ? null : stat_data,
-     "info":  {
-     "longitude": 123.456,
-     "latitude": 456.123
-     }
-     }
-     };
-     */
-
-    console.log("Pushing data into DynamoDB. Please wait.");
-    console.log(params);
-/*
+    //console.log(params);
     docClient.put(params, function (err, data) {
         if (err) {
             console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
         } else {
-            console.log("PutItem succeeded:");
+            //console.log("PutItem succeeded:");
         }
     });
-*/
+
 }
 
 function add2dyndbBatch(obdID, arrGPS, arrRPM) {
@@ -91,17 +75,15 @@ function add2dyndbBatch(obdID, arrGPS, arrRPM) {
             };
 
             // TODO: Use batch mode to push all data in single call.
-            console.log("Pushing data into DynamoDB.");
-            console.log(params);
-/*
+            //console.log(params);
             docClient.put(params, function (err, data) {
                 if (err) {
                     console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
                 } else {
-                    console.log("PutItem succeeded:");
+                    //console.log("PutItem succeeded:");
                 }
             });
-*/
+
         }
     }
     // TODO: Push RPM values.
