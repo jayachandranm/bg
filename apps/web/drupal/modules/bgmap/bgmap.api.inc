@@ -1,4 +1,24 @@
 <?php
+// For AWS
+require 'vendor/autoload.php';
+
+//date_default_timezone_set('UTC');
+
+$sdk = new Aws\Sdk([
+    'endpoint'   => 'https://dynamodb.ap-southeast-1.amazonaws.com',
+    'region'   => 'ap-southeast-1',
+    'version'  => 'latest'
+]);
+
+function _getdata_dyndb($reqtype, $filter)
+{
+    // From admin page.
+    //$max_num = variable_get('bgmap_max', 3);
+    //$sid_list = $filter[sidList];
+    $sid_list = $filter->sidList;
+    $start_time = $filter->start;
+    $end_time = $filter->end;
+}
 
 function _getdata_exdb($bg_db, $reqtype, $filter)
 {
