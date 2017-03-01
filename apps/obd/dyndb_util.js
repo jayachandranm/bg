@@ -10,32 +10,21 @@ AWS.config.update({
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
+var table = "OBDTable_mmmYYYY";
 
-console.log("Pushing data into DynamoDB. Please wait.");
 
-function add2dyndb(obdID, statData, arrGPS, arrRPM, arrAlarms) {
+function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     //
-    var table = "OBDTable_mmmYYYY";
-
     var items = {};
     items["obd_dev_id"] = obdID;
     if (statData != null) {
         items["stat_data"] = statData;
-        items["timestamp"] = statData.utc_time;
+        items["timestamp"] = statData.utc_time * 1000;
     }
-    if (arrGPS != null) {
-        var gpsVals;
-        if (arrGPS.length == 1) {
-            // If only one GPS item, everything goes in one row.
-            gpsVals = arrGPS[0];
-        } else if (arrGPS.length > 1) {
-            // When there are multiple GPS items, the last entry maps to stat_data
-            // Update rest of the items in a separate loop.
-            gpsVals = arrGPS[arrGPS.length - 1];
-        }
+    if (gpsItem != null) {
         // If GPS available, overwrite sample time with GPS time.
-        items["timestamp"] = getUnixTime(gpsVals.date_time);
-        items["gps_data"] = getGpsJson(gpsVals);
+        items["timestamp"] = getUnixTime(gpsItem.date_time);
+        items["gps_data"] = getGpsJson(gpsItem);
     }
     if (arrAlarms != null) {
         var alarms = {};
@@ -71,6 +60,9 @@ function add2dyndb(obdID, statData, arrGPS, arrRPM, arrAlarms) {
      };
      */
 
+    console.log("Pushing data into DynamoDB. Please wait.");
+    console.log(params);
+/*
     docClient.put(params, function (err, data) {
         if (err) {
             console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
@@ -78,16 +70,47 @@ function add2dyndb(obdID, statData, arrGPS, arrRPM, arrAlarms) {
             console.log("PutItem succeeded:");
         }
     });
-
+*/
 }
 
 function add2dyndbBatch(obdID, arrGPS, arrRPM) {
+    //
+    if (arrGPS != null) {
+        // Skip the last item.
+        var numItems4db = arrGPS.length - 1;
+        for (i = 0; i < numItems4db; i++) {
+            var items = {};
+            items["obd_dev_id"] = obdID;
+            var gpsItem = arrGPS[i];
+            items["timestamp"] = getUnixTime(gpsItem.date_time);
+            items["gps_data"] = getGpsJson(gpsItem);
+
+            var params = {
+                TableName: table,
+                Item: items
+            };
+
+            // TODO: Use batch mode to push all data in single call.
+            console.log("Pushing data into DynamoDB.");
+            console.log(params);
+/*
+            docClient.put(params, function (err, data) {
+                if (err) {
+                    console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+                } else {
+                    console.log("PutItem succeeded:");
+                }
+            });
+*/
+        }
+    }
+    // TODO: Push RPM values.
 }
 
-function getGpsJson(gpsData) {
+function getGpsJson(gpsItem) {
     var gpsJson = {};
-    var Long = gpsVals.longitude / 3600000;
-    var Lat = gpsVals.latitude / 3600000;
+    var Long = gpsItem.longitude / 3600000;
+    var Lat = gpsItem.latitude / 3600000;
     gpsJson["longitude"] = Long;
     gpsJson["latitude"] = Lat;
     gpsJson["speed"] = 0;
