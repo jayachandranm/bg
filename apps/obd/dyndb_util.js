@@ -1,6 +1,7 @@
 var AWS = require("aws-sdk");
 var fs = require('fs');
 
+module.exports.import2db = import2db;
 module.exports.add2dyndb = add2dyndb;
 module.exports.add2dyndbBatch = add2dyndbBatch;
 
@@ -12,6 +13,25 @@ AWS.config.update({
 var docClient = new AWS.DynamoDB.DocumentClient();
 var table = "OBDTable_mmmYYYY";
 
+function import2db(obdID, timestamp, gpsJson) {
+    var items = {};
+    items["obd_dev_id"] = obdID;
+    items["timestamp"] = timestamp;
+    items["gps_data"] = gpsJson;
+
+    var params = {
+        TableName: table,
+        Item: items
+    };
+    //console.log(params);
+    docClient.put(params, function (err, data) {
+        if (err) {
+            console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+        } else {
+            //console.log("PutItem succeeded:");
+        }
+    });
+}
 
 function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     //
