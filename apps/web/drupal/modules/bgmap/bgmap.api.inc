@@ -5,19 +5,56 @@ require 'vendor/autoload.php';
 //date_default_timezone_set('UTC');
 
 $sdk = new Aws\Sdk([
-    'endpoint'   => 'https://dynamodb.ap-southeast-1.amazonaws.com',
-    'region'   => 'ap-southeast-1',
-    'version'  => 'latest'
+    'endpoint' => 'https://dynamodb.ap-southeast-1.amazonaws.com',
+    'region' => 'ap-southeast-1',
+    'version' => 'latest'
 ]);
+
+use Aws\DynamoDb\Exception\DynamoDbException;
+use Aws\DynamoDb\Marshaler;
+
+$dynamodb = $sdk->createDynamoDb();
+$marshaler = new Marshaler();
+
+$tableName = 'OBDTable_mmmYYYY';
 
 function _getdata_dyndb($reqtype, $filter)
 {
+    global $dynamodb, $marshaler, $tableName;
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
     //$sid_list = $filter[sidList];
     $sid_list = $filter->sidList;
     $start_time = $filter->start;
     $end_time = $filter->end;
+    if ($reqtype == 'rt') {
+        foreach ($sid_list as $sid) {
+            $params = [
+                'TableName' => $tableName,
+                'ProjectionExpression' => '#ts, gps_data',
+                'KeyConditionExpression' =>
+                    'obd_dev_id = :o_id',
+                'ScanIndexForward' => false,
+                'Limit' => 1,
+                'ExpressionAttributeNames' => ['#ts' => 'timestamp'],
+                'ExpressionAttributeValues' => [
+                    ':o_id' => ['S' => $sid]
+                ],
+                'ConsistentRead' => false
+            ];
+        }
+
+        try {
+            $result = $dynamodb->query($params);
+            $gps_data = $marshaler->unmarshalItem($result);
+            print_r($gps_data);
+        } catch (DynamoDbException $e) {
+            echo "Unable to query:\n";
+            echo $e->getMessage() . "\n";
+        }
+    }
+    if ($reqtype == 'trc') {
+    }
 }
 
 function _getdata_exdb($bg_db, $reqtype, $filter)
@@ -29,15 +66,15 @@ function _getdata_exdb($bg_db, $reqtype, $filter)
     $start_time = $filter->start;
     $end_time = $filter->end;
 
-/*
-    $bg_db = array(
-        'database' => 'db',
-        'username' => 'user', 
-        'password' => 'pass',  
-        'host' => 'localhost',  
-        'driver' => 'mysql',  
-    );
-*/
+    /*
+        $bg_db = array(
+            'database' => 'db',
+            'username' => 'user',
+            'password' => 'pass',
+            'host' => 'localhost',
+            'driver' => 'mysql',
+        );
+    */
 
     Database::addConnectionInfo('BLUGRAPHTECH', 'default', $bg_db);
     db_set_active('BLUGRAPHTECH');
@@ -51,7 +88,7 @@ function _getdata_exdb($bg_db, $reqtype, $filter)
             ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->condition('sid', $sid_list, 'IN')
             ->orderBy('timestamp', 'DESC');
-            //$query->addExpression('MAX(id)');
+        //$query->addExpression('MAX(id)');
         // TODO: Can be conditional, different for block and page.
         //$query->range(0, $max_num);
         // TODO: Use timestamp condition instead?
@@ -60,7 +97,7 @@ function _getdata_exdb($bg_db, $reqtype, $filter)
         $query = db_select($query_inner, 'b')
             ->fields('b', array('sid', 'timestamp', 'longitude', 'latitude'))
             ->groupBy('sid');
-        
+
     }
     if ($reqtype == 'trc') {
         $query = db_select('obd_gps', 'a')
