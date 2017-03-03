@@ -31,33 +31,33 @@ function _getdata_dyndb($reqtype, $filter)
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
     //$sid_list = $filter[sidList];
-    $sid_list = $filter->sidList;
+    $sid = $filter->sid;
+    //$sid_list = $filter->sidList;
     $start_time = $filter->start;
     $end_time = $filter->end;
     if ($reqtype == 'rt') {
-        foreach ($sid_list as $sid) {
-            $params = [
-                'TableName' => $tableName,
-                'ProjectionExpression' => '#ts, gps_data',
-                'KeyConditionExpression' =>
-                    'obd_dev_id = :o_id',
-                'ScanIndexForward' => false,
-                'Limit' => 1,
-                'ExpressionAttributeNames' => ['#ts' => 'timestamp'],
-                'ExpressionAttributeValues' => [
-                    ':o_id' => ['S' => $sid]
-                ],
-                'ConsistentRead' => false
-            ];
-        }
+        $params = [
+            'TableName' => $tableName,
+            'ProjectionExpression' => '#ts, gps_data',
+            'KeyConditionExpression' =>
+                'obd_dev_id = :o_id',
+            'ScanIndexForward' => false,
+            'Limit' => 1,
+            'ExpressionAttributeNames' => ['#ts' => 'timestamp'],
+            'ExpressionAttributeValues' => [
+                ':o_id' => ['S' => $sid]
+            ],
+            'ConsistentRead' => false
+        ];
 
         try {
-            $result = $dynamodb->query($params);
-            foreach ($result['Items'] as $i) {
-                $gps_data = $marshaler->unmarshalItem($i)['gps_data'];
-                dpm($gps_data);
-                //print_r($gps_data);
-            }
+            $result_dyn = $dynamodb->query($params);
+            //foreach ($result['Items'] as $i) {
+            $i = $result_dyn['Items'];
+            $result = $marshaler->unmarshalItem($i);
+            dpm($result);
+            //print_r($gps_data);
+            //}
             //$gps_data = $marshaler->unmarshalItem($result);
             //print_r($result);
             //dpm($result['Items']);
@@ -68,6 +68,7 @@ function _getdata_dyndb($reqtype, $filter)
     }
     if ($reqtype == 'trc') {
     }
+    return $result;
 }
 
 function _getdata_exdb($bg_db, $reqtype, $filter)
