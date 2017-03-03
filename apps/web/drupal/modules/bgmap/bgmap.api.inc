@@ -8,7 +8,6 @@ use Aws\DynamoDb\Marshaler;
 
 function _getdata_dyndb($reqtype, $filter)
 {
-
     $sdk = new Aws\Sdk([
         'region' => 'ap-southeast-1',
         'version' => 'latest',
@@ -35,6 +34,9 @@ function _getdata_dyndb($reqtype, $filter)
     //$sid_list = $filter->sidList;
     $start_time = $filter->start;
     $end_time = $filter->end;
+  
+    $result = array();
+    
     if ($reqtype == 'rt') {
         $params = [
             'TableName' => $tableName,
@@ -52,12 +54,11 @@ function _getdata_dyndb($reqtype, $filter)
 
         try {
             $result_dyn = $dynamodb->query($params);
-            //foreach ($result['Items'] as $i) {
-            $i = $result_dyn['Items'];
+            foreach ($result_dyn['Items'] as $i) {
+            //$i = $result_dyn['Items'];
             $result = $marshaler->unmarshalItem($i);
-            dpm($result);
             //print_r($gps_data);
-            //}
+            }
             //$gps_data = $marshaler->unmarshalItem($result);
             //print_r($result);
             //dpm($result['Items']);
@@ -68,6 +69,7 @@ function _getdata_dyndb($reqtype, $filter)
     }
     if ($reqtype == 'trc') {
     }
+    //dpm($result);
     return $result;
 }
 

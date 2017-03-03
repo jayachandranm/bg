@@ -40,23 +40,18 @@ function _get_geojson($rqtype)
     $items2 = array();
     switch ($reqtype) {
         case 'trc':
-            //$result = _getdata_exdb($bg_db, $reqtype, $filter);
-            $sid_list = $filter->sidList;
-            foreach ($sid_list as $sid) {
-                $filter->sid = $sid;
-                $result = _getdata_dyndb($reqtype, $filter);
-                $row = $result;
+            $result = _getdata_exdb($bg_db, $reqtype, $filter);
+            foreach ($result as $row) {
+                //$noise = round($row->noise_data, 2);
+                $time = intval($row->timestamp);
+                $lat = floatval($row->latitude);
+                $lng = floatval($row->longitude);
                 // TODO: Or use float/double?
                 //$time = intval($row->timestamp);
                 //$noise = round($row->noise_data, 2);
                 // In DB as double.
                 //$lat = floatval($row->latitude);
                 //$lng = floatval($row->longitude);
-                $time = intval($row['timestamp']);
-                $gps_data = intval($row['gps_data']);
-                dpm($gps_data);
-                $lat = floatval($row->latitude);
-                $lng = floatval($row->longitude);
 
                 //$polygon[] = array($lat, $lng);
                 $polygon[] = array($lng, $lat);
@@ -94,14 +89,23 @@ function _get_geojson($rqtype)
             break;
 
         case 'rt': // both single and multi.
-            $result = _getdata_exdb($bg_db, $reqtype, $filter);
-            foreach ($result as $row) {
-                //$noise = round($row->noise_data, 2);
-                $time = intval($row->timestamp);
-                $lat = floatval($row->latitude);
-                $lng = floatval($row->longitude);
-                $sid = $row->sid;
+            //$result = _getdata_exdb($bg_db, $reqtype, $filter);
+            $sid_list = $filter->sidList;
+            foreach ($sid_list as $sid) {
+                $filter->sid = $sid;
+                $result = _getdata_dyndb($reqtype, $filter);
+                //dpm($result);
+                $row = $result;
+                //$time = intval($row['timestamp']);
+                $time = $row['timestamp'];
+                $gps_data = $row['gps_data'];
+                //dpm($gps_data);
+                //$lat = floatval($row->latitude);
+                //$lng = floatval($row->longitude);
                 //$title = $row->title; //$row['name']
+                $lat = $gps_data['latitude'];
+                $lng = $gps_data['longitude'];
+                //dpm($lat, $lng);
 
                 $feature = array(
                     'type' => 'Feature',
@@ -131,5 +135,4 @@ function _get_geojson($rqtype)
     //dpm($geojson);
     return drupal_json_output($geojson);
 }
-
 
