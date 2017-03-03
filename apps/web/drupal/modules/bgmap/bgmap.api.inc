@@ -30,14 +30,14 @@ function _getdata_dyndb($reqtype, $filter)
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
     //$sid_list = $filter[sidList];
-    $sid = $filter->sid;
     //$sid_list = $filter->sidList;
-    $start_time = $filter->start;
-    $end_time = $filter->end;
+    //$start_time = $filter->start;
+    //$end_time = $filter->end;
   
     $result = array();
     
     if ($reqtype == 'rt') {
+        $sid = $filter->sid;
         $params = [
             'TableName' => $tableName,
             'ProjectionExpression' => '#ts, gps_data',
@@ -68,6 +68,41 @@ function _getdata_dyndb($reqtype, $filter)
         }
     }
     if ($reqtype == 'trc') {
+        $sid = $filter->sid;
+        // Bug: https://forums.aws.amazon.com/thread.jspa?messageID=752661&#752661
+        $start_time = (string)$filter->start;
+        $end_time = (string)$filter->end;
+/*
+        $sid = '213EP2016000570';
+        $start_time =  '1480565971000';
+        $end_time = '1480567044000';
+*/
+        $params = [
+            'TableName' => $tableName,
+            'ProjectionExpression' => '#ts, gps_data',
+            'KeyConditionExpression' =>
+                'obd_dev_id = :o_id and #ts between :begin and :end',
+            'ScanIndexForward' => true,
+            'ExpressionAttributeNames' => ['#ts' => 'timestamp'],
+            'ExpressionAttributeValues' => [
+                ':o_id' => ['S' => $sid],
+                ':begin' => ['N' => $start_time],
+                ':end' => ['N' => $end_time]
+            ],
+            'ConsistentRead' => false
+        ];
+
+        try {
+            $result_dyn = $dynamodb->query($params);
+            foreach ($result_dyn['Items'] as $i) {
+            //$i = $result_dyn['Items'];
+            $result[] = $marshaler->unmarshalItem($i);
+            //print_r($gps_data);
+            }
+        } catch (DynamoDbException $e) {
+            echo "Unable to query:\n";
+            echo $e->getMessage() . "\n";
+        }
     }
     //dpm($result);
     return $result;
