@@ -9,24 +9,24 @@ use Aws\DynamoDb\Marshaler;
 function _getdata_dyndb($reqtype, $filter)
 {
 
-$sdk = new Aws\Sdk([
-    'region' => 'ap-southeast-1',
-    'version' => 'latest',
-    'credentials' => [
-        'key'    => 'mykey',
-        'secret' => 'mysecret',
-    ],
-]);
+    $sdk = new Aws\Sdk([
+        'region' => 'ap-southeast-1',
+        'version' => 'latest',
+        'credentials' => [
+            'key' => 'mykey',
+            'secret' => 'mysecret',
+        ],
+    ]);
 
 //global $sdk;
-try {
-$dynamodb = $sdk->createDynamoDb();
-} catch (DynamoDbException $e) {
-echo $e->getMessage() . "\n";
-}
+    try {
+        $dynamodb = $sdk->createDynamoDb();
+    } catch (DynamoDbException $e) {
+        echo $e->getMessage() . "\n";
+    }
 
-$marshaler = new Marshaler();
-$tableName = 'OBDTable_mmmYYYY';
+    $marshaler = new Marshaler();
+    $tableName = 'OBDTable_mmmYYYY';
     //global $dynamodb, $marshaler, $tableName;
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
