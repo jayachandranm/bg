@@ -36,7 +36,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
                         //$('#trace_map').after(html);
                         //var stop = L.DomEvent.stopPropagation;
                         L.DomEvent.disableClickPropagation(controlDiv);
-                        this.setup();
+                        //this.setup();
 
                         /*
                          L.DomEvent
@@ -62,7 +62,6 @@ var BGMAP = (function (me, $, Drupal, undefined) {
 
                     onRemove: function (map) {
                     },
-
 
                     setup: function () {
                         var self = this;
