@@ -31,6 +31,7 @@ function _get_geojson($rqtype)
     $bg_db = getExtDBConfig();
     module_load_include("api.inc", "bgmap");
     $result = _getdata_exdb($bg_db, $reqtype, $filter);
+    $result2 = _getdata_dyndb($reqtype, $filter);
     //
     date_default_timezone_set('Asia/Singapore');
     $geojson = array(

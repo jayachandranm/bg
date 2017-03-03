@@ -3,24 +3,31 @@
 require 'vendor/autoload.php';
 
 //date_default_timezone_set('UTC');
-
-$sdk = new Aws\Sdk([
-    'endpoint' => 'https://dynamodb.ap-southeast-1.amazonaws.com',
-    'region' => 'ap-southeast-1',
-    'version' => 'latest'
-]);
-
 use Aws\DynamoDb\Exception\DynamoDbException;
 use Aws\DynamoDb\Marshaler;
 
-$dynamodb = $sdk->createDynamoDb();
-$marshaler = new Marshaler();
-
-$tableName = 'OBDTable_mmmYYYY';
-
 function _getdata_dyndb($reqtype, $filter)
 {
-    global $dynamodb, $marshaler, $tableName;
+
+$sdk = new Aws\Sdk([
+    'region' => 'ap-southeast-1',
+    'version' => 'latest',
+    'credentials' => [
+        'key'    => 'mykey',
+        'secret' => 'mysecret',
+    ],
+]);
+
+//global $sdk;
+try {
+$dynamodb = $sdk->createDynamoDb();
+} catch (DynamoDbException $e) {
+echo $e->getMessage() . "\n";
+}
+
+$marshaler = new Marshaler();
+$tableName = 'OBDTable_mmmYYYY';
+    //global $dynamodb, $marshaler, $tableName;
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
     //$sid_list = $filter[sidList];
@@ -46,8 +53,14 @@ function _getdata_dyndb($reqtype, $filter)
 
         try {
             $result = $dynamodb->query($params);
-            $gps_data = $marshaler->unmarshalItem($result);
-            print_r($gps_data);
+            foreach ($result['Items'] as $i) {
+                $gps_data = $marshaler->unmarshalItem($i)['gps_data'];
+                dpm($gps_data);
+                //print_r($gps_data);
+            }
+            //$gps_data = $marshaler->unmarshalItem($result);
+            //print_r($result);
+            //dpm($result['Items']);
         } catch (DynamoDbException $e) {
             echo "Unable to query:\n";
             echo $e->getMessage() . "\n";
