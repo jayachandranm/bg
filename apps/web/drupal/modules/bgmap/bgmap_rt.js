@@ -93,8 +93,8 @@
                         //data: jsonPost,
                         data: {jsonPost: jsonPost},
                         success: function (jsonData) {
-                            //console.log('Received JSON for All Veh=', jsonData);
-                            console.log('Received JSON for RT Single=', JSON.stringify(jsonData));
+                            console.log('Received JSON for All Veh=', jsonData);
+                            //console.log('Received JSON for RT Single=', JSON.stringify(jsonData));
                             //rtGeoJsonLayer = L.geoJson().addTo(map);
                             var pop;
                             rtGeoJsonLayer = L.geoJson(jsonData, {
@@ -116,12 +116,12 @@
                                     });
                                 },
                                 style: function (feature) {
-                                    console.log(feature.properties.style);
+                                    //console.log(feature.properties.style);
                                     var style_rcvd = feature.properties.style;
                                     var sid = feature.properties.title;
                                     var custom_color = sid2vehmap[sid].color;
                                     style_rcvd.fillColor = custom_color;
-                                    console.log('New Style', style_rcvd);
+                                    //console.log('New Style', style_rcvd);
                                     return style_rcvd;
                                     //return feature.properties.style;
                                     //return {fillColor: "blue", color: "blue", fillOpacity: 0.5};
@@ -163,7 +163,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestCurrentLoc, 5000);
+                            setTimeout(requestCurrentLoc, 20000);
                         },
                         error: function (xhr, status, error) {
                             //error: function () {
