@@ -21,18 +21,19 @@ function backupTable(tablename, callback) {
   var body = data_stream.pipe(gzip);
 
   var s3obj = new aws.S3({params: {Bucket: 'abhcs-hello-ddb', Key: tablename + '/' + tablename + '-' + ts + '.gz'}});
+/*
   s3obj.upload({Body: body}).
     on('httpUploadProgress', function(evt) {
       console.log(evt);
     }).
     send(function(err, data) { console.log(err, data); callback(); });
-
+*/
   function onScan(err, data) {
     if (err) console.log(err, err.stack);
     else {
       for (var idx = 0; idx < data.Items.length; idx++) {
-        data_stream.append(JSON.stringify(data.Items[idx]));
-        data_stream.append("\n");
+        //data_stream.append(JSON.stringify(data.Items[idx]));
+        //data_stream.append("\n");
       }
 
       if (typeof data.LastEvaluatedKey != "undefined") {
