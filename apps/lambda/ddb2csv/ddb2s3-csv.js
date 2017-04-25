@@ -1,11 +1,8 @@
 var aws = require('aws-sdk');
 var stream = require('stream');
 var Dyno = require('dyno');
-//var assert = require('assert');
 var CSVTransform = require('./transform-stream');
-//var MyStream = require('json2csv-stream');
 var zlib = require('zlib');
-//var async = require('async');
 
 var dateFormat = require('dateformat');
 var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
@@ -17,25 +14,34 @@ var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
   });
 
 //exports.handler = function (event, context) {
-//function backupTable(tablename) {
 function backupTable(context) {
 //function backupTable(tablename, callback) {
-  //var data_stream = new ReadableStream();//new stream.Readable();
-  //var data_stream = new DynStream(tablename);
   var tablename = 'OBDTable_mmmYYYY';
-  var data_stream = dyno.scanStream();
+
+  //var data_stream = dyno.scanStream();
+
+  var params = {
+    //TableName: 'Table',
+    //IndexName: 'Index',
+    KeyConditionExpression: 'obd_dev_id = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
+    ExpressionAttributeValues: {
+      ':hkey': '213EP2016000570',
+      ':rkey_l': 1480565971000,
+      ':rkey_h': 1480566618000
+    },
+    ExpressionAttributeNames: {
+      '#ts': 'timestamp',
+    },
+  };
+
+  var data_stream = dyno.queryStream(params);
+
   var gzip = zlib.createGzip();
   var csv = CSVTransform();
-  //var parser = new MyStream();
 
   // body will contain the compressed content to ship to s3
-  //var body = data_stream.pipe(gzip);
   //var body = data_stream.pipe(process.stdout);
-  //var body = data_stream.pipe(csv).pipe(process.stdout);
   var body = data_stream.pipe(csv).pipe(gzip);
-  //var body = data_stream.pipe(csv);
-  //var body = data_stream.pipe(parser).pipe(process.stdout);
-  //var body = data_stream;
 
   var s3obj = new aws.S3({params: {Bucket: 'abhcs-hello-ddb', Key: tablename + '/' + tablename + '-' + ts + '.xls.gz'}});
   s3obj.upload({Body: body}).
@@ -49,29 +55,3 @@ function backupTable(context) {
 
 module.exports.backupTable = backupTable;
 
-//function backupAll(context) {
-/*
-function backupAll() {
-  dynamo.listTables({}, function(err, data) {
-    if (err) console.log(err, err.stack); // an error occurred
-    else {
-      async.each(data.TableNames, function(table, callback) {
-        console.log('Backing up ' + table);
-        backupTable(table, callback);
-      }, function(err){
-        if( err ) {
-          console.log('A table failed to process');
-        } else {
-          console.log('All tables have been processed successfully');
-        }
-        //context.done(err);
-      });
-    }
-  });
-}
-*/
-
-//backupAll();
-//backupTable('OBDTable_mmmYYYY');
-
-//module.exports.backupAll = backupAll;
