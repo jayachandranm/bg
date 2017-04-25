@@ -1,11 +1,11 @@
 var aws = require('aws-sdk');
 var stream = require('stream');
 var Dyno = require('dyno');
-var assert = require('assert');
+//var assert = require('assert');
 var CSVTransform = require('./transform-stream');
 //var MyStream = require('json2csv-stream');
 var zlib = require('zlib');
-var async = require('async');
+//var async = require('async');
 
 var dateFormat = require('dateformat');
 var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
@@ -16,10 +16,13 @@ var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
     //endpoint: 'http://localhost:4567'
   });
 
-function backupTable(tablename) {
+//exports.handler = function (event, context) {
+//function backupTable(tablename) {
+function backupTable(context) {
 //function backupTable(tablename, callback) {
   //var data_stream = new ReadableStream();//new stream.Readable();
   //var data_stream = new DynStream(tablename);
+  var tablename = 'OBDTable_mmmYYYY';
   var data_stream = dyno.scanStream();
   var gzip = zlib.createGzip();
   var csv = CSVTransform();
@@ -41,8 +44,10 @@ function backupTable(tablename) {
     }).
     send(function(err, data) { console.log(err, data); });
     //send(function(err, data) { console.log(err, data); callback(); });
+} //function backupTable
+//};
 
-}
+module.exports.backupTable = backupTable;
 
 //function backupAll(context) {
 /*
@@ -67,6 +72,6 @@ function backupAll() {
 */
 
 //backupAll();
-backupTable('OBDTable_mmmYYYY');
+//backupTable('OBDTable_mmmYYYY');
 
 //module.exports.backupAll = backupAll;
