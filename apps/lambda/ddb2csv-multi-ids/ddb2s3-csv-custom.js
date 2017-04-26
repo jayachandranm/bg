@@ -4,7 +4,7 @@ var DynStream = require('./dyn-stream');
 var CSVTransform = require('./transform-stream');
 //var MyStream = require('json2csv-stream');
 var zlib = require('zlib');
-var async = require('async');
+//var async = require('async');
 
 var dateFormat = require('dateformat');
 var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
@@ -13,6 +13,7 @@ function backupTable(tablename) {
 //function backupTable(tablename, callback) {
   //var data_stream = new ReadableStream();//new stream.Readable();
   //var data_stream = new DynStream(tablename);
+  console.log("backup..");
   var data_stream = DynStream(tablename);
   var gzip = zlib.createGzip();
   var csv = CSVTransform();
@@ -21,12 +22,13 @@ function backupTable(tablename) {
   // body will contain the compressed content to ship to s3
   //var body = data_stream.pipe(gzip);
   //var body = data_stream.pipe(process.stdout);
-  //var body = data_stream.pipe(csv).pipe(process.stdout);
-  var body = data_stream.pipe(csv).pipe(gzip);
+  var body = data_stream.pipe(csv).pipe(process.stdout);
+  //var body = data_stream.pipe(csv).pipe(gzip);
   //var body = data_stream.pipe(csv);
   //var body = data_stream.pipe(parser).pipe(process.stdout);
   //var body = data_stream;
 
+/*
   var s3obj = new aws.S3({params: {Bucket: 'abhcs-hello-ddb', Key: tablename + '/' + tablename + '-' + ts + '.xls.gz'}});
   s3obj.upload({Body: body}).
     on('httpUploadProgress', function(evt) {
@@ -35,8 +37,8 @@ function backupTable(tablename) {
     send(function(err, data) { console.log(err, data); });
     //send(function(err, data) { console.log(err, data); callback(); });
 
+*/
 }
-
 //function backupAll(context) {
 /*
 function backupAll() {
