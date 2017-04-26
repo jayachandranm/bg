@@ -37,10 +37,12 @@ DynStream.prototype._read = function read() {
   dynamo.describeTable({TableName: this._tablename}, function(err, data) {
     if (err) console.log(err, err.stack);
     else {
-      console.log(data);
+      //console.log(data);
       table = data.Table
       // Write table metadata to first line
       //self.push(table);
+      var title = { gps_data: { latitude: 'LATITUDE', longitude: 'LONGITUDE' }, obd_dev_id: 'DEV_ID', timestamp: 'TIME' }
+      self.push(title);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
 
@@ -61,7 +63,7 @@ DynStream.prototype._read = function read() {
       };
       
       function multiQuery() {
-        console.log("Multi query..", self._count, self._sidSize, "===============");
+        //console.log("Multi query..", self._count, self._sidSize, "===============");
         if(self._count < self._sidSize) {
           params.ExpressionAttributeValues = { ':hkey': sids[self._count], ':rkey_l': 1480565971000, ':rkey_h': 1480566618000 };
           self._query(params, function(err){
@@ -70,7 +72,7 @@ DynStream.prototype._read = function read() {
           });
         }
         else {
-          console.log("ENDED");
+          //console.log("ENDED");
           self.ended = true;
           self.push(null);
         }
