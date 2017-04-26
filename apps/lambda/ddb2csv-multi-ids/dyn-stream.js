@@ -24,7 +24,7 @@ function DynStream(tablename, options) {
 util.inherits(DynStream, Readable);
 
 DynStream.prototype._read = function read() {  
-  console.log("******* _ read() ********");
+  //console.log("******* _ read() ********");
   var self = this;
   if (this.connecting || this.ended) return;
 
@@ -44,6 +44,8 @@ DynStream.prototype._read = function read() {
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
 
+      //self._scan(params);
+
       var params = {
         TableName: self._tablename,
         //IndexName: 'Index',
@@ -58,20 +60,19 @@ DynStream.prototype._read = function read() {
         },
       };
       
-      //self._scan(params);
       function multiQuery() {
-        console.log("Multi query..", self._count, self._sidSize);
+        console.log("Multi query..", self._count, self._sidSize, "===============");
         if(self._count < self._sidSize) {
           params.ExpressionAttributeValues = { ':hkey': sids[self._count], ':rkey_l': 1480565971000, ':rkey_h': 1480566618000 };
-          self._query(params);
-          self._count++;
-          if(self._count < self._sidSize) {
+          self._query(params, function(err){
+            self._count++;
             setTimeout(multiQuery, 1000);
-          }
-          else {
-            self.ended = true;
-            //self.push(null);
-          }
+          });
+        }
+        else {
+          console.log("ENDED");
+          self.ended = true;
+          self.push(null);
         }
       }
       multiQuery();
@@ -79,17 +80,22 @@ DynStream.prototype._read = function read() {
   });
 };
 
-DynStream.prototype._query = function (params) {
+DynStream.prototype._query = function (params, callback) {
   var self = this;
   // start streaminf table data
   dynDoc.query(params, function (err, data) {
-    if (err) console.log(err, err.stack);
+    if (err) {
+      console.log(err, err.stack);
+      callback(err);
+    }
     else {
       for (var idx = 0; idx < data.Items.length; idx++) {
         self.push(data.Items[idx]);
         //self._count++;
       }
-
+      callback();
+    }
+     
 /*
       if (typeof data.LastEvaluatedKey != "undefined") {
         params.ExclusiveStartKey = data.LastEvaluatedKey;
@@ -101,11 +107,6 @@ DynStream.prototype._query = function (params) {
         self.push(null);
       }
 */
-      if(self.ended) {
-        console.log("ENDED");
-        self.push(null);
-      }
-    }
   });
 };
 
