@@ -11,6 +11,7 @@ var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
 function backupTable(tablename) {
 //function backupTable(tablename, callback) {
   //console.log("backup..");
+  var tablename = 'OBDTable_mmmYYYY';
   var data_stream = DynStream(tablename);
   var gzip = zlib.createGzip();
   var csv = CSVTransform();
@@ -29,5 +30,5 @@ function backupTable(tablename) {
     //send(function(err, data) { console.log(err, data); callback(); });
 }
 
-backupTable('OBDTable_mmmYYYY');
-//module.exports.backupAll = backupAll;
+//backupTable('OBDTable_mmmYYYY');
+module.exports.backupTable = backupTable;
