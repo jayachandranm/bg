@@ -47,6 +47,12 @@ DynStream.prototype._read = function read() {
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
 
       //self._scan(params);
+      var d = new Date(); 
+      d.setHours(0,0,0,0);
+      var end_t = d.getTime();
+      d.setDate(d.getDate() - 1);
+      var start_t = d.getTime();
+      //console.log("Start/end times..", start_t, end_t);
 
       var params = {
         TableName: self._tablename,
