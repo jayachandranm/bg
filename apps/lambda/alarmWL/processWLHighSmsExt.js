@@ -15,13 +15,36 @@ exports.handler = (event, context, callback) => {
     var eventText = JSON.stringify(event, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
     console.log("Received event:", eventText);
+    
+    var currWL = event.wL;
+    var lastWL = event.history.wL_1;
 
-    var devState = getShadowState(config);
-    // May have to use history by accessing Shadow, or have a period of silence after an alert.
-    var alertCondition = true;
+    // May have to use history by accessing Shadow.
+    var alertLevel = 0;
+    if( (currWL > 100) && (lastWL <= 100)) {
+	    // critical.
+	    alertLevel = 5;
+    }
+    else if((currWL > 90) && (lastWL <= 90) ) {
+		alertLevel = 4;
+	}
+    else if((currWL > 75) && (lastWL <= 75) ) {
+		alertLevel = 3;
+	}
+    else if((currWL > 60) && (lastWL <= 60) ) {
+		alertLevel = 2;
+	}
+    else if((currWL > 50) && (lastWL <= 50) ) {
+		alertLevel = 1;
+	}
 
-    if (alertCondition) {
-        var messageText = msgSMS(event, devState);
+    if (alertLevel) {
+        // Make sure that thing name is same as station id.
+        //config.thingName = event.station_id;
+        config.thingName = event.sn;
+        var devState = getShadowState(config);
+	    //
+        var messageText = composeSMS(event, alertLevel, devState);
 
         // Create an SNS object
         var sns = new AWS.SNS();
@@ -34,18 +57,21 @@ exports.handler = (event, context, callback) => {
             TopicArn: "arn:aws:sns:ap-southeast-1:658774400218:MyIoTTestTopic"
             //NextToken: 'STRING_VALUE'
         };
-        var subscriberList;
+        var subscriberList = new Array();
         sns.listSubscriptionsByTopic(params2, function (err, data) {
             if (err)
                 console.log(err, err.stack); // an error occurred
             else {
                 console.log(data.Subscriptions[0].Endpoint);           // successful response
                 console.log(data.Subscriptions[1].Endpoint);
+				for(int i=0; i<data.Subscriptions.length; i++) {
+					subscriberList.push(data.Subscriptions[i].Endpoint)
+				}
             }
         });
         // TODO: Use the subscriber list to send SMS through external vendor.
 
-        sendMsg(messageText, subsList);
+        sendMsg(messageText, subscriberList);
 
     } // if
 
@@ -90,11 +116,23 @@ exports.handler = (event, context, callback) => {
     }
 
     function sendMsg(msg, subsList) {
+		var user = 'TODO';
+		var pass = 'TODO';
+		var sms_from = 'BluGraph';
+        // Create a comma separared list of numbers. (max=10?)
+		var phoneList = document.write(subsList.join(", "));
+		//
+		var sms_server = 'gateway80.onewaysms.sg';
+        var path1 =  "/api2.aspx?apiusername=" + user + "&apipassword=" + pass;
+		var path2= "&message=" + encodeURI(msg)) + "&languagetype=1";
+
+		/*
         var options = {
             host: 'requestb.in',
             path: '/rfyb1wrf',
             method: 'POST'
         };
+		*/
 
         callback = function (response) {
             var str = '';
@@ -107,16 +145,27 @@ exports.handler = (event, context, callback) => {
             //the whole response has been recieved, so we just print it out here
             response.on('end', function () {
                 console.log(str);
+				// TODO: If error, write to S3?
             });
         }
 
-        var req = http.request(options, callback);
+		for(i=0; i<subsList.length; i++) {
+		  var path3= "&senderid=" + encodeURI(sms_from) . "&mobileno=" + encodeURI(subsList[i]); 
+          var options = {
+            host: sms_server,
+            path: path1 + path2 + path3,
+            //method: 'POST'
+          };
+          var req = http.request(options, callback);
+		}
+		/*
         req.write("hello world!");
         req.end();
+		*/
     }
 
     //
-    function msgSMS(event) {
+    function composeSMS(event, alertLevel, devState) {
         // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
         var messageText = "Received  " + event.timestamp + " message from button ID: " + event.serialNumber;
         // Write the string to the console
