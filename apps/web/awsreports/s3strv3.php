@@ -22,8 +22,22 @@ $key = 'OBDTable_mmmYYYY/OBDTable_mmmYYYY-04282017-053030.xls.gz';
 $bucket = 'abhcs-hello-ddb';
 
 // Download the body of the "key" object in the "bucket" bucket
-$link = 's3://'.$bucket.'/'.$key;
-$data = file_get_contents($link);
+$file = 's3://'.$bucket.'/'.$key;
+//$data = file_get_contents($file);
+
+if (file_exists($file)) {
+    header('Content-Description: File Transfer');
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.basename($file).'"');
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    header('Content-Length: ' . filesize($file));
+    readfile($file);
+    exit;
+}
+
+//readfile($file);
 
 /*
 // Open a stream in read-only mode
