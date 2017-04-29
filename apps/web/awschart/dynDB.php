@@ -50,15 +50,21 @@ function _getdata_dyndb($reqtype, $filter)
         ];
 
         try {
+          $result = Array();
+          while(true) {
             $result_dyn = $dynamodb->query($params);
             foreach ($result_dyn['Items'] as $i) {
-            //$i = $result_dyn['Items'];
-            $result = $marshaler->unmarshalItem($i);
-            //print_r($gps_data);
+                //$i = $result_dyn['Items'];
+                $result = $marshaler->unmarshalItem($i);
             }
+            if (isset($result_dyn['LastEvaluatedKey'])) {
+                $params['ExclusiveStartKey'] = $result_dyn['LastEvaluatedKey'];
+            } else {
+                break;
+            }   
             //$gps_data = $marshaler->unmarshalItem($result);
             //print_r($result);
-            //dpm($result['Items']);
+          }
         } catch (DynamoDbException $e) {
             echo "Unable to query:\n";
             echo $e->getMessage() . "\n";
@@ -89,6 +95,31 @@ function _getdata_dyndb($reqtype, $filter)
             'ConsistentRead' => false
         ];
 
+        $result = Array();
+        try {
+          while(true) {
+            $result_dyn = $dynamodb->query($params);
+            foreach ($result_dyn['Items'] as $i) {
+                //$i = $result_dyn['Items'];
+                $result[] = $marshaler->unmarshalItem($i);
+            }
+            if (isset($result_dyn['LastEvaluatedKey'])) {
+                //print_r("Got last evaluated key");
+                $params['ExclusiveStartKey'] = $result_dyn['LastEvaluatedKey'];
+            } else {
+                //print_r($result);
+                //print_r("All done!");
+                break;
+            }   
+            //$gps_data = $marshaler->unmarshalItem($result);
+            //print_r($result);
+          }
+        } catch (DynamoDbException $e) {
+            echo "Unable to query:\n";
+            echo $e->getMessage() . "\n";
+        }
+
+/*
         try {
             $result_dyn = $dynamodb->query($params);
             foreach ($result_dyn['Items'] as $i) {
@@ -100,6 +131,7 @@ function _getdata_dyndb($reqtype, $filter)
             echo "Unable to query:\n";
             echo $e->getMessage() . "\n";
         }
+*/
     }
     //dpm($result);
     return $result;

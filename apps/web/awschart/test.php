@@ -11,6 +11,7 @@ include 'dynDB.php';
             $filter->sid = 'WL1001'; 
             $filter->end = round(microtime(true) *1000);
             $filter->start = $filter->end - (3600*24*1000);
+            //print_r($filter);
             $result = _getdata_dyndb($reqtype, $filter);
             foreach ($result as $row) {
                 //dpm($row);
