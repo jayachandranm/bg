@@ -95,7 +95,7 @@ function _getdata_dyndb($reqtype, $filter)
             'KeyConditionExpression' =>
                 'sid = :o_id and #ts between :begin and :end',
             'ScanIndexForward' => true,
-            'FilterExpression' => 'wl = :wl_1',
+            'FilterExpression' => 'attribute_not_exists(md) and (wl = :wl_1)',
             'ExpressionAttributeNames' => ['#ts' => 'ts'],
             'ExpressionAttributeValues' => [
                 ':o_id' => ['S' => $sid],
