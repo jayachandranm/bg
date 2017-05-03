@@ -3,7 +3,7 @@ require 'vendor/autoload.php';
 
 $client = new Aws\Sns\SnsClient([
     'region'  => 'ap-southeast-1',
-    'version' => '2006-03-01',
+    'version' => 'latest',
 ]);
 
 use Aws\Sns\SnsClient;
