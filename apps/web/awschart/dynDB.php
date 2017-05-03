@@ -75,6 +75,15 @@ function _getdata_dyndb($reqtype, $filter)
         // Bug: https://forums.aws.amazon.com/thread.jspa?messageID=752661&#752661
         $start_time = (string)$filter->start;
         $end_time = (string)$filter->end;
+        $wl = '89';
+
+/*
+        $wl_1 = $marshaler->marshalJson('
+          {
+            ":wl_1":85,
+           }
+        ');
+*/
 /*
         $sid = '213EP2016000570';
         $start_time =  '1480565971000';
@@ -86,11 +95,13 @@ function _getdata_dyndb($reqtype, $filter)
             'KeyConditionExpression' =>
                 'sid = :o_id and #ts between :begin and :end',
             'ScanIndexForward' => true,
+            'FilterExpression' => 'wl = :wl_1',
             'ExpressionAttributeNames' => ['#ts' => 'ts'],
             'ExpressionAttributeValues' => [
                 ':o_id' => ['S' => $sid],
                 ':begin' => ['N' => $start_time],
-                ':end' => ['N' => $end_time]
+                ':end' => ['N' => $end_time],
+                ':wl_1' => ['N' => $wl]
             ],
             'ConsistentRead' => false
         ];
