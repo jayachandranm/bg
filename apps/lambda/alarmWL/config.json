@@ -1,0 +1,8 @@
+{
+    "thingName": "mything",
+    "endpointAddress": "iotEP",
+    "snsTopicArn": "snsARN",
+    "smsUser": "myuser",
+    "smsPass": "mypass"
+}
+
