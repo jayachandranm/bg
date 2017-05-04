@@ -106,19 +106,22 @@ function sendMsg(msg, subsList) {
     var path1 = "/api2.aspx?apiusername=" + user + "&apipassword=" + pass;
     var path2 = "&message=" + encodeURI(msg) + "&languagetype=1";
 
+    var subsCsvList = '';
     for (i = 0; i < subsList.length; i++) {
-        var path3 = "&senderid=" + encodeURI(sms_from)
-            + "&mobileno=" + encodeURI(subsList[i]);
-	//
-        console.log(path1 + path2 + path3);
-        var options = {
-            host: sms_server,
-            path: path1 + path2 + path3,
-            //method: 'POST'
-        };
-        //var req = http.request(options, callback);
-        var req = http.get(options, callback);
+        subsCsvList = subsCsvList + "," + subsList[i];
     }
+
+    var path3 = "&senderid=" + encodeURI(sms_from)
+        + "&mobileno=" + encodeURI(subsCsvList);
+    //
+    console.log(path1 + path2 + path3);
+    var options = {
+        host: sms_server,
+        path: path1 + path2 + path3,
+        //method: 'POST'
+    };
+    //var req = http.request(options, callback);
+    var req = http.get(options, callback);
     /*
      req.write("hello world!");
      req.end();
