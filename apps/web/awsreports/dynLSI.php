@@ -75,15 +75,7 @@ function _getdata_dyndb($reqtype, $filter)
         // Bug: https://forums.aws.amazon.com/thread.jspa?messageID=752661&#752661
         $start_time = (string)$filter->start;
         $end_time = (string)$filter->end;
-        $wl = '89';
-
-/*
-        $wl_1 = $marshaler->marshalJson('
-          {
-            ":wl_1":85,
-           }
-        ');
-*/
+        $wl = 85;
 /*
         $sid = '213EP2016000570';
         $start_time =  '1480565971000';
@@ -95,7 +87,7 @@ function _getdata_dyndb($reqtype, $filter)
             'KeyConditionExpression' =>
                 'sid = :o_id and #ts between :begin and :end',
             'ScanIndexForward' => true,
-            'FilterExpression' => 'attribute_not_exists(md) and (wl = :wl_1)',
+            'FilterExpression' => 'wl = :wl_1',
             'ExpressionAttributeNames' => ['#ts' => 'ts'],
             'ExpressionAttributeValues' => [
                 ':o_id' => ['S' => $sid],
@@ -143,6 +135,56 @@ function _getdata_dyndb($reqtype, $filter)
             echo $e->getMessage() . "\n";
         }
 */
+    }
+    if ($reqtype == 'mode') {
+        $sid = $filter->sid;
+        // Bug: https://forums.aws.amazon.com/thread.jspa?messageID=752661&#752661
+        $start_time = (string)$filter->start;
+        $end_time = (string)$filter->end;
+        $wl = 85;
+        $mode_val = 2;
+        $modeIndex = 'modeIndex';
+        $params = [
+            'TableName' => $tableName,
+            'IndexName': $modeIndex,
+            'ProjectionExpression' => '#ts, wl, md, sid',
+            'KeyConditionExpression' =>
+                'sid = :o_id and md = :md_val',
+            'ScanIndexForward' => true,
+            'FilterExpression' => 'wl = :wl_1',
+            'ExpressionAttributeNames' => ['#ts' => 'ts'],
+            'ExpressionAttributeValues' => [
+                ':o_id' => ['S' => $sid],
+                ':begin' => ['N' => $start_time],
+                ':end' => ['N' => $end_time],
+                ':md_val' => ['N' => $mode_val]
+            ],
+            'ConsistentRead' => false
+        ];
+
+        $result = Array();
+        try {
+          while(true) {
+            $result_dyn = $dynamodb->query($params);
+            foreach ($result_dyn['Items'] as $i) {
+                //$i = $result_dyn['Items'];
+                $result[] = $marshaler->unmarshalItem($i);
+            }
+            if (isset($result_dyn['LastEvaluatedKey'])) {
+                //print_r("Got last evaluated key");
+                $params['ExclusiveStartKey'] = $result_dyn['LastEvaluatedKey'];
+            } else {
+                //print_r($result);
+                //print_r("All done!");
+                break;
+            }   
+            //$gps_data = $marshaler->unmarshalItem($result);
+            //print_r($result);
+          }
+        } catch (DynamoDbException $e) {
+            echo "Unable to query:\n";
+            echo $e->getMessage() . "\n";
+        }
     }
     //dpm($result);
     return $result;
