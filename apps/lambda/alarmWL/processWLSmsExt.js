@@ -85,36 +85,45 @@ function processWL(msg, context) {
                         for (var i = 0; i < data.Subscriptions.length; i++) {
                             subscriberList.push(data.Subscriptions[i].Endpoint)
                         }
+                        // Use the subscriber list to send SMS through external vendor.
+                        sendMsg(messageText, subscriberList);
                     }
                 });
             }
         });
-        // TODO: Use the subscriber list to send SMS through external vendor.
-        //sendMsg(messageText, subscriberList);
     } // if
 //
 }
 
 function sendMsg(msg, subsList) {
-    var user = 'TODO';
-    var pass = 'TODO';
-    var sms_from = 'BluGraph';
+    var user = config.smsUser;
+    var pass = config.smsPass;
+    var sms_from = config.smsFrom;
     // Create a comma separared list of numbers. (max=10?)
-    var phoneList = document.write(subsList.join(", "));
+    //var phoneList = document.write(subsList.join(", "));
     //
     var sms_server = 'gateway80.onewaysms.sg';
     var path1 = "/api2.aspx?apiusername=" + user + "&apipassword=" + pass;
     var path2 = "&message=" + encodeURI(msg) + "&languagetype=1";
 
+    for (i = 0; i < subsList.length; i++) {
+        var path3 = "&senderid=" + encodeURI(sms_from)
+            + "&mobileno=" + encodeURI(subsList[i]);
+	//
+        console.log(path1 + path2 + path3);
+        var options = {
+            host: sms_server,
+            path: path1 + path2 + path3,
+            //method: 'POST'
+        };
+        //var req = http.request(options, callback);
+        var req = http.get(options, callback);
+    }
     /*
-     var options = {
-     host: 'requestb.in',
-     path: '/rfyb1wrf',
-     method: 'POST'
-     };
+     req.write("hello world!");
+     req.end();
      */
-
-    callback = function (response) {
+    var callback = function (response) {
         var str = '';
 
         //another chunk of data has been recieved, so append it to `str`
@@ -128,20 +137,5 @@ function sendMsg(msg, subsList) {
             // TODO: If error, write to S3?
         });
     }
-
-    for (i = 0; i < subsList.length; i++) {
-        var path3 = "&senderid=" + encodeURI(sms_from)
-            + "&mobileno=" + encodeURI(subsList[i]);
-        var options = {
-            host: sms_server,
-            path: path1 + path2 + path3,
-            //method: 'POST'
-        };
-        var req = http.request(options, callback);
-    }
-    /*
-     req.write("hello world!");
-     req.end();
-     */
 }
 
