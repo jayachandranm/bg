@@ -15,36 +15,30 @@ exports.handler = (event, context, callback) => {
     var eventText = JSON.stringify(event, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
     console.log("Received event:", eventText);
-    
-    var currWL = event.wL;
-    var lastWL = event.history.wL_1;
+
+    var currWL = event.wl;
+    var lastWL = event.history.wl_1;
+
+    var alertLevel = 0;
+    var wlRise = true;
+    if (currWL > lastWL) {
+        wlRise = true;
+        alertLevel = getAlertlevelRise();
+    }
+
+    if (currWL < lastWL) {
+        wlRise = false;
+        alertLevel = getAlertlevelFall();
+    }
 
     // May have to use history by accessing Shadow.
-    var alertLevel = 0;
-    if( (currWL > 100) && (lastWL <= 100)) {
-	    // critical.
-	    alertLevel = 5;
-    }
-    else if((currWL > 90) && (lastWL <= 90) ) {
-		alertLevel = 4;
-	}
-    else if((currWL > 75) && (lastWL <= 75) ) {
-		alertLevel = 3;
-	}
-    else if((currWL > 60) && (lastWL <= 60) ) {
-		alertLevel = 2;
-	}
-    else if((currWL > 50) && (lastWL <= 50) ) {
-		alertLevel = 1;
-	}
-
     if (alertLevel) {
         // Make sure that thing name is same as station id.
         //config.thingName = event.station_id;
         config.thingName = event.sn;
         var devState = getShadowState(config);
-	    //
-        var messageText = composeSMS(event, alertLevel, devState);
+        //
+        var messageText = composeSMS(event, alertLevel, wlRise, devState);
 
         // Create an SNS object
         var sns = new AWS.SNS();
@@ -64,9 +58,10 @@ exports.handler = (event, context, callback) => {
             else {
                 console.log(data.Subscriptions[0].Endpoint);           // successful response
                 console.log(data.Subscriptions[1].Endpoint);
-				for(int i=0; i<data.Subscriptions.length; i++) {
-					subscriberList.push(data.Subscriptions[i].Endpoint)
-				}
+                for (var i = 0; i < data.Subscriptions.length; i++ )
+                {
+                    subscriberList.push(data.Subscriptions[i].Endpoint)
+                }
             }
         });
         // TODO: Use the subscriber list to send SMS through external vendor.
@@ -74,6 +69,52 @@ exports.handler = (event, context, callback) => {
         sendMsg(messageText, subscriberList);
 
     } // if
+
+    function getAlerlevelRise() {
+        var alertLevel = 0;
+        if ((currWL > 110) && (lastWL <= 110)) {
+            // critical.
+            alertLevel = 5;
+        }
+        if ((currWL > 100) && (lastWL <= 100)) {
+            alertLevel = 4;
+        }
+        else if ((currWL > 90) && (lastWL <= 90)) {
+            alertLevel = 3;
+        }
+        else if ((currWL > 75) && (lastWL <= 75)) {
+            alertLevel = 2;
+        }
+        else if ((currWL > 50) && (lastWL <= 50)) {
+            alertLevel = 1;
+        }
+
+        return alertLevel;
+
+    }
+
+    function getAlerlevelFall() {
+        var alertLevel = 0;
+        if ((currWL < 50) && (lastWL >= 50)) {
+            // Special value, to indicate change to normal level.
+            alertLevel = 10;
+        }
+        if ((currWL < 75) && (lastWL >= 75)) {
+            alertLevel = 1;
+        }
+        else if ((currWL < 90) && (lastWL >= 90)) {
+            alertLevel = 2;
+        }
+        else if ((currWL < 100) && (lastWL >= 100)) {
+            alertLevel = 3;
+        }
+        else if ((currWL < 110) && (lastWL >= 110)) {
+            alertLevel = 4;
+        }
+
+        return alertLevel;
+
+    }
 
     function getShadowState(config) {
         var currDevState;
@@ -116,23 +157,23 @@ exports.handler = (event, context, callback) => {
     }
 
     function sendMsg(msg, subsList) {
-		var user = 'TODO';
-		var pass = 'TODO';
-		var sms_from = 'BluGraph';
+        var user = 'TODO';
+        var pass = 'TODO';
+        var sms_from = 'BluGraph';
         // Create a comma separared list of numbers. (max=10?)
-		var phoneList = document.write(subsList.join(", "));
-		//
-		var sms_server = 'gateway80.onewaysms.sg';
-        var path1 =  "/api2.aspx?apiusername=" + user + "&apipassword=" + pass;
-		var path2= "&message=" + encodeURI(msg)) + "&languagetype=1";
+        var phoneList = document.write(subsList.join(", "));
+        //
+        var sms_server = 'gateway80.onewaysms.sg';
+        var path1 = "/api2.aspx?apiusername=" + user + "&apipassword=" + pass;
+        var path2 = "&message=" + encodeURI(msg) + "&languagetype=1";
 
-		/*
-        var options = {
-            host: 'requestb.in',
-            path: '/rfyb1wrf',
-            method: 'POST'
-        };
-		*/
+        /*
+         var options = {
+         host: 'requestb.in',
+         path: '/rfyb1wrf',
+         method: 'POST'
+         };
+         */
 
         callback = function (response) {
             var str = '';
@@ -145,29 +186,33 @@ exports.handler = (event, context, callback) => {
             //the whole response has been recieved, so we just print it out here
             response.on('end', function () {
                 console.log(str);
-				// TODO: If error, write to S3?
+                // TODO: If error, write to S3?
             });
         }
 
-		for(i=0; i<subsList.length; i++) {
-		  var path3= "&senderid=" + encodeURI(sms_from) . "&mobileno=" + encodeURI(subsList[i]); 
-          var options = {
-            host: sms_server,
-            path: path1 + path2 + path3,
-            //method: 'POST'
-          };
-          var req = http.request(options, callback);
-		}
-		/*
-        req.write("hello world!");
-        req.end();
-		*/
+        for (i = 0; i < subsList.length; i++) {
+            var path3 = "&senderid=" + encodeURI(sms_from).
+            "&mobileno=" + encodeURI(subsList[i]);
+            var options = {
+                host: sms_server,
+                path: path1 + path2 + path3,
+                //method: 'POST'
+            };
+            var req = http.request(options, callback);
+        }
+        /*
+         req.write("hello world!");
+         req.end();
+         */
     }
 
-    //
-    function composeSMS(event, alertLevel, devState) {
+//
+    function composeSMS(event, alertLevel, wlRise, devState) {
         // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
-        var messageText = "Received  " + event.timestamp + " message from button ID: " + event.serialNumber;
+        if (!wlRise && alertLevel == 10) {
+            // From Level 1 to normal.
+        }
+        var messageText = "Received  " + event.ts + " message from button ID: " + event.sid;
         // Write the string to the console
         console.log("Message to send: " + messageText);
         return messageText;
