@@ -2,14 +2,16 @@
 var AWS = require("aws-sdk");
 var http = require('http');
 
+//module.exports.getAlertlevelRise = getAlertlevelRise;
+
 module.exports = {
-	getAlerlevelRise, 
-	getAlerlevelFall, 
+	getAlertlevelRise, 
+	getAlertlevelFall, 
 	getShadowState, 
 	composeSMS
-}
+};
 
-    function getAlerlevelRise() {
+    function getAlertlevelRise(currWL, lastWL) {
         var alertLevel = 0;
         if ((currWL > 110) && (lastWL <= 110)) {
             // critical.
@@ -32,7 +34,7 @@ module.exports = {
 
     }
 
-    function getAlerlevelFall() {
+    function getAlertlevelFall(currWL, lastWL) {
         var alertLevel = 0;
         if ((currWL < 50) && (lastWL >= 50)) {
             // Special value, to indicate change to normal level.
@@ -55,13 +57,20 @@ module.exports = {
 
     }
 
-    function getShadowState(config) {
+    function getShadowState(iotdata, config) {
         var currDevState;
+        console.log("Get Shadow for device: ", config);
         iotdata.getThingShadow({
-            thingName: config.thingName
+            thingName: 'hello'
         }, function (err, data) {
             if (err) {
-                context.fail(err);
+                //context.fail(err);
+                // TODO:
+                console.log("Error in getting Shadow.", err);
+                //console.log("Request:");
+                //console.log(this.request.httpRequest);
+                //console.log("Response:");
+                //console.log(this.httpResponse);
             } else {
                 console.log(data);
                 var jsonPayload = JSON.parse(data.payload);
@@ -73,7 +82,7 @@ module.exports = {
         return currDevState;
     }
 
-    function setShadowState(config) {
+    function setShadowState(iotdata, config) {
         var newStatus = "5 battery rd";
         var update = {
             "state": {
@@ -87,24 +96,25 @@ module.exports = {
             thingName: config.thingName
         }, function (err, data) {
             if (err) {
-                context.fail(err);
+                //context.fail(err);
+                console.log("Error in setting Shadow.")
             } else {
                 console.log(data);
-                context.succeed('newStatus: ' + newStatus);
+                //context.succeed('newStatus: ' + newStatus);
+                console.log("Setting Shadow succeeded.")
             }
         });
     }
 
 
 //
-    function composeSMS(event, alertLevel, wlRise, devState) {
+    function composeSMS(msg, alertLevel, wlRise, devState) {
         // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
         if (!wlRise && alertLevel == 10) {
             // From Level 1 to normal.
         }
-        var messageText = "Received  " + event.ts + " message from button ID: " + event.sid;
+        var messageText = "Received  " + msg.ts + " message from button ID: " + msg.sid;
         // Write the string to the console
         console.log("Message to send: " + messageText);
         return messageText;
     }
-};

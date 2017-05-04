@@ -4,47 +4,55 @@ var AWS = require("aws-sdk");
 var http = require('http');
 var utils = require('./wlAlertUtils');
 var config = require('./config.json');
+var mqttmsg = require('./mqtt.json');
 
-var iotdata = new AWS.IotData({endpoint: config.endpointAddress});
+var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
+//var iotdata = new AWS.IotData({endpoint: config.endpointAddress});
 
 module.exports.processWL = processWL;
+processWL(mqttmsg, null);
 
 // Set up the code to call when the Lambda function is invoked
 //exports.handler = (event, context, callback) => {
-var processWL = function(event, context) {
+function processWL(msg, context) {
     // Load the message passed into the Lambda function into a JSON object
-    var eventText = JSON.stringify(event, null, 2);
+    var eventText = JSON.stringify(msg, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
     console.log("Received event:", eventText);
 
-    var currWL = event.wl;
-    var lastWL = event.history.wl_1;
+    var currWL = msg.wl;
+    var lastWL = msg.history.wl_1;
+    config.thingName = msg.sid;
+    var sid = msg.sid;
 
     var alertLevel = 0;
     var wlRise = true;
     if (currWL > lastWL) {
         wlRise = true;
-        alertLevel = utils.getAlertlevelRise();
+        alertLevel = utils.getAlertlevelRise(currWL, lastWL);
+        console.log("Level Rising ->" , alertLevel);
     }
 
     if (currWL < lastWL) {
         wlRise = false;
-        alertLevel = utils.getAlertlevelFall();
+        alertLevel = utils.getAlertlevelFall(currWL, lastWL);
+        console.log("Level Falling ->" , alertLevel);
     }
 
     // May have to use history by accessing Shadow.
     if (alertLevel) {
         // Make sure that thing name is same as station id.
-        //config.thingName = event.station_id;
-        config.thingName = event.sid;
-        var devState = utils.getShadowState(config);
+        // TODO : test
+        config.thingName = "hello_mpro";
+        var devState = utils.getShadowState(iotdata, config);
         //
-        var messageText = utils.composeSMS(event, alertLevel, wlRise, devState);
+/*
+        var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
 
         // Create an SNS object
-        var sns = new AWS.SNS();
+        var sns = new AWS.SNS({region: 'ap-southeast-1'});
 
-        var topic = config.snsTopicArn + ":" + event.station_id;
+        var topic = config.snsTopicArn + ":" + sid;
         // Populate the parameters for the publish operation
         // - Message : the text of the message to send
         // - TopicArn : the ARN of the Amazon SNS topic to which you want to publish 
@@ -65,9 +73,10 @@ var processWL = function(event, context) {
                 }
             }
         });
+*/
         // TODO: Use the subscriber list to send SMS through external vendor.
 
-        sendMsg(messageText, subscriberList);
+        //sendMsg(messageText, subscriberList);
 
     } // if
 //
@@ -109,8 +118,8 @@ var processWL = function(event, context) {
         }
 
         for (i = 0; i < subsList.length; i++) {
-            var path3 = "&senderid=" + encodeURI(sms_from).
-            "&mobileno=" + encodeURI(subsList[i]);
+            var path3 = "&senderid=" + encodeURI(sms_from) 
+                       + "&mobileno=" + encodeURI(subsList[i]);
             var options = {
                 host: sms_server,
                 path: path1 + path2 + path3,
