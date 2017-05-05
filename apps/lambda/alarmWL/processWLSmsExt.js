@@ -27,7 +27,16 @@ function processWL(msg, context) {
     var lastWL = msg.history.wl_1;
     config.thingName = msg.sid;
     var sid = msg.sid;
-
+    // If md does not exist in the message, this lambda will not be called.
+    // If md is set and md =0, this lambda may be called.
+/*
+    if(typeof msg.md !== 'undefined' && msg.md !== null) {
+        if(msg.md !== 0 ) {
+            // Do send alerts, if md is non-zero.
+	    return;
+        }
+    }  
+*/
     var alertLevel = 0;
     var wlRise = true;
     if (currWL > lastWL) {
