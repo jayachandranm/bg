@@ -1,6 +1,7 @@
 // Load the AWS SDK
 var AWS = require("aws-sdk");
 var http = require('http');
+var moment = require('moment');
 
 //module.exports.getAlertlevelRise = getAlertlevelRise;
 
@@ -11,46 +12,51 @@ module.exports = {
     composeSMS
 };
 
-function getAlertlevelRise(currWL, lastWL) {
+function getAlertlevelRise(currWL, lastWL, config) {
     var alertLevel = 0;
-    if ((currWL > 110) && (lastWL <= 110)) {
+    if ((currWL >= config.riseThr_cr) && (lastWL < config.riseThr_cr)) {
         // critical.
-        alertLevel = 5;
+        alertLevel = 200;
     }
-    if ((currWL > 100) && (lastWL <= 100)) {
-        alertLevel = 4;
+    else if ((currWL >= config.riseThr_d) && (lastWL < config.riseThr_d)) {
+        alertLevel = 100;
     }
-    else if ((currWL > 90) && (lastWL <= 90)) {
-        alertLevel = 3;
+    else if ((currWL >= config.riseThr_c) && (lastWL < config.riseThr_c)) {
+        alertLevel = 90;
     }
-    else if ((currWL > 75) && (lastWL <= 75)) {
-        alertLevel = 2;
+    else if ((currWL >= config.riseThr_b) && (lastWL < config.riseThr_b)) {
+        alertLevel = 75;
     }
-    else if ((currWL > 50) && (lastWL <= 50)) {
-        alertLevel = 1;
+    else if ((currWL >= config.riseThr_a) && (lastWL < config.riseThr_a)) {
+        alertLevel = 50;
     }
 
     return alertLevel;
 
 }
 
-function getAlertlevelFall(currWL, lastWL) {
+function getAlertlevelFall(currWL, lastWL, delta, config) {
     var alertLevel = 0;
-    if ((currWL < 50) && (lastWL >= 50)) {
+    var Thr_a = config.fallThr_a - delta;
+    var Thr_b = config.fallThr_b - delta;
+    var Thr_c = config.fallThr_c - delta;
+    var Thr_d = config.fallThr_d - delta;
+    var Thr_cr = config.fallThr_cr - delta;
+    if ((currWL < Thr_a) && (lastWL >= Thr_a)) {
         // Special value, to indicate change to normal level.
-        alertLevel = 10;
+        alertLevel = 50;
     }
-    if ((currWL < 75) && (lastWL >= 75)) {
-        alertLevel = 1;
+    else if ((currWL < Thr_b) && (lastWL >= Thr_b)) {
+        alertLevel = 75;
     }
-    else if ((currWL < 90) && (lastWL >= 90)) {
-        alertLevel = 2;
+    else if ((currWL < Thr_c) && (lastWL >= Thr_c)) {
+        alertLevel = 90;
     }
-    else if ((currWL < 100) && (lastWL >= 100)) {
-        alertLevel = 3;
+    else if ((currWL < Thr_d) && (lastWL >= Thr_d)) {
+        alertLevel = 100;
     }
-    else if ((currWL < 110) && (lastWL >= 110)) {
-        alertLevel = 4;
+    else if ((currWL < Thr_cr) && (lastWL >= Thr_cr)) {
+        alertLevel = 200;
     }
 
     return alertLevel;
@@ -73,16 +79,15 @@ function getShadowState(iotdata, config) {
             //console.log(this.httpResponse);
             return null;
         } else {
-            console.log(data);
             var jsonPayload = JSON.parse(data.payload);
-            var status = jsonPayload.state.reported.location;
-            console.log('status: ' + status);
+            //console.log(jsonPayload);
             currDevState = data;
             return currDevState;
         }
     });
 }
 
+/*
 function setShadowState(iotdata, config) {
     var newStatus = "5 battery rd";
     var update = {
@@ -106,14 +111,45 @@ function setShadowState(iotdata, config) {
         }
     });
 }
+*/
 
 //
 function composeSMS(msg, alertLevel, wlRise, devState) {
     // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
+/*
     if (!wlRise && alertLevel == 10) {
         // From Level 1 to normal.
     }
-    var messageText = "Received  " + msg.wl + " message from button ID: " + msg.sid;
+*/
+    //var dt = new Date(msg.ts);
+    // 2017-04-13 10:21:39
+    //var options = {};
+    //options.timeZone = 'SG'; // UTC
+    //options.timeZoneName = 'short';
+    // date.toLocaleString();
+    // moment().local() may not work as the AWS server may not be in SG timezone.
+    var dt = moment(msg.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); // moment (Date);
+    //dt.format("YYYY-MM-DD hh:mm:ss");
+    var alertLevelTxt = alertLevel.toString() + "%";
+    if(alertLevel === 200) {
+        alertLevelTxt = "Critical"
+    }
+
+    var lvlmtr = msg.wl/100;
+    
+    var wlmrl = devState.cope_level + lvlmtr;
+    wlRiseTxt = "FALL";
+    if(wlRise) {
+        wlRiseTxt = "RISE";
+    }
+    var messageText = msg.sid + "\n" 
+	+ alertLevelTxt + "\n" 
+	+ wlRiseTxt + "\n" 
+	+ dt + "\n" 
+	+ "Water Level:" + wlmrl + "mRL(" + lvlmtr + "m) \n" 
+	+ "OPERATIONAL" + "\n"
+	+ "Cope:" + devState.cope_level + "mRL(1.0m) \n"
+	+ devState.location;
     // Write the string to the console
     console.log("Message to send: " + messageText);
     return messageText;

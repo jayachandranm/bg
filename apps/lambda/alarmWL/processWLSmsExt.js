@@ -1,4 +1,4 @@
-console.log('Loading function');
+//console.log('Loading function');
 // Load the AWS SDK
 var AWS = require("aws-sdk");
 var http = require('http');
@@ -29,58 +29,59 @@ function processWL(msg, context) {
     var sid = msg.sid;
     // If md does not exist in the message, this lambda will not be called.
     // If md is set and md =0, this lambda may be called.
-/*
-    if(typeof msg.md !== 'undefined' && msg.md !== null) {
-        if(msg.md !== 0 ) {
-            // Do send alerts, if md is non-zero.
-	    return;
-        }
-    }  
-*/
+    /*
+     if(typeof msg.md !== 'undefined' && msg.md !== null) {
+     if(msg.md !== 0 ) {
+     // Do send alerts, if md is non-zero.
+     return;
+     }
+     }
+     */
     var alertLevel = 0;
-    var wlRise = true;
-    if (currWL > lastWL) {
-        wlRise = true;
-        alertLevel = utils.getAlertlevelRise(currWL, lastWL);
-        console.log("Level Rising ->", alertLevel);
-    }
+    var devState;
+    iotdata.getThingShadow({
+        thingName: thingName
+    }, function (err, data) {
+        if (err) {
+            context.fail(err);
+            console.log("Error in getting Shadow.", err);
+        } else {
+            var jsonPayload = JSON.parse(data.payload);
+            console.log('Shadow: ' + jsonPayload.toString());
+            //console.log('status: ' + status);
+            devState = jsonPayload.state.reported;
+            var delta = devState.delta;
+            var wlRise = true;
+            if (currWL > lastWL) {
+                wlRise = true;
+                alertLevel = utils.getAlertlevelRise(currWL, lastWL, config);
+                console.log("Level Rising ->", alertLevel);
+            }
 
-    if (currWL < lastWL) {
-        wlRise = false;
-        alertLevel = utils.getAlertlevelFall(currWL, lastWL);
-        console.log("Level Falling ->", alertLevel);
-    }
+            if (currWL < lastWL) {
+                wlRise = false;
+                alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, config);
+                console.log("Level Falling ->", alertLevel);
+            }
 
-    // May have to use history by accessing Shadow.
-    if (alertLevel) {
-        // Make sure that thing name is same as station id.
-        // TODO : test
-        //thingName = "hello";
-        /*
-         var devState = utils.getShadowState(iotdata, config);
-         console.log("devState: ", devState);
-         //
-         if(devState == null) {
-         return "Error";
-         }
-         */
-        var devState;
-        var subscriberList = new Array();
-        iotdata.getThingShadow({
-            thingName: thingName
-        }, function (err, data) {
-            if (err) {
-                context.fail(err);
-                console.log("Error in getting Shadow.", err);
-            } else {
-                var jsonPayload = JSON.parse(data.payload);
-                var status = jsonPayload.state.reported.location;
-                console.log('status: ' + status);
-                devState = data;
+            // May have to use history by accessing Shadow.
+            if (alertLevel) {
+                // Make sure that thing name is same as station id.
+                // TODO : test
+                //thingName = "hello";
+                /*
+                 var devState = utils.getShadowState(iotdata, config);
+                 console.log("devState: ", devState);
+                 //
+                 if(devState == null) {
+                 return "Error";
+                 }
+                 */
+                var subscriberList = new Array();
                 var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
 
                 var params_sns = {
-                    TopicArn: config.snsTopicArn + ":" + sid
+                    TopicArn: config.snsArn + ":" + sid
                     //NextToken: 'STRING_VALUE'
                 };
                 console.log("SNS params: ", params_sns);
@@ -95,11 +96,10 @@ function processWL(msg, context) {
                         // Use the subscriber list to send SMS through external vendor.
                         sendMsg(messageText, subscriberList);
                     }
-                });
-            }
-        });
-    } // if
-//
+                }); // listSubscriptionsByTopic
+            } // if alertLevel
+        } // else
+    }); // getThingShadow
 }
 
 function sendMsg(msg, subsList) {
