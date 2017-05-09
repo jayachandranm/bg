@@ -18,8 +18,23 @@ var chart = AmCharts.makeChart("chartdiv", {
     "dataProvider": chartData,
     "valueAxes": [{
         "position": "left",
-        "title": "Level visitors"
+        "title": "Water Level",
+        "guides": [{
+           "fillAlpha": 0.20,
+           "fillColor": "#CC0000",
+           "value": 90,
+           "toValue": 95
+        },{
+           "value": 110,
+           "lineColor": "#CC0000",
+           "lineAlpha": 1,
+           "dashLength": 2,
+            "inside": true,
+            "labelRotation": 90,
+            "label": "motorcycle fee introduced"
+        }]
     }],
+
     "graphs": [{
         "id": "g1",
         "fillAlphas": 0.4,
@@ -28,7 +43,7 @@ var chart = AmCharts.makeChart("chartdiv", {
     }],
     "chartScrollbar": {
         "graph": "g1",
-        "scrollbarHeight": 80,
+        "scrollbarHeight": 40,
         "backgroundAlpha": 0,
         "selectedBackgroundAlpha": 0.1,
         "selectedBackgroundColor": "#888888",
