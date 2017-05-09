@@ -1,20 +1,24 @@
-    console.log('Loading function');
 // Load the AWS SDK
 var AWS = require("aws-sdk");
+//var utils = require('./wlAlertUtils');
+var config = require('./config.json');
 
-var iotdata = new AWS.IotData({endpoint: "a1spluk5rusbj4.iot.ap-southeast-1.amazonaws.com", region: 'ap-southeast-1'});
+var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
+// Create an SNS object
+var sns = new AWS.SNS({region: 'ap-southeast-1'});
+
+module.exports.processBattLow = processBattLow;
 
 // Set up the code to call when the Lambda function is invoked
-exports.handler = (event, context, callback) =>
-{
+//exports.handler = (event, context, callback) => {
+function processBattLow(devMsg, context) {
     // Load the message passed into the Lambda function into a JSON object
-    var eventText = JSON.stringify(event, null, 2);
+    var eventText = JSON.stringify(devMsg, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
     console.log("Received event:", eventText);
     //
-    var msg = event;
-    var thingName = event.sid;
-    var battLevel = event.bl;
+    var thingName = devMsg.sid;
+    var battLevel = devMsg.bl;
 
     // May have to use history by accessing Shadow, or have a period of silence after an alert.
     // get shadow
@@ -40,28 +44,28 @@ exports.handler = (event, context, callback) =>
             var battState = devState.battery_status;
             //if((battLevel < config.warn_1) && (battState === "high")) {
             var messageText = '';
-            if ((battLevel < 80) && (battState === "high")) {
+            if ((battLevel < config.alarmThr_med) && (battState === "high")) {
                 console.log("Battery level changing from high to medium");
-                messageText = composeSMS(msg, "discharged to medium", devState);
-                sendSMS(messageText);
+                messageText = composeMsg(devMsg, "discharged to medium", devState);
+                sendMsg(messageText);
                 setShadowState("medium");
             }
-            if ((battLevel < 60) && ((battState === "medium") || (battState === "high"))) {
+            if ((battLevel < config.alarmThr_low) && ((battState === "medium") || (battState === "high"))) {
                 console.log("Battery level changing from medium/high to low");
-                messageText = composeSMS(msg, "discharged to low", devState);
-                sendSMS(messageText);
+                messageText = composeMsg(devMsg, "discharged to low", devState);
+                sendMsg(messageText);
                 setShadowState("low");
             } // if
-            if ((battLevel > 65) && (battState === "low")) {
+            if ((battLevel > (config.alarmThr_low + config.delta) ) && (battState === "low")) {
                 console.log("Battery level changing from low to medium");
-                messageText = composeSMS(msg, "charged to medium", devState);
-                sendSMS(messageText);
+                messageText = composeMsg(devMsg, "charged to medium", devState);
+                sendMsg(messageText);
                 setShadowState("medium");
             }
-            if ((battLevel > 85) && ((battState === "medium") || (battState === "low"))) {
+            if ((battLevel > (config.alarmThr_med + config.delta)) && ((battState === "medium") || (battState === "low"))) {
                 console.log("Battery level changing from medium/low to high");
-                messageText = composeSMS(msg, "charged to high", devState);
-                sendSMS(messageText);
+                messageText = composeMsg(devMsg, "charged to high", devState);
+                sendMsg(messageText);
                 setShadowState("low");
             } // if
 
@@ -69,15 +73,12 @@ exports.handler = (event, context, callback) =>
     }); // getThingShadow
 
 
-    var sendSMS = function(messageText) {
+    var sendMsg = function (messageText) {
 
-        // Create an SNS object
-        var sns = new AWS.SNS();
-
-        var topic = "arn:aws:sns:ap-southeast-1:433339126986:WSS01_alarm" //+ event.station_id;
+        var topic = config.snsArn + ":" + config.snsBattTopic; //+ event.station_id;
         // Populate the parameters for the publish operation
         // - Message : the text of the message to send
-        // - TopicArn : the ARN of the Amazon SNS topic to which you want to publish 
+        // - TopicArn : the ARN of the Amazon SNS topic to which you want to publish
         var params = {
             Message: messageText,
             TopicArn: topic
@@ -86,40 +87,40 @@ exports.handler = (event, context, callback) =>
     } // if
 
     //
-    var composeSMS = function(topic, msg, devState) {
+    var composeMsg = function (devMsg, alertMsg, devState) {
         // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
-        var messageText = "Battery " + msg  
-            + ", Level= " + topic.bl
-            + " from Station: " + topic.sid
-            + " at time: " + topic.ts_r;
+	var dt = new Date(devMsg.ts);
+        var messageText = "Battery " + alertMsg
+            + ", Level= " + devMsg.bl
+            + " from Station: " + devMsg.sid
+            + " at time: " + dt.toLocaleString();
         // Write the string to the console
         console.log("Message to send: " + messageText);
         return messageText;
     }
-    
-    var setShadowState = function(status) {
-    var newStatus = status;
-    var update = {
-        "state": {
-            "desired": {
-                "battery_status": newStatus
-            }
-        }
-    };
-    iotdata.updateThingShadow({
-        payload: JSON.stringify(update),
-        thingName: thingName
-    }, function (err, data) {
-        if (err) {
-            //context.fail(err);
-            console.log("Error in setting Shadow.")
-        } else {
-            console.log(data);
-            //context.succeed('newStatus: ' + newStatus);
-            console.log("Setting Shadow succeeded.")
-        }
-    });
-}
 
+    var setShadowState = function (status) {
+        var newStatus = status;
+        var update = {
+            "state": {
+                "desired": {
+                    "battery_status": newStatus
+                }
+            }
+        };
+        iotdata.updateThingShadow({
+            payload: JSON.stringify(update),
+            thingName: thingName
+        }, function (err, data) {
+            if (err) {
+                //context.fail(err);
+                console.log("Error in setting Shadow.")
+            } else {
+                console.log(data);
+                //context.succeed('newStatus: ' + newStatus);
+                console.log("Setting Shadow succeeded.")
+            }
+        });
+    }
 }
 
