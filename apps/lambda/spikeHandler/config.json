@@ -1,0 +1,10 @@
+{
+    "endpointAddress": "a1spluk5rusbj4.iot.ap-southeast-1.amazonaws.com",
+    "snsArn": "arn:aws:sns:ap-southeast-1:433339126986",
+    "snsBattTopic": "WSS01_alarm",
+    "smsUser": "API8C3H7EVPER",
+    "smsPass": "API8C3H7EVPER8C3H7",
+    "smsFrom": "BluGraph",
+    "spikeDur_Thr": 1800000
+}
+
