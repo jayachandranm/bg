@@ -55,7 +55,7 @@ function processSpike(devMsg, context) {
                     // set dev to maintenance. Future MQTT messages will not come to this Lambda.
                     messageText = composeMsg(devMsg, "Switching from Spike to Maintenance.", devState);
                     sendMsg(messageText);
-                    setShadowStateMode("mode", "maintenance");
+                    setShadowState("mode", "maintenance");
                 }
             }
         }
