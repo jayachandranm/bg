@@ -1,4 +1,4 @@
-var backup = require('./ddb2s3-csv-multi-query');
+var backup = require('./ddb2s3-csv-all');
 
 exports.handler = function (event, context) {
   //

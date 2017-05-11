@@ -11,8 +11,10 @@ var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
 function backupTable(tablename) {
 //function backupTable(tablename, callback) {
   //console.log("backup..");
-  var tablename = 'OBDTable_mmmYYYY';
-  var data_stream = DynStream(tablename);
+  var table_name = 'pubc5wl-ddb';
+  var bucket_name = 'pubc5wl';
+  var folder_name = 'daily_report';
+  var data_stream = DynStream(table_name);
   var gzip = zlib.createGzip();
   var csv = CSVTransform();
   //var parser = new MyStream();
@@ -21,7 +23,7 @@ function backupTable(tablename) {
   //var body = data_stream.pipe(csv).pipe(process.stdout);
   var body = data_stream.pipe(csv).pipe(gzip);
 
-  var s3obj = new aws.S3({params: {Bucket: 'abhcs-hello-ddb', Key: tablename + '/' + tablename + '-' + ts + '.xls.gz'}});
+  var s3obj = new aws.S3({params: {Bucket: bucket_name, Key: folder_name + '/' + table_name + '-' + ts + '.xls.gz'}});
   s3obj.upload({Body: body}).
     on('httpUploadProgress', function(evt) {
       console.log(evt);

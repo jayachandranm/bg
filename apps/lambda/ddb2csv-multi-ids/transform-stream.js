@@ -19,7 +19,8 @@ inherits(CSVTransform, Transform);
 CSVTransform.prototype._transform = function transform(JSONrecord, encoding, callback) {
   var self = this;
   //console.log("transform", JSONrecord);
-  var fields = ['timestamp', 'gps_data.latitude', 'gps_data.longitude', 'obd_dev_id'];
+  //var fields = ['timestamp', 'gps_data.latitude', 'gps_data.longitude', 'obd_dev_id'];
+  var fields = ['sid', 'ts', 'raw', 'wl', 'md'];
   var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "\t" });
   //var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "," });
   this.push(csv);
