@@ -141,7 +141,9 @@ function sendMsg(msg, subsList) {
         response.on('data', function (chunk) {
             str += chunk;
         });
-
+        response.on('error', (e) => {
+            console.error(e);
+        });
         //the whole response has been recieved, so we just print it out here
         response.on('end', function () {
             console.log(str);
