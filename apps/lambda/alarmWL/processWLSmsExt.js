@@ -24,7 +24,7 @@ function processWL(msg, context) {
     console.log("Received event:", eventText);
 
     var currWL = msg.wl;
-    var lastWL = msg.history.wl_1;
+    var lastWL = msg.hs.wl_1;
     var thingName = msg.sid;
     var sid = msg.sid;
     // If md does not exist in the message, this lambda will not be called.
@@ -50,7 +50,9 @@ function processWL(msg, context) {
             console.log('Shadow: ' + jsonPayload.toString());
             //console.log('status: ' + status);
             devState = jsonPayload.state.reported;
-            var delta = devState.delta;
+	    // TODO: delta will be handled on device side.
+            //var delta = devState.delta;
+            var delta = 0;
             var wlRise = true;
             if (currWL > lastWL) {
                 wlRise = true;

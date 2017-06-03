@@ -14,11 +14,13 @@ module.exports = {
 
 function getAlertlevelRise(currWL, lastWL, config) {
     var alertLevel = 0;
+/*
     if ((currWL >= config.riseThr_cr) && (lastWL < config.riseThr_cr)) {
         // critical.
         alertLevel = 200;
     }
-    else if ((currWL >= config.riseThr_d) && (lastWL < config.riseThr_d)) {
+    else */
+    if ((currWL >= config.riseThr_d) && (lastWL < config.riseThr_d)) {
         alertLevel = 100;
     }
     else if ((currWL >= config.riseThr_c) && (lastWL < config.riseThr_c)) {
@@ -55,10 +57,11 @@ function getAlertlevelFall(currWL, lastWL, delta, config) {
     else if ((currWL < Thr_d) && (lastWL >= Thr_d)) {
         alertLevel = 100;
     }
+/*
     else if ((currWL < Thr_cr) && (lastWL >= Thr_cr)) {
         alertLevel = 200;
     }
-
+*/
     return alertLevel;
 
 }
@@ -135,9 +138,10 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
         alertLevelTxt = "Critical"
     }
 
-    var lvlmtr = msg.wl/100;
+    var lvlmtr = msg.wa/100;
     
     var wlmrl = devState.cope_level + lvlmtr;
+    var cope_m = devState.cope_level - devState.invert_level
     wlRiseTxt = "FALL";
     if(wlRise) {
         wlRiseTxt = "RISE";
@@ -146,9 +150,9 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
 	+ alertLevelTxt + "\n" 
 	+ wlRiseTxt + "\n" 
 	+ dt + "\n" 
-	+ "Water Level:" + wlmrl + "mRL(" + lvlmtr + "m) \n" 
+	+ "Water Level:" + wlmrl.toFixed(4) + "mRL(" + lvlmtr.toFixed(4) + "m) \n" 
 	+ "OPERATIONAL" + "\n"
-	+ "Cope:" + devState.cope_level + "mRL(1.0m) \n"
+	+ "Cope:" + devState.cope_level + "mRL(" + cope_m.toFixed(4) + "m) \n"
 	+ devState.location;
     // Write the string to the console
     console.log("Message to send: " + messageText);
