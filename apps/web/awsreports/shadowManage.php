@@ -26,32 +26,38 @@ $params = [
  */
 
 $result = $client->getThingShadow($params);
+//print_r($result);
 
-$shadow = $result['payload'];
+$shadow = $result['payload']->getContents();
+//print_r($shadow);
+//echo $shadow;
+$shadow_j = json_decode($shadow);
+//echo $shadow['state']['reported'];
+print_r($shadow_j->state->reported);
 
 /*
 */
 
-$arr = array('a' => 1, 'b' => 2);
-
-$payload_json = [
-                "state": [
-                    "desired": [
-                        "spike_threshold":98,
-                        "location":"ArkTest"
-                    ]
-                ]
-            ]
+$payload_json = array(
+                  'state' => array(
+                    'desired' => array(
+                        'location' => "ArkTest2"
+                    )
+                )
+            );
 
 
 $payload = json_encode($payload_json);
 
+/*
 $result_mod = $client->updateThingShadow([
     'payload' => $payload,
     'thingName' => $station_id,
 ]);
 
+
 print_r($result_mod);
+*/
 
 /*
  */
