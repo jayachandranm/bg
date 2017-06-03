@@ -1,7 +1,7 @@
 //console.log('Loading function');
 // Load the AWS SDK
 var AWS = require("aws-sdk");
-var http = require('http');
+var https = require('https');
 var utils = require('./wlAlertUtils');
 var config = require('./config.json');
 //var mqttmsg = require('./mqtt.json');
@@ -105,15 +105,15 @@ function processWL(msg, context) {
 }
 
 function sendMsg(msg, subsList) {
-    var user = config.smsUser;
-    var pass = config.smsPass;
-    var sms_from = config.smsFrom;
+    var user = encodeURI(config.smsUser);
+    var pass = encodeURI(config.smsPass);
+    var sms_from = encodeURI(config.smsFrom);
     // Create a comma separared list of numbers. (max=10?)
     //var phoneList = document.write(subsList.join(", "));
     //
-    var sms_server = 'gateway80.onewaysms.sg';
-    var path1 = "/api2.aspx?apiusername=" + user + "&apipassword=" + pass;
-    var path2 = "&message=" + encodeURI(msg) + "&languagetype=1";
+    var sms_server = 'www.isms.com.my';
+    var path1 = "/isms_send.php?un=" + user + "&pwd=" + pass;
+    var path2 = "&msg=" + encodeURI(msg) + "&type=1";
 
     // TODO: Prepare the CSV while parsing SNS response.
     var subsCsvList = '';
@@ -121,8 +121,8 @@ function sendMsg(msg, subsList) {
         subsCsvList = subsCsvList + "," + subsList[i];
     }
 
-    var path3 = "&senderid=" + encodeURI(sms_from)
-        + "&mobileno=" + encodeURI(subsCsvList);
+    var path3 = "&sendid=" + encodeURI(sms_from)
+        + "&dstno=" + encodeURI(subsCsvList);
     //
     //console.log(path1 + path2 + path3);
     var options = {
@@ -131,7 +131,7 @@ function sendMsg(msg, subsList) {
         //method: 'POST'
     };
     //var req = http.request(options, callback);
-    var req = http.get(options, callback);
+    var req = https.get(options, callback);
     /*
      req.write("hello world!");
      req.end();
@@ -143,7 +143,9 @@ function sendMsg(msg, subsList) {
         response.on('data', function (chunk) {
             str += chunk;
         });
-
+	response.on('error', (e) => {
+	    console.error(e);
+	});
         //the whole response has been recieved, so we just print it out here
         response.on('end', function () {
             console.log(str);
