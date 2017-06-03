@@ -1,6 +1,6 @@
 // Load the AWS SDK
 var AWS = require("aws-sdk");
-var http = require('http');
+//var http = require('http');
 var moment = require('moment');
 
 //module.exports.getAlertlevelRise = getAlertlevelRise;
@@ -150,9 +150,9 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
 	+ alertLevelTxt + "\n" 
 	+ wlRiseTxt + "\n" 
 	+ dt + "\n" 
-	+ "Water Level:" + wlmrl.toFixed(4) + "mRL(" + lvlmtr.toFixed(4) + "m) \n" 
+	+ "Water Level:" + wlmrl.toFixed(2) + "mRL(" + lvlmtr.toFixed(2) + "m) \n" 
 	+ "OPERATIONAL" + "\n"
-	+ "Cope:" + devState.cope_level + "mRL(" + cope_m.toFixed(4) + "m) \n"
+	+ "Cope:" + devState.cope_level + "mRL(" + cope_m.toFixed(2) + "m) \n"
 	+ devState.location;
     // Write the string to the console
     console.log("Message to send: " + messageText);
