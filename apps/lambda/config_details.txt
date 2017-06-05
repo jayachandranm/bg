@@ -1,1 +1,5 @@
-WHERE ((wl > 50) OR ((wl < 50) AND (history.wl_1 >= 50))) AND (isUndefined(md))
+WHERE ((wl > 50) OR ((wl < 50) AND (hs.wl_1 >= 50))) AND (isUndefined(md))
+
+
+Spike:
+SELECT *, timestamp() as ts FROM 'pubc5wl/+' WHERE (CASE isUndefined(md) WHEN true THEN false ELSE md="spike" END) = true
