@@ -38,10 +38,12 @@ function processBattLow(devMsg, context) {
             console.log("Error in getting Shadow.", err);
         } else {
             var jsonPayload = JSON.parse(data.payload);
-            console.log('Shadow: ' + jsonPayload);
+            var shadowTxt = JSON.stringify(jsonPayload, null, 2);
+            console.log('Shadow: ' + shadowTxt);
             //console.log('status: ' + status);
             devState = jsonPayload.state.reported;
-            var battState = devState.battery_status;
+            var battState = devState.batt_status;
+            console.log('Battery status in Shadow: ' + battState);
             //if((battLevel < config.warn_1) && (battState === "high")) {
             var messageText = '';
             if ((battLevel < config.alarmThr_med) && (battState === "high")) {
@@ -50,23 +52,23 @@ function processBattLow(devMsg, context) {
                 sendMsg(messageText);
                 setShadowState("medium");
             }
-            if ((battLevel < config.alarmThr_low) && ((battState === "medium") || (battState === "high"))) {
+	    else if ((battLevel < config.alarmThr_low) && ((battState === "medium") || (battState === "high"))) {
                 console.log("Battery level changing from medium/high to low");
                 messageText = composeMsg(devMsg, "discharged to low", devState);
                 sendMsg(messageText);
                 setShadowState("low");
             } // if
-            if ((battLevel > (config.alarmThr_low + config.delta) ) && (battState === "low")) {
+	    else if ((battLevel >= (config.alarmThr_low + config.delta) ) && (battState === "low")) {
                 console.log("Battery level changing from low to medium");
                 messageText = composeMsg(devMsg, "charged to medium", devState);
                 sendMsg(messageText);
                 setShadowState("medium");
             }
-            if ((battLevel > (config.alarmThr_med + config.delta)) && ((battState === "medium") || (battState === "low"))) {
+	    else if ((battLevel >= (config.alarmThr_med + config.delta)) && ((battState === "medium") || (battState === "low"))) {
                 console.log("Battery level changing from medium/low to high");
                 messageText = composeMsg(devMsg, "charged to high", devState);
                 sendMsg(messageText);
-                setShadowState("low");
+                setShadowState("high");
             } // if
 
         } // else
@@ -104,7 +106,7 @@ function processBattLow(devMsg, context) {
         var update = {
             "state": {
                 "desired": {
-                    "battery_status": newStatus
+                    "batt_status": newStatus
                 }
             }
         };
