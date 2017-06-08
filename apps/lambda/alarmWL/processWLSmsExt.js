@@ -5,6 +5,8 @@ var https = require('https');
 var utils = require('./wlAlertUtils');
 var config = require('./config.json');
 //var mqttmsg = require('./mqtt.json');
+var dateFormat = require('dateformat');
+var moment = require('moment');
 
 var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 //var iotdata = new AWS.IotData({endpoint: config.endpointAddress});
@@ -96,7 +98,7 @@ function processWL(msg, context) {
                             subscriberList.push(data.Subscriptions[i].Endpoint)
                         }
                         // Use the subscriber list to send SMS through external vendor.
-                        sendMsg(messageText, subscriberList);
+                        sendMsg(sid, messageText, subscriberList);
                     }
                 }); // listSubscriptionsByTopic
             } // if alertLevel
@@ -104,7 +106,7 @@ function processWL(msg, context) {
     }); // getThingShadow
 }
 
-function sendMsg(msg, subsList) {
+function sendMsg(sid, msg, subsList) {
     var user = encodeURI(config.smsUser);
     var pass = encodeURI(config.smsPass);
     var sms_from = encodeURI(config.smsFrom);
@@ -136,6 +138,9 @@ function sendMsg(msg, subsList) {
      req.write("hello world!");
      req.end();
      */
+    // TODO: Update log based on SMS send response.
+    storeInS3(sid, msg, subsCsvList);
+
     var callback = function (response) {
         var str = '';
 
@@ -148,9 +153,42 @@ function sendMsg(msg, subsList) {
 	});
         //the whole response has been recieved, so we just print it out here
         response.on('end', function () {
-            console.log(str);
+            console.log('SMS Sent: ', str);
             // TODO: If error, write to S3?
         });
     }
+}
+
+function storeInS3(sid, smsMsg, subsCsvList) {
+  var bucket_name = 'pubc5wl';
+  var folder_name = 'sms_log';
+  var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
+  var s3_key = folder_name + '/' + sid + '-' + ts + '-sms.log';
+  
+  var dt = moment(new Date()).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); 
+  var sms_report = sid + '\t' + dt + '\t' + subsCsvList 
+		+ '\t' + smsMsg.replace(/(?:\r\n|\r|\n)/g, ', ');
+  console.log('Report filename: ', s3_key);
+  console.log('Log_msg: ', sms_report);
+  var params = {
+     Bucket : bucket_name,
+     Key : s3_key,
+     Body : sms_report
+  }
+/*
+  var s3obj = new aws.S3(params);
+  s3obj.upload({Body: body}).
+    on('httpUploadProgress', function(evt) {
+      console.log(evt);
+    }).
+    send(function(err, data) { console.log(err, data); });
+*/
+  var s3 = new AWS.S3();
+  s3.putObject(params, function(err, data) {
+    if (err) 
+      console.log(err, err.stack); // an error occurred
+    else
+      console.log(data);           // successful response
+    });
 }
 
