@@ -81,9 +81,9 @@ function processWL(msg, context) {
                  return "Error";
                  }
                  */
-                var subscriberList = new Array();
                 var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
 
+                var subscriberList = new Array();
                 var params_sns = {
                     TopicArn: config.snsArn + ":" + sid
                     //NextToken: 'STRING_VALUE'
