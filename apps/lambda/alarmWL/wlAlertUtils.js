@@ -140,7 +140,7 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
 
     var lvlmtr = msg.wa/100;
     
-    var wlmrl = devState.cope_level + lvlmtr;
+    var wlmrl = devState.invert_level + lvlmtr;
     var cope_m = devState.cope_level - devState.invert_level
     wlRiseTxt = "FALL";
     if(wlRise) {
