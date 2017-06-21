@@ -2,19 +2,18 @@ from __future__ import print_function
 
 import boto3
 import json
-
-import datetime
+#import simplejson
 
 import decimal
 from boto3.dynamodb.conditions import Key, Attr
 
-from xml.etree.ElementTree import Element, SubElement, Comment
-from ElementTree_pretty import prettify
+import datetime
 
 import os
 from StringIO import StringIO
 
 # Helper class to convert a DynamoDB item to JSON.
+# Extends JSONEncoder
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):
@@ -37,7 +36,9 @@ def lambda_handler(event, context):
     #print("Received event: " + json.dumps(event, indent=2))
     #return "Hello There"  # Echo back the first key value
     #raise Exception('Something went wrong')
-    
+
+    data_series = []
+
     for x in stations:
         print("<-------------------->")
         print(x)
@@ -60,10 +61,8 @@ def lambda_handler(event, context):
             print("No time")
 
         ts = int(ts_millis / 1000)
-        dt = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
-        dt1 = dt
-        hm = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-        hm1 = hm
+        dt1 = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+        hm1 = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
         #print(dt1, hm1)
 
         try:
@@ -77,6 +76,7 @@ def lambda_handler(event, context):
         if al > 2:
             al = 2
         flag = al
+
         try:
             if 'md' in (data_row0):
                 print("There is md here")
@@ -93,53 +93,20 @@ def lambda_handler(event, context):
         response = iot_client.get_thing_shadow(
             thingName=str(sid)
         )
-        print(response)
+        #print(response)
         #print (json.loads(response["payload"].read())["state"]["reported"]["location"])
         streamingBody = response["payload"]
         jsonState = json.loads(streamingBody.read())
         loc = (jsonState["state"]["reported"]["location"])
         print(loc)
-        print(wa)
-        print(str(wa))
+        series = {}
+        series["waterlevel"] = str(wa)
+        series["flag"] = str(flag)
+        series["observation_time"] = dt1 + " " + hm1
+        series["station_id"] = sid
+        series["desc"] = loc
 
-        top = Element('series')
-        comment = Comment('Recent WL values from all stations.')
-        top.append(comment)
-        child = SubElement(top, 'waterlevel')
-        child.text = str(wa)
-        child = SubElement(top, 'flag')
-        child.text = str(flag)
-        child = SubElement(top, 'observation_time')
-        child.text = dt1 + " " + hm1
-        child = SubElement(top, 'station_id')
-        child.text = str(sid)
-        child = SubElement(top, 'desc')
-        child.text = str(wa)
-
-        print prettify(top)
-
-        #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
-        xml_all_sids = "   " + "<?xml version=\"1.0\" ?>" + '\n' + "<TimeSeries>"'\n'
-        xml_all_sids = xml_all_sids \
-                        + "<series>" + '\n' + "<header>" + '\n' + "<type>instantaneous</type>" + '\n' \
-                        + "<locationId>" + str(sid) + "</locationId>" + '\n' \
-                        + "<parameterId>" + str(wa) + "</parameterId>" + '\n' \
-                        + "<timeStep unit=""nonequidistant""/>" \
-                        + '\n' + "<startDate date=" + dt + " time=" + hm  + " />" + '\n' \
-                        + "<endDate date=" + dt1 + " time=" + hm1 + " />" + '\n' \
-                        + "<missVal>" + "-999.9" + "</missVal>" + '\n' \
-                        + "<x>" + "31810.18</x>" + '\n' \
-                        + "<y>" + "41013.21" + "</y>" + '\n' \
-                        + "<fileDescription>cope_level=" + "108.23" \
-                        + " invert_level=""105.73" + '\n' \
-                        + "</fileDescription>" + '\n' \
-                        + "</header>" + '\n' \
-                        + "<event date=" + "2011-01-13" + " time=" + "14:51:01" + " value=" + "105.76" + " />" + '\n' \
-                        + "</series>" + '\n'
-
-        xml_all_sids = xml_all_sids \
-                        + "</series>" + '\n' + "</TimeSeries>" + "<waterlevel>" + str(wa) + "</waterlevel>" + '\n'
-    
-    return xml_all_sids
-
+        print (json.dumps(series))
+        data_series.append(series)
+    return data_series
 
