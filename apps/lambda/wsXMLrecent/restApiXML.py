@@ -8,6 +8,9 @@ import datetime
 import decimal
 from boto3.dynamodb.conditions import Key, Attr
 
+from xml.etree.ElementTree import Element, SubElement, Comment
+from ElementTree_pretty import prettify
+
 import os
 from StringIO import StringIO
 
@@ -35,7 +38,6 @@ def lambda_handler(event, context):
     #return "Hello There"  # Echo back the first key value
     #raise Exception('Something went wrong')
     
-    xml_all_sids = "   " + "<?xml version=\"1.0\" ?>" + '\n' + "<TimeSeries>"'\n'
     for x in stations:
         print("<-------------------->")
         print(x)
@@ -45,35 +47,30 @@ def lambda_handler(event, context):
             KeyConditionExpression=Key('sid').eq(x)
         )
         data_row0 = response["Items"][0]
-        print(data_row0)
-        print(data_row0['ts_r'])
         wa = 0.0
         ts_millis = 0.0
         ts = 0
         try:
             wa = (data_row0['wa'])
-            print(wa)
         except:
             print("No data")
         try:
             ts_millis = data_row0['ts']
-            print(ts_millis)
         except:
             print("No time")
-            
+
         ts = int(ts_millis / 1000)
-        print(ts)
         dt = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         dt1 = dt
         hm = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
         hm1 = hm
-        print(dt1, hm1)
-        
+        #print(dt1, hm1)
+
         try:
             sid = (data_row0['sid'])
-            print(sid)
+            #print(sid)
             al = (data_row0['al'])
-            print(al)
+            #print(al)
         except:
             print("No SID")
 
@@ -104,7 +101,25 @@ def lambda_handler(event, context):
         print(loc)
         print(wa)
         print(str(wa))
+
+        top = Element('series')
+        comment = Comment('Recent WL values from all stations.')
+        top.append(comment)
+        child = SubElement(top, 'waterlevel')
+        child.text = str(wa)
+        child = SubElement(top, 'flag')
+        child.text = str(flag)
+        child = SubElement(top, 'observation_time')
+        child.text = dt1 + " " + hm1
+        child = SubElement(top, 'station_id')
+        child.text = str(sid)
+        child = SubElement(top, 'desc')
+        child.text = str(wa)
+
+        print prettify(top)
+
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
+        xml_all_sids = "   " + "<?xml version=\"1.0\" ?>" + '\n' + "<TimeSeries>"'\n'
         xml_all_sids = xml_all_sids \
                         + "<series>" + '\n' + "<header>" + '\n' + "<type>instantaneous</type>" + '\n' \
                         + "<locationId>" + str(sid) + "</locationId>" + '\n' \
