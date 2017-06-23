@@ -10,6 +10,8 @@ import json
 import decimal
 from boto3.dynamodb.conditions import Key, Attr
 
+import urllib2
+
 import datetime
 import time
 
@@ -22,15 +24,14 @@ iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 
 hostname = "52.220.188.123"
 source = os.environ['LAMBDA_TASK_ROOT'] + "/test.txt"
-dest = "/home/ubuntu/xfiles/test.txt"
-key_filename = os.environ['LAMBDA_TASK_ROOT'] + "/lx_sg1.pem"
+dest = "/home/ubuntu/xfiles/test.xml"
 user = "ubuntu"
 port = 22
-
 
 def lambda_handler(event, context):
     print
     "Reached so far only"
+    key_filename = os.environ['LAMBDA_TASK_ROOT'] + "/lx_sg1.pem"
     key_filename = paramiko.RSAKey.from_private_key_file(key_filename)
 
     try:
@@ -47,8 +48,8 @@ def lambda_handler(event, context):
         print("Connection Error")
 
     tm = time.strftime('%Y-%m-%d %H:%M')
-    file = open(tm + ".txt", 'w')
-    #    file=sftp.file(dest, "w", -1)
+    #file = open(tm + ".txt", 'w')
+    file=sftp.file(dest, "w", -1)
     #    file.write('Hello World!\n')
     file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
     for x in stations:
@@ -121,25 +122,27 @@ def lambda_handler(event, context):
         loc2 = loc2.strip()
         print(loc2)
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
-        try:
-            file.write("<series>"  
-                       + "<header>"
-                       + "<type>instantaneous</type>"
-                       + "<locationId>" + str(sid) + "</locationId>"
-                       + "<parameterId>" + "WaterLevel" + "</parameterId>"
-                       + "<timeStep unit=""nonequidistant""/>"
-                       + "<startDate date=" + dt + " time=" + hm + " />"
-                       + "<endDate date=" + dt1 + " time=" + hm1 + " />"
-                       + "<missVal>" + "-999.9" + "</missVal>"
-                       + "<x>" + "31810.18</x>"
-                       + "<y>" + "41013.21" + "</y>"
-                       + "<fileDescription>cope_level=" + "108.23"
-                       + " invert_level=""105.73"
-                       + "</fileDescription>" 
-                       + "</header>"
-                       + "<event date=" + dt1 + " time=" + hm1 + " value=" + str(wa) + " />"
+        xml_to_write = "<series>" \
+                       + "<header>" \
+                       + "<type>instantaneous</type>" \
+                       + "<locationId>" + str(sid) + "</locationId>" \
+                       + "<parameterId>" + "WaterLevel" + "</parameterId>" \
+                       + "<timeStep unit=""nonequidistant""/>" \
+                       + "<startDate date=" + dt1 + " time=" + hm1 + " />" \
+                       + "<endDate date=" + dt1 + " time=" + hm1 + " />" \
+                       + "<missVal>" + "-999.9" + "</missVal>" \
+                       + "<x>" + "31810.18</x>" \
+                       + "<y>" + "41013.21" + "</y>" \
+                       + "<fileDescription>cope_level=" + "108.23" \
+                       + " invert_level=""105.73" \
+                       + "</fileDescription>" \
+                       + "</header>" \
+                       + "<event date=" + dt1 + " time=" + hm1 + " value=" + str(wa) + " />" \
                        + "</series>")
-            file.flush()
+        print(xml_to_write)
+        try:
+            file.write(xml_to_write)  
+            #file.flush()
         except:
             print("File write error.")
     #      print ("Print completed")
@@ -149,5 +152,5 @@ def lambda_handler(event, context):
         file.write("</TimeSeries>")
         file.flush()
     except:
-        print("File write error.)
+        print("File write error.")
 
