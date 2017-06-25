@@ -24,7 +24,6 @@ iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 
 hostname = "52.220.188.123"
 source = os.environ['LAMBDA_TASK_ROOT'] + "/test.txt"
-dest = "/home/ubuntu/xfiles/test.xml"
 user = "ubuntu"
 port = 22
 
@@ -47,8 +46,9 @@ def lambda_handler(event, context):
     except paramiko.SSHException:
         print("Connection Error")
 
-    tm = time.strftime('%Y-%m-%d %H:%M')
+    tm = time.strftime('%Y-%m-%d_%H-%M')
     #file = open(tm + ".txt", 'w')
+    dest = "/home/ubuntu/xfiles/" + tm + ".xml"
     file=sftp.file(dest, "w", -1)
     #    file.write('Hello World!\n')
     file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
@@ -138,7 +138,7 @@ def lambda_handler(event, context):
                        + "</fileDescription>" \
                        + "</header>" \
                        + "<event date=" + dt1 + " time=" + hm1 + " value=" + str(wa) + " />" \
-                       + "</series>")
+                       + "</series>"
         print(xml_to_write)
         try:
             file.write(xml_to_write)  
