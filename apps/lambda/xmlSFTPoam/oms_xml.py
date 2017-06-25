@@ -22,10 +22,16 @@ table = dynamodb.Table('pubc5wl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 
-hostname = "52.220.188.123"
-source = os.environ['LAMBDA_TASK_ROOT'] + "/test.txt"
-user = "ubuntu"
+#source = os.environ['LAMBDA_TASK_ROOT'] + "/test.txt"
+#hostname = "52.220.188.123"
+hostname = "49.128.56.51"
 port = 22
+user = "ubuntu"
+myuser = "user"
+mypass = "tst"
+#remote_dir = "/home/ubuntu/SFTP\ Folders/Shared\ Folder/Blugraph/"
+remote_dir = "SFTP Folders/Shared Folder/Blugraph"
+#remote_dir = "xfiles/myx"
 
 def lambda_handler(event, context):
     print
@@ -35,8 +41,9 @@ def lambda_handler(event, context):
 
     try:
         t = paramiko.Transport(hostname, port)
-        print(t)
-        t.connect(username=user, pkey=key_filename)
+        #print(t)
+        #t.connect(username=user, pkey=key_filename)
+        t.connect(username=myuser, password=mypass)
         print("Connected")
     except:
         print("Connect Error.")
@@ -46,15 +53,23 @@ def lambda_handler(event, context):
     except paramiko.SSHException:
         print("Connection Error")
 
+    try:
+        sftp.chdir(remote_dir)
+        print("Changed remote to: " + remote_dir)
+    except:
+        print("chdir failure") 
+
     tm = time.strftime('%Y-%m-%d_%H-%M')
     #file = open(tm + ".txt", 'w')
-    dest = "/home/ubuntu/xfiles/" + tm + ".xml"
+    #dest = "/home/ubuntu/xfiles/" + tm + ".xml"
+    #dest = sub_path + tm + ".xml"
+    dest = tm + ".xml"
     file=sftp.file(dest, "w", -1)
     #    file.write('Hello World!\n')
     file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
     for x in stations:
-        print("<-------------------->")
-        print(x)
+        #print("<-------------------->")
+        #print(x)
         try:
             response = table.query(
                 Limit=1,
@@ -65,7 +80,7 @@ def lambda_handler(event, context):
             print("DB access error.")
         #
         data_row0 = response["Items"][0]
-        print(data_row0)
+        #print(data_row0)
         wa = 0.0
         ts_millis = 0.0
         ts = 0
@@ -84,9 +99,9 @@ def lambda_handler(event, context):
         hm1 = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
         try:
             sid = data_row0['sid']
-            print(sid)
+            #print(sid)
             al = data_row0['al']
-            print(al)
+            #print(al)
         except:
             print("No SID")
 
@@ -96,18 +111,18 @@ def lambda_handler(event, context):
         #
         try:
             if 'md' in data_row0:
-                print("There is md here")
+                #print("There is md here")
                 md = data_row0['md']
-                print(md)
+                #print(md)
                 if md == "spike":
                     flag = 3
-            else:
-                print("There is no md here")
+            #else:
+            #    print("There is no md here")
             #
         except:
             print("No time")
 
-        print(flag)
+        #print(flag)
         #
         response = iot_client.get_thing_shadow(
             thingName=str(sid)
@@ -115,12 +130,12 @@ def lambda_handler(event, context):
         streamingBody = response["payload"]
         jsonState = json.loads(streamingBody.read())
         loc = (jsonState["state"]["reported"]["location"])
-        print(loc)
+        #print(loc)
         #
         get_sid_url = "http://13.228.68.232/stationname.php?stationid=" + sid
         loc2 = urllib2.urlopen(get_sid_url).read()
         loc2 = loc2.strip()
-        print(loc2)
+        #print(loc2)
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
         xml_to_write = "<series>" \
                        + "<header>" \
