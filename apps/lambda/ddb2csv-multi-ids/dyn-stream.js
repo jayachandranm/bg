@@ -45,7 +45,7 @@ DynStream.prototype._read = function read() {
       //self.push(table);
   //var fields = ['timestamp', 'gps_data.latitude', 'gps_data.longitude', 'obd_dev_id'];
       // Create one dummy row of data, where the values goes for title.
-      var title = { sid: 'STATION-ID', ts: 'DATE-TIME', raw: 'WATER-LVL(cm)', wl: 'WATER-LVL(%)', md: 'STATUS' }
+      var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
       self.push(title);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits

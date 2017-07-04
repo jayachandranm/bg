@@ -4,8 +4,8 @@ var DynStream = require('./dyn-stream');
 var CSVTransform = require('./transform-stream');
 //var MyStream = require('json2csv-stream');
 var zlib = require('zlib');
-
 var dateFormat = require('dateformat');
+
 var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
 
 function backupTable(tablename) {

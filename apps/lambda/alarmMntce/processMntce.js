@@ -7,11 +7,11 @@ var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-sou
 // Create an SNS object
 var sns = new AWS.SNS({region: 'ap-southeast-1'});
 
-module.exports.processBattLow = processBattLow;
+module.exports.processMntce = processMntce;
 
 // Set up the code to call when the Lambda function is invoked
 //exports.handler = (event, context, callback) => {
-function processBattLow(devMsg, context) {
+function processMntce(devMsg, context) {
     // Load the message passed into the Lambda function into a JSON object
     var eventText = JSON.stringify(devMsg, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
@@ -38,38 +38,18 @@ function processBattLow(devMsg, context) {
             console.log("Error in getting Shadow.", err);
         } else {
             var jsonPayload = JSON.parse(data.payload);
-            var shadowTxt = JSON.stringify(jsonPayload, null, 2);
-            console.log('Shadow: ' + shadowTxt);
+            console.log('Shadow: ' + jsonPayload);
             //console.log('status: ' + status);
             devState = jsonPayload.state.reported;
-            var battState = devState.batt_status;
-            console.log('Battery status in Shadow: ' + battState);
+            var mode = devState.mode;
             //if((battLevel < config.warn_1) && (battState === "high")) {
             var messageText = '';
-            if ((battLevel < config.alarmThr_med) && (battState === "high")) {
-                console.log("Battery level changing from high to medium");
-                messageText = composeMsg(devMsg, "discharged to medium", devState);
+            if ((mode === "active")) {
+                console.log("Device switched to maintenance mode.");
+                messageText = composeMsg(devMsg, "switched to maintenance", devState);
                 sendMsg(messageText);
-                setShadowState("medium");
+                setShadowState("maintenance.");
             }
-	    else if ((battLevel < config.alarmThr_low) && ((battState === "medium") || (battState === "high"))) {
-                console.log("Battery level changing from medium/high to low");
-                messageText = composeMsg(devMsg, "discharged to low", devState);
-                sendMsg(messageText);
-                setShadowState("low");
-            } // if
-	    else if ((battLevel >= (config.alarmThr_low + config.delta) ) && (battState === "low")) {
-                console.log("Battery level changing from low to medium");
-                messageText = composeMsg(devMsg, "charged to medium", devState);
-                sendMsg(messageText);
-                setShadowState("medium");
-            }
-	    else if ((battLevel >= (config.alarmThr_med + config.delta)) && ((battState === "medium") || (battState === "low"))) {
-                console.log("Battery level changing from medium/low to high");
-                messageText = composeMsg(devMsg, "charged to high", devState);
-                sendMsg(messageText);
-                setShadowState("high");
-            } // if
 
         } // else
     }); // getThingShadow
@@ -77,7 +57,7 @@ function processBattLow(devMsg, context) {
 
     var sendMsg = function (messageText) {
 
-        var topic = config.snsArn + ":" + config.snsBattTopic; //+ event.station_id;
+        var topic = config.snsArn + ":" + config.snsMntceTopic; //+ event.station_id;
         // Populate the parameters for the publish operation
         // - Message : the text of the message to send
         // - TopicArn : the ARN of the Amazon SNS topic to which you want to publish
@@ -92,9 +72,8 @@ function processBattLow(devMsg, context) {
     var composeMsg = function (devMsg, alertMsg, devState) {
         // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
 	var dt = new Date(devMsg.ts);
-        var messageText = "Battery " + alertMsg
-            + ", Level= " + devMsg.bl
-            + " from Station: " + devMsg.sid
+        var messageText = "Switched to maintenance, "
+            + " Station: " + devMsg.sid
             + " at time: " + dt.toLocaleString();
         // Write the string to the console
         console.log("Message to send: " + messageText);
@@ -106,7 +85,7 @@ function processBattLow(devMsg, context) {
         var update = {
             "state": {
                 "desired": {
-                    "batt_status": newStatus
+                    "mode": newStatus
                 }
             }
         };

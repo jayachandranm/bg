@@ -1,1 +1,7 @@
-WHERE ((wl > 50) OR ((wl < 50) AND (history.wl_1 >= 50))) AND (isUndefined(md))
+WHERE ((wl > 50) OR ((wl < 50) AND (hs.wl_1 >= 50))) AND (isUndefined(md))
+
+Spike:
+SELECT *, timestamp() as ts FROM 'pubc5wl/+' WHERE (CASE isUndefined(md) WHEN true THEN false ELSE md="spike" END) = true
+
+Batt:
+SELECT *, timestamp() as ts FROM 'pubc5wl/+' WHERE ((bl < 12.5) OR ((bl >= 12.5) AND (get_thing_shadow(sid, "arn:aws:iam::NUM:role/RoleName").state.reported.batt_status = "medium")))

@@ -2,9 +2,13 @@
 // Load the AWS SDK
 var AWS = require("aws-sdk");
 var http = require('http');
+var sync_request = require('sync-request');
+var https = require('https');
 var utils = require('./wlAlertUtils');
 var config = require('./config.json');
 //var mqttmsg = require('./mqtt.json');
+var dateFormat = require('dateformat');
+var moment = require('moment');
 
 var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 //var iotdata = new AWS.IotData({endpoint: config.endpointAddress});
@@ -24,7 +28,7 @@ function processWL(msg, context) {
     console.log("Received event:", eventText);
 
     var currWL = msg.wl;
-    var lastWL = msg.history.wl_1;
+    var lastWL = msg.hs.wl_1;
     var thingName = msg.sid;
     var sid = msg.sid;
     // If md does not exist in the message, this lambda will not be called.
@@ -47,10 +51,12 @@ function processWL(msg, context) {
             console.log("Error in getting Shadow.", err);
         } else {
             var jsonPayload = JSON.parse(data.payload);
-            console.log('Shadow: ' + jsonPayload.toString());
+            console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
             //console.log('status: ' + status);
             devState = jsonPayload.state.reported;
-            var delta = devState.delta;
+	    // TODO: delta will be handled on device side.
+            //var delta = devState.delta;
+            var delta = 0;
             var wlRise = true;
             if (currWL > lastWL) {
                 wlRise = true;
@@ -77,14 +83,21 @@ function processWL(msg, context) {
                  return "Error";
                  }
                  */
-                var subscriberList = new Array();
+
+                var res = sync_request('GET', 'http://13.228.68.232/stationname.php?stationid=' + sid);
+                var locName = res.body.toString('utf-8').replace('\t','');
+                //var locName = res.getBody();
+                console.log(locName);
+                devState.location = locName;
+
                 var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
 
+                var subscriberList = new Array();
                 var params_sns = {
                     TopicArn: config.snsArn + ":" + sid
                     //NextToken: 'STRING_VALUE'
                 };
-                console.log("SNS params: ", params_sns);
+                //console.log("SNS params: ", params_sns);
                 sns.listSubscriptionsByTopic(params_sns, function (err, data) {
                     if (err)
                         console.log(err, err.stack); // an error occurred
@@ -94,7 +107,7 @@ function processWL(msg, context) {
                             subscriberList.push(data.Subscriptions[i].Endpoint)
                         }
                         // Use the subscriber list to send SMS through external vendor.
-                        sendMsg(messageText, subscriberList);
+                        sendMsg(sid, messageText, subscriberList);
                     }
                 }); // listSubscriptionsByTopic
             } // if alertLevel
@@ -102,16 +115,16 @@ function processWL(msg, context) {
     }); // getThingShadow
 }
 
-function sendMsg(msg, subsList) {
-    var user = config.smsUser;
-    var pass = config.smsPass;
-    var sms_from = config.smsFrom;
+function sendMsg(sid, msg, subsList) {
+    var user = encodeURI(config.smsUser);
+    var pass = encodeURI(config.smsPass);
+    var sms_from = encodeURI(config.smsFrom);
     // Create a comma separared list of numbers. (max=10?)
     //var phoneList = document.write(subsList.join(", "));
     //
-    var sms_server = 'gateway80.onewaysms.sg';
-    var path1 = "/api2.aspx?apiusername=" + user + "&apipassword=" + pass;
-    var path2 = "&message=" + encodeURI(msg) + "&languagetype=1";
+    var sms_server = 'www.isms.com.my';
+    var path1 = "/isms_send.php?un=" + user + "&pwd=" + pass;
+    var path2 = "&msg=" + encodeURI(msg) + "&type=1";
 
     // TODO: Prepare the CSV while parsing SNS response.
     var subsCsvList = '';
@@ -119,8 +132,8 @@ function sendMsg(msg, subsList) {
         subsCsvList = subsCsvList + "," + subsList[i];
     }
 
-    var path3 = "&senderid=" + encodeURI(sms_from)
-        + "&mobileno=" + encodeURI(subsCsvList);
+    var path3 = "&sendid=" + encodeURI(sms_from)
+        + "&dstno=" + encodeURI(subsCsvList);
     //
     //console.log(path1 + path2 + path3);
     var options = {
@@ -129,11 +142,14 @@ function sendMsg(msg, subsList) {
         //method: 'POST'
     };
     //var req = http.request(options, callback);
-    var req = http.get(options, callback);
+    var req = https.get(options, callback).end();
     /*
      req.write("hello world!");
      req.end();
      */
+    // TODO: Update log based on SMS send response.
+    storeInS3(sid, msg, subsCsvList);
+
     var callback = function (response) {
         var str = '';
 
@@ -141,14 +157,47 @@ function sendMsg(msg, subsList) {
         response.on('data', function (chunk) {
             str += chunk;
         });
-        response.on('error', (e) => {
-            console.error(e);
-        });
+	response.on('error', (e) => {
+	    console.error(e);
+	});
         //the whole response has been recieved, so we just print it out here
         response.on('end', function () {
-            console.log(str);
+            console.log('SMS Sent: ', str);
             // TODO: If error, write to S3?
         });
     }
+}
+
+function storeInS3(sid, smsMsg, subsCsvList) {
+  var bucket_name = 'pubc5wl';
+  var folder_name = 'sms_log';
+  var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
+  var s3_key = folder_name + '/' + sid + '-' + ts + '-sms.log';
+  
+  var dt = moment(new Date()).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); 
+  var sms_report = sid + '\t' + dt + '\t' + subsCsvList 
+		+ '\t' + smsMsg.replace(/(?:\r\n|\r|\n)/g, ', ');
+  console.log('Report filename: ', s3_key);
+  console.log('Log_msg: ', sms_report);
+  var params = {
+     Bucket : bucket_name,
+     Key : s3_key,
+     Body : sms_report
+  }
+/*
+  var s3obj = new aws.S3(params);
+  s3obj.upload({Body: body}).
+    on('httpUploadProgress', function(evt) {
+      console.log(evt);
+    }).
+    send(function(err, data) { console.log(err, data); });
+*/
+  var s3 = new AWS.S3();
+  s3.putObject(params, function(err, data) {
+    if (err) 
+      console.log(err, err.stack); // an error occurred
+    else
+      console.log(data);           // successful response
+    });
 }
 
