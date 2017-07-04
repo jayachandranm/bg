@@ -139,9 +139,14 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
     }
 
     var lvlmtr = msg.wa/100;
+    var copeLevel = devState.cope_level;
+    // TODO: Temp fix.
+    if(copeLevel === 200) {
+        copeLevel = 101;
+    }
     
     var wlmrl = devState.invert_level + lvlmtr;
-    var cope_m = devState.cope_level - devState.invert_level
+    var cope_m = copeLevel - devState.invert_level
     wlRiseTxt = "FALL";
     if(wlRise) {
         wlRiseTxt = "RISE";
@@ -152,7 +157,7 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
 	+ dt + "\n" 
 	+ "Water Level:" + wlmrl.toFixed(2) + "mRL(" + lvlmtr.toFixed(2) + "m) \n" 
 	+ "OPERATIONAL" + "\n"
-	+ "Cope:" + devState.cope_level + "mRL(" + cope_m.toFixed(2) + "m) \n"
+	+ "Cope:" + copeLevel + "mRL(" + cope_m.toFixed(2) + "m) \n"
 	+ devState.location;
     // Write the string to the console
     console.log("Message to send: " + messageText);
