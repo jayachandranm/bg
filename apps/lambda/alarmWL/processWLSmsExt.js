@@ -1,6 +1,8 @@
 //console.log('Loading function');
 // Load the AWS SDK
 var AWS = require("aws-sdk");
+var http = require('http');
+var sync_request = require('sync-request');
 var https = require('https');
 var utils = require('./wlAlertUtils');
 var config = require('./config.json');
@@ -49,7 +51,7 @@ function processWL(msg, context) {
             console.log("Error in getting Shadow.", err);
         } else {
             var jsonPayload = JSON.parse(data.payload);
-            console.log('Shadow: ' + jsonPayload.toString());
+            console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
             //console.log('status: ' + status);
             devState = jsonPayload.state.reported;
 	    // TODO: delta will be handled on device side.
@@ -81,6 +83,13 @@ function processWL(msg, context) {
                  return "Error";
                  }
                  */
+
+                var res = sync_request('GET', 'http://13.228.68.232/stationname.php?stationid=' + sid);
+                var locName = res.body.toString('utf-8').replace('\t','');
+                //var locName = res.getBody();
+                console.log(locName);
+                devState.location = locName;
+
                 var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
 
                 var subscriberList = new Array();
@@ -88,7 +97,7 @@ function processWL(msg, context) {
                     TopicArn: config.snsArn + ":" + sid
                     //NextToken: 'STRING_VALUE'
                 };
-                console.log("SNS params: ", params_sns);
+                //console.log("SNS params: ", params_sns);
                 sns.listSubscriptionsByTopic(params_sns, function (err, data) {
                     if (err)
                         console.log(err, err.stack); // an error occurred
@@ -133,7 +142,7 @@ function sendMsg(sid, msg, subsList) {
         //method: 'POST'
     };
     //var req = http.request(options, callback);
-    var req = https.get(options, callback);
+    var req = https.get(options, callback).end();
     /*
      req.write("hello world!");
      req.end();
