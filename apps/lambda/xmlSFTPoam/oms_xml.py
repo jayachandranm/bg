@@ -22,27 +22,18 @@ table = dynamodb.Table('pubc5wl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 
-#source = os.environ['LAMBDA_TASK_ROOT'] + "/test.txt"
-#hostname = "52.220.188.123"
-hostname = "49.128.56.51"
+hostname = "localhost"
 port = 22
-user = "ubuntu"
 myuser = "user"
 mypass = "tst"
 #remote_dir = "/home/ubuntu/SFTP\ Folders/Shared\ Folder/Blugraph/"
 remote_dir = "SFTP Folders/Shared Folder/Blugraph"
-#remote_dir = "xfiles/myx"
 
 def lambda_handler(event, context):
-    print
-    "Reached so far only"
-    key_filename = os.environ['LAMBDA_TASK_ROOT'] + "/lx_sg1.pem"
-    key_filename = paramiko.RSAKey.from_private_key_file(key_filename)
 
     try:
         t = paramiko.Transport(hostname, port)
         #print(t)
-        #t.connect(username=user, pkey=key_filename)
         t.connect(username=myuser, password=mypass)
         print("Connected")
     except:
@@ -59,13 +50,9 @@ def lambda_handler(event, context):
     except:
         print("chdir failure") 
 
-    tm = time.strftime('%Y-%m-%d_%H-%M')
-    #file = open(tm + ".txt", 'w')
-    #dest = "/home/ubuntu/xfiles/" + tm + ".xml"
-    #dest = sub_path + tm + ".xml"
+    tm = time.strftime('%Y-%m-%d_%H-%M-%S')
     dest = tm + ".xml"
     file=sftp.file(dest, "w", -1)
-    #    file.write('Hello World!\n')
     file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
     for x in stations:
         #print("<-------------------->")
@@ -129,7 +116,9 @@ def lambda_handler(event, context):
         )
         streamingBody = response["payload"]
         jsonState = json.loads(streamingBody.read())
-        loc = (jsonState["state"]["reported"]["location"])
+        loc = jsonState["state"]["reported"]["location"]
+        cope = jsonState["state"]["reported"]["cope_level"]
+        invert = jsonState["state"]["reported"]["invert_level"]
         #print(loc)
         #
         get_sid_url = "http://13.228.68.232/stationname.php?stationid=" + sid
@@ -148,8 +137,8 @@ def lambda_handler(event, context):
                        + "<missVal>" + "-999.9" + "</missVal>" \
                        + "<x>" + "31810.18</x>" \
                        + "<y>" + "41013.21" + "</y>" \
-                       + "<fileDescription>cope_level=" + "108.23" \
-                       + " invert_level=""105.73" \
+                       + "<fileDescription>cope_level=" + str(cope) \
+                       + " invert_level=" + str(invert) \
                        + "</fileDescription>" \
                        + "</header>" \
                        + "<event date=" + dt1 + " time=" + hm1 + " value=" + str(wa) + " />" \
@@ -168,4 +157,6 @@ def lambda_handler(event, context):
         file.flush()
     except:
         print("File write error.")
+
+    return "File uploaded."
 
