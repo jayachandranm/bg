@@ -1,0 +1,12 @@
+{
+    "endpointAddress": "<EP>.iot.<region>.amazonaws.com",
+    "snsArn": "arn:aws:sns:<region>:<id>",
+    "snsBattTopic": "topic",
+    "smsUser": "myuser",
+    "smsPass": "mypass",
+    "smsFrom": "bus",
+    "alarmThr_med": 12.5,
+    "alarmThr_low": 11.8,
+    "delta": 0.1
+}
+
