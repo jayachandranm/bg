@@ -51,8 +51,7 @@ function processWL(msg, context) {
             console.log("Error in getting Shadow.", err);
         } else {
             var jsonPayload = JSON.parse(data.payload);
-            console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
-            //console.log('status: ' + status);
+            //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
             devState = jsonPayload.state.reported;
 	    // TODO: delta will be handled on device side.
             //var delta = devState.delta;
@@ -72,17 +71,6 @@ function processWL(msg, context) {
 
             // May have to use history by accessing Shadow.
             if (alertLevel) {
-                // Make sure that thing name is same as station id.
-                // TODO : test
-                //thingName = "hello";
-                /*
-                 var devState = utils.getShadowState(iotdata, config);
-                 console.log("devState: ", devState);
-                 //
-                 if(devState == null) {
-                 return "Error";
-                 }
-                 */
 
                 var res = sync_request('GET', 'http://13.228.68.232/stationname.php?stationid=' + sid);
                 var locName = res.body.toString('utf-8').replace('\t','');
@@ -102,7 +90,7 @@ function processWL(msg, context) {
                     if (err)
                         console.log(err, err.stack); // an error occurred
                     else {
-                        //console.log(data.Subscriptions[0].Endpoint);           // successful response
+                        //console.log("Num subscritpions: ", data.Subscriptions.length);    
                         for (var i = 0; i < data.Subscriptions.length; i++) {
                             subscriberList.push(data.Subscriptions[i].Endpoint)
                         }
@@ -135,7 +123,7 @@ function sendMsg(sid, msg, subsList) {
     var path3 = "&sendid=" + encodeURI(sms_from)
         + "&dstno=" + encodeURI(subsCsvList);
     //
-    //console.log(path1 + path2 + path3);
+    console.log(path1 + path2 + path3);
     var options = {
         host: sms_server,
         path: path1 + path2 + path3,
