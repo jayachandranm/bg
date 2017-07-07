@@ -142,7 +142,8 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
     if(wlRise) {
         wlRiseTxt = "RISE";
     }
-    var messageText = "WGN " +msg.sid + "\n" 
+    //var messageText = "WGN " +msg.sid + "\n" 
+    var messageText = msg.sid + "\n" 
 	+ alertLevelTxt + "\n" 
 	+ wlRiseTxt + "\n" 
 	+ dt + "\n" 
