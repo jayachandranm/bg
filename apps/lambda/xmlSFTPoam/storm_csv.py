@@ -34,10 +34,10 @@ table = dynamodb.Table('pubc5wl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 
-hostname = "49.128.56.55"
+hostname = "localhost"
 port = 22
-myuser = "blugraph"
-mypass = "P@ss1234"
+myuser = "user"
+mypass = "tst"
 #remote_dir = "/home/ubuntu/SFTP\ Folders/Shared\ Folder/Blugraph/"
 #remote_dir = "SFTP Folders/Shared Folder/Blugraph"
 #remote_dir = "STORM SFTP/Blugraph"
