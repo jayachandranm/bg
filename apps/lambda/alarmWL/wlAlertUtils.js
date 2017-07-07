@@ -119,11 +119,6 @@ function setShadowState(iotdata, config) {
 //
 function composeSMS(msg, alertLevel, wlRise, devState) {
     // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
-/*
-    if (!wlRise && alertLevel == 10) {
-        // From Level 1 to normal.
-    }
-*/
     //var dt = new Date(msg.ts);
     // 2017-04-13 10:21:39
     //var options = {};
@@ -140,10 +135,6 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
 
     var lvlmtr = msg.wa/100;
     var copeLevel = devState.cope_level;
-    // TODO: Temp fix.
-    if(copeLevel === 200) {
-        copeLevel = 101;
-    }
     
     var wlmrl = devState.invert_level + lvlmtr;
     var cope_m = copeLevel - devState.invert_level
@@ -151,7 +142,8 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
     if(wlRise) {
         wlRiseTxt = "RISE";
     }
-    var messageText = "WGN " +msg.sid + "\n" 
+    //var messageText = "WGN " +msg.sid + "\n" 
+    var messageText = msg.sid + "\n" 
 	+ alertLevelTxt + "\n" 
 	+ wlRiseTxt + "\n" 
 	+ dt + "\n" 
