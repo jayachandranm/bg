@@ -111,7 +111,7 @@ function sendMsg(sid, msg, subsList) {
     //var phoneList = document.write(subsList.join(", "));
     //
     var sms_server = 'www.isms.com.my';
-    var path1 = "/isms_send.php?un=" + user + "&pwd=" + pass;
+    var path1 = "/isms_send_bulk.php?un=" + user + "&pwd=" + pass;
     var path2 = "&msg=" + encodeURI(msg) + "&type=1";
 
     // TODO: Prepare the CSV while parsing SNS response.
