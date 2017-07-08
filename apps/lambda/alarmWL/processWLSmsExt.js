@@ -10,8 +10,12 @@ var config = require('./config.json');
 var dateFormat = require('dateformat');
 var moment = require('moment');
 
+
 var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 //var iotdata = new AWS.IotData({endpoint: config.endpointAddress});
+
+AWS.config.update({ region: 'ap-southeast-1' });
+dynDoc = new AWS.DynamoDB.DocumentClient();
 
 // Create an SNS object
 var sns = new AWS.SNS({region: 'ap-southeast-1'});
@@ -23,14 +27,19 @@ module.exports.processWL = processWL;
 //exports.handler = (event, context, callback) => {
 function processWL(msg, context) {
     // Load the message passed into the Lambda function into a JSON object
-    var eventText = JSON.stringify(msg, null, 2);
+    //var eventText = JSON.stringify(msg, null, 2);
+    var record_0 = msg.Records[0].dynamodb;
+    var eventText = JSON.stringify(record_0, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
-    console.log("Received event:", eventText);
+    //console.log("Received DDB record-0:", eventText);
 
-    var currWL = msg.wl;
-    var lastWL = msg.hs.wl_1;
-    var thingName = msg.sid;
-    var sid = msg.sid;
+    var msg_0 = record_0.NewImage;
+    console.log("Received DDB record-0 (NewImage):", JSON.stringify(msg_0, null, 2));
+    var currWL = msg_0.wl.N;
+    var lastWL = currWL;
+    //var lastWL = msg.hs.wl_1;
+    var sid = msg_0.sid.S;
+    var thingName = sid;
     // If md does not exist in the message, this lambda will not be called.
     // If md is set and md =0, this lambda may be called.
     /*
@@ -56,6 +65,44 @@ function processWL(msg, context) {
 	    // TODO: delta will be handled on device side.
             //var delta = devState.delta;
             var delta = 0;
+
+            // Get prev value for this sid from DDB table.
+            var tablename = 'pubc5wl-ddb';
+            var ddb_params = {
+                TableName: tablename,
+                //IndexName: 'Index',
+                //KeyConditionExpression: 'sid = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
+                KeyConditionExpression: 'sid = :hkey',
+                ExpressionAttributeValues: {
+                    ':hkey': sid
+                    /*
+                    ,
+                    ':rkey_l': start_t,
+                    ':rkey_h': end_t
+                    */
+                },
+                ScanIndexForward: false,
+                Limit: 2,
+                /*
+                ExpressionAttributeNames: {
+                    '#ts': 'ts',
+                },
+                */
+            };
+
+            var record_1;
+            dynDoc.query(ddb_params, function (err, data) {
+                if (err) {
+                    console.log(err, err.stack);
+                    callback(err);
+                }
+                else {
+                    console.log("Retried data size: " );
+                    record_1 =  data.Items[1];
+                    console.log(JSON.stringify(record_1, null, 2));
+                }
+            });
+
             var wlRise = true;
             if (currWL > lastWL) {
                 wlRise = true;
@@ -124,6 +171,8 @@ function sendMsg(sid, msg, subsList) {
         + "&dstno=" + encodeURI(subsCsvList);
     //
     console.log(path1 + path2 + path3);
+
+    /*
     var options = {
         host: sms_server,
         path: path1 + path2 + path3,
@@ -131,10 +180,6 @@ function sendMsg(sid, msg, subsList) {
     };
     //var req = http.request(options, callback);
     var req = https.get(options, callback).end();
-    /*
-     req.write("hello world!");
-     req.end();
-     */
     // TODO: Update log based on SMS send response.
     storeInS3(sid, msg, subsCsvList);
 
@@ -145,15 +190,16 @@ function sendMsg(sid, msg, subsList) {
         response.on('data', function (chunk) {
             str += chunk;
         });
-	response.on('error', (e) => {
-	    console.error(e);
-	});
+        response.on('error', (e) => {
+            console.error(e);
+        });
         //the whole response has been recieved, so we just print it out here
         response.on('end', function () {
             console.log('SMS Sent: ', str);
             // TODO: If error, write to S3?
         });
     }
+    */
 }
 
 function storeInS3(sid, smsMsg, subsCsvList) {
