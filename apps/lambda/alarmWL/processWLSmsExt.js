@@ -25,21 +25,31 @@ module.exports.processWL = processWL;
 
 // Set up the code to call when the Lambda function is invoked
 //exports.handler = (event, context, callback) => {
-function processWL(msg, context) {
+function processWL(stream, context) {
     // Load the message passed into the Lambda function into a JSON object
     //var eventText = JSON.stringify(msg, null, 2);
-    var record_0 = msg.Records[0].dynamodb;
+    var record_0 = stream.Records[0].dynamodb;
     var eventText = JSON.stringify(record_0, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
     //console.log("Received DDB record-0:", eventText);
 
     var msg_0 = record_0.NewImage;
-    console.log("Received DDB record-0 (NewImage):", JSON.stringify(msg_0, null, 2));
+    //console.log("Received DDB record-0 (NewImage):", JSON.stringify(msg_0, null, 2));
     var currWL = msg_0.wl.N;
     var lastWL = currWL;
     //var lastWL = msg.hs.wl_1;
     var sid = msg_0.sid.S;
-    var thingName = sid;
+    var thingName = sid; 
+    var ts_unix = msg_0.ts.N;
+    var ts_r = msg_0.ts_r.S;
+
+    var msg = {
+        sid: sid,
+        wl: currWL,
+        wa: msg_0.wa.N,
+        ts: ts_unix
+    };
+    
     // If md does not exist in the message, this lambda will not be called.
     // If md is set and md =0, this lambda may be called.
     /*
@@ -70,24 +80,12 @@ function processWL(msg, context) {
             var tablename = 'pubc5wl-ddb';
             var ddb_params = {
                 TableName: tablename,
-                //IndexName: 'Index',
-                //KeyConditionExpression: 'sid = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
                 KeyConditionExpression: 'sid = :hkey',
                 ExpressionAttributeValues: {
                     ':hkey': sid
-                    /*
-                    ,
-                    ':rkey_l': start_t,
-                    ':rkey_h': end_t
-                    */
                 },
                 ScanIndexForward: false,
                 Limit: 2,
-                /*
-                ExpressionAttributeNames: {
-                    '#ts': 'ts',
-                },
-                */
             };
 
             var record_1;
@@ -97,60 +95,61 @@ function processWL(msg, context) {
                     callback(err);
                 }
                 else {
-                    console.log("Retried data size: " );
                     record_1 =  data.Items[1];
-                    console.log(JSON.stringify(record_1, null, 2));
+                    console.log("Current wl=", currWL, "; TS_R=", ts_r);
+                    console.log("Prev record: ", JSON.stringify(record_1, null, 2));
+                    lastWL = record_1.wl;
+                    //
+                    var wlRise = true;
+                    if (currWL > lastWL) {
+                        wlRise = true;
+                        alertLevel = utils.getAlertlevelRise(currWL, lastWL, config);
+                        console.log("Level Rising ->", alertLevel);
+                    }
+
+                    if (currWL < lastWL) {
+                        wlRise = false;
+                        alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, config);
+                        console.log("Level Falling ->", alertLevel);
+                    }
+
+                    // May have to use history by accessing Shadow.
+                    if (alertLevel) {
+
+                        var res = sync_request('GET', 'http://13.228.68.232/stationname.php?stationid=' + sid);
+                        var locName = res.body.toString('utf-8').replace('\t','');
+                        //var locName = res.getBody();
+                        console.log(locName);
+                        devState.location = locName;
+
+                        var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
+
+                        var subscriberList = new Array();
+                        var params_sns = {
+                            TopicArn: config.snsArn + ":" + sid
+                            //NextToken: 'STRING_VALUE'
+                        };
+                        //console.log("SNS params: ", params_sns);
+                        sns.listSubscriptionsByTopic(params_sns, function (err, data) {
+                            if (err)
+                                console.log(err, err.stack); // an error occurred
+                            else {
+                                //console.log("Num subscritpions: ", data.Subscriptions.length);
+                                for (var i = 0; i < data.Subscriptions.length; i++) {
+                                    subscriberList.push(data.Subscriptions[i].Endpoint)
+                                }
+                                // Use the subscriber list to send SMS through external vendor.
+                                sendMsg(sid, messageText, subscriberList);
+                            }
+                        }); // listSubscriptionsByTopic
+                    } // if alertLevel
                 }
             });
-
-            var wlRise = true;
-            if (currWL > lastWL) {
-                wlRise = true;
-                alertLevel = utils.getAlertlevelRise(currWL, lastWL, config);
-                console.log("Level Rising ->", alertLevel);
-            }
-
-            if (currWL < lastWL) {
-                wlRise = false;
-                alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, config);
-                console.log("Level Falling ->", alertLevel);
-            }
-
-            // May have to use history by accessing Shadow.
-            if (alertLevel) {
-
-                var res = sync_request('GET', 'http://13.228.68.232/stationname.php?stationid=' + sid);
-                var locName = res.body.toString('utf-8').replace('\t','');
-                //var locName = res.getBody();
-                console.log(locName);
-                devState.location = locName;
-
-                var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
-
-                var subscriberList = new Array();
-                var params_sns = {
-                    TopicArn: config.snsArn + ":" + sid
-                    //NextToken: 'STRING_VALUE'
-                };
-                //console.log("SNS params: ", params_sns);
-                sns.listSubscriptionsByTopic(params_sns, function (err, data) {
-                    if (err)
-                        console.log(err, err.stack); // an error occurred
-                    else {
-                        //console.log("Num subscritpions: ", data.Subscriptions.length);    
-                        for (var i = 0; i < data.Subscriptions.length; i++) {
-                            subscriberList.push(data.Subscriptions[i].Endpoint)
-                        }
-                        // Use the subscriber list to send SMS through external vendor.
-                        sendMsg(sid, messageText, subscriberList);
-                    }
-                }); // listSubscriptionsByTopic
-            } // if alertLevel
-        } // else
+        } // else (get shadow success)
     }); // getThingShadow
 }
 
-function sendMsg(sid, msg, subsList) {
+function sendMsg(sid, msgTxt, subsList) {
     var user = encodeURI(config.smsUser);
     var pass = encodeURI(config.smsPass);
     var sms_from = encodeURI(config.smsFrom);
@@ -159,7 +158,7 @@ function sendMsg(sid, msg, subsList) {
     //
     var sms_server = 'www.isms.com.my';
     var path1 = "/isms_send_bulk.php?un=" + user + "&pwd=" + pass;
-    var path2 = "&msg=" + encodeURI(msg) + "&type=1";
+    var path2 = "&msg=" + encodeURI(msgTxt) + "&type=1";
 
     // TODO: Prepare the CSV while parsing SNS response.
     var subsCsvList = '';
@@ -172,7 +171,6 @@ function sendMsg(sid, msg, subsList) {
     //
     console.log(path1 + path2 + path3);
 
-    /*
     var options = {
         host: sms_server,
         path: path1 + path2 + path3,
@@ -181,7 +179,7 @@ function sendMsg(sid, msg, subsList) {
     //var req = http.request(options, callback);
     var req = https.get(options, callback).end();
     // TODO: Update log based on SMS send response.
-    storeInS3(sid, msg, subsCsvList);
+    storeInS3(sid, msgTxt, subsCsvList);
 
     var callback = function (response) {
         var str = '';
@@ -199,7 +197,6 @@ function sendMsg(sid, msg, subsList) {
             // TODO: If error, write to S3?
         });
     }
-    */
 }
 
 function storeInS3(sid, smsMsg, subsCsvList) {
