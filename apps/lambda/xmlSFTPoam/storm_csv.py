@@ -39,13 +39,14 @@ port = 22
 myuser = "user"
 mypass = "tst"
 #remote_dir = "/home/ubuntu/SFTP\ Folders/Shared\ Folder/Blugraph/"
-remote_dir = "SFTP Folders/Shared Folder/Blugraph"
+#remote_dir = "SFTP Folders/Shared Folder/Blugraph"
+#remote_dir = "STORM SFTP/Blugraph"
+remote_dir = "Blugraph"
 
 def lambda_handler(event, context):
 
     try:
         t = paramiko.Transport(hostname, port)
-        #print(t)
         t.connect(username=myuser, password=mypass)
         print("Connected")
     except:
@@ -56,16 +57,16 @@ def lambda_handler(event, context):
     except paramiko.SSHException:
         print("Connection Error")
 
-    try:
-        sftp.chdir(remote_dir)
-        print("Changed remote to: " + remote_dir)
-    except:
-        print("chdir failure") 
+#    try:
+#        sftp.chdir(remote_dir)
+#        print("Changed remote to: " + remote_dir)
+#    except:
+#        print("chdir failure") 
 
     tm = time.strftime('%Y-%m-%d_%H-%M-%S')
-    dest = tm + ".xml"
+    dest = tm + ".csv"
     file=sftp.file(dest, "w", -1)
-    file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
+    #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
     for x in stations:
         #print("<-------------------->")
         #print(x)
@@ -99,6 +100,7 @@ def lambda_handler(event, context):
         #hm1 = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
         dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
         hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
+        dt_hm1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d %H:%M:%S')
         try:
             sid = data_row0['sid']
             #print(sid)
@@ -111,13 +113,18 @@ def lambda_handler(event, context):
             al = 2
         flag = al
         #
+        md_f = 0
         try:
             if 'md' in data_row0:
                 #print("There is md here")
                 md = data_row0['md']
                 #print(md)
+                if md == "maintenance":
+                    md_f = 1
+
                 if md == "spike":
                     flag = 3
+                    #md_f = 0
             #else:
             #    print("There is no md here")
             #
@@ -126,48 +133,27 @@ def lambda_handler(event, context):
 
         #print(flag)
         #
-        response = iot_client.get_thing_shadow(
-            thingName=str(sid)
-        )
-        streamingBody = response["payload"]
-        jsonState = json.loads(streamingBody.read())
-        loc = jsonState["state"]["reported"]["location"]
-        cope = jsonState["state"]["reported"]["cope_level"]
-        invert = jsonState["state"]["reported"]["invert_level"]
+        #response = iot_client.get_thing_shadow(
+        #    thingName=str(sid)
+        #)
+        #streamingBody = response["payload"]
+        #jsonState = json.loads(streamingBody.read())
+        #loc = jsonState["state"]["reported"]["location"]
+        #cope = jsonState["state"]["reported"]["cope_level"]
+        #invert = jsonState["state"]["reported"]["invert_level"]
         #print(loc)
-        get_sid_url = "http://13.228.68.232/coords.php?sid=" + sid
-        lat_lon_j = urllib2.urlopen(get_sid_url).read()
-        lat_lon = json.loads(lat_lon_j)
-        lat = lat_lon['lat']
-        lon = lat_lon['lon']
-        #lat_str = float("{0:.7f}".format(lat))
-        #lon_str = float("{0:.7f}".format(lon))
-        lat_str = "{0:.7f}".format(lat)
-        lon_str = "{0:.7f}".format(lon)
+        #
+        #get_sid_url = "http://13.228.68.232/stationname.php?stationid=" + sid
+        #loc2 = urllib2.urlopen(get_sid_url).read()
+        #loc2 = loc2.strip()
         #print(loc2)
-        #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
-        #               + "<x>" + "31810.18</x>" \
-        #               + "<y>" + "41013.21" + "</y>" \
-        xml_to_write = "<series>" \
-                       + "<header>" \
-                       + "<type>instantaneous</type>" \
-                       + "<locationId>" + str(sid) + "</locationId>" \
-                       + "<parameterId>" + "WaterLevel" + "</parameterId>" \
-                       + "<timeStep unit=""nonequidistant""/>" \
-                       + "<startDate date=" + "\"" + dt1 + "\"" + " time=" + "\"" + hm1 + "\"" + " />" \
-                       + "<endDate date=" + "\"" + dt1 + "\""  + " time=" + "\"" + hm1 + "\"" + " />" \
-                       + "<missVal>" + "-999.9" + "</missVal>" \
-                       + "<x>" + lat_str + "</x>" \
-                       + "<y>" + lon_str + "</y>" \
-                       + "<fileDescription>cope_level=" + str(cope) \
-                       + " invert_level=" + str(invert) \
-                       + "</fileDescription>" \
-                       + "</header>" \
-                       + "<event date=" + "\""  + dt1 + "\"" + " time=" + "\"" + hm1 + "\"" + " value=" + str(wa) + " />" \
-                       + "</series>"
-        print(xml_to_write)
+        csv_to_write = str(sid) + "," \
+                       + dt_hm1 + "," \
+                       + str(wa) + "," \
+                       + str(md_f) + "\n"
+        print(csv_to_write)
         try:
-            file.write(xml_to_write)  
+            file.write(csv_to_write)  
             #file.flush()
         except:
             print("File write error.")
@@ -175,7 +161,6 @@ def lambda_handler(event, context):
     #    sftp.put(source, dest)
     #      print ("Transfer completed")
     try:
-        file.write("</TimeSeries>")
         file.flush()
     except:
         print("File write error.")
