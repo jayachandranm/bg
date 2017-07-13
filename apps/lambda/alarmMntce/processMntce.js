@@ -17,21 +17,13 @@ function processMntce(devMsg, context) {
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
     console.log("Received event:", eventText);
     //
-    var thingName = devMsg.sid;
-    var battLevel = devMsg.bl;
+    var sid = devMsg.sid;
 
-    // May have to use history by accessing Shadow, or have a period of silence after an alert.
-    // get shadow
-    // if battery level < 80 and shadow batt_status = high, send alert.
-    // set shadow batt_status = medium.
-    // if batt_level < 60 and shadow batt_status = med, send alert.
-    // set shadow batt_status = low.
-    // From device, when batt_level > 70, if batt_status = low, set to medium.
-    // From device, when batt_level > 90, if batt_statu = low/medium, set to high.
+    // 
     var alertCondition = false;
     var devState;
     iotdata.getThingShadow({
-        thingName: thingName
+        thingName: sid
     }, function (err, data) {
         if (err) {
             context.fail(err);
@@ -42,13 +34,13 @@ function processMntce(devMsg, context) {
             //console.log('status: ' + status);
             devState = jsonPayload.state.reported;
             var mode = devState.mode;
-            //if((battLevel < config.warn_1) && (battState === "high")) {
             var messageText = '';
+	    // If Shadow mode is active, this is first maintenance message.
             if ((mode === "active")) {
-                console.log("Device switched to maintenance mode.");
+                console.log("Device initiated switch to maintenance mode.");
                 messageText = composeMsg(devMsg, "switched to maintenance", devState);
                 sendMsg(messageText);
-                setShadowState("maintenance.");
+                setShadowState("maintenance");
             }
 
         } // else
@@ -72,16 +64,16 @@ function processMntce(devMsg, context) {
     var composeMsg = function (devMsg, alertMsg, devState) {
         // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
 	var dt = new Date(devMsg.ts);
-        var messageText = "Switched to maintenance, "
-            + " Station: " + devMsg.sid
+        var messageText = " Station: " + devMsg.sid
+            + alertMsg
             + " at time: " + dt.toLocaleString();
         // Write the string to the console
         console.log("Message to send: " + messageText);
         return messageText;
     }
 
-    var setShadowState = function (status) {
-        var newStatus = status;
+    var setShadowState = function (val) {
+        var newStatus = val;
         var update = {
             "state": {
                 "desired": {
@@ -91,7 +83,7 @@ function processMntce(devMsg, context) {
         };
         iotdata.updateThingShadow({
             payload: JSON.stringify(update),
-            thingName: thingName
+            thingName: sid
         }, function (err, data) {
             if (err) {
                 //context.fail(err);
