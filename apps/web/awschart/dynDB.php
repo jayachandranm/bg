@@ -21,11 +21,8 @@ function _getdata_dyndb($reqtype, $filter)
     }
 
     $marshaler = new Marshaler();
-    //$tableName = 'OBDTable_mmmYYYY';
-    $tableName = 'wlTest';
+    $tableName = 'pubc5wl-ddb';
     //global $dynamodb, $marshaler, $tableName;
-    // From admin page.
-    //$max_num = variable_get('bgmap_max', 3);
     //$sid_list = $filter[sidList];
     //$sid_list = $filter->sidList;
     //$start_time = $filter->start;
@@ -37,7 +34,7 @@ function _getdata_dyndb($reqtype, $filter)
         $sid = $filter->sid;
         $params = [
             'TableName' => $tableName,
-            'ProjectionExpression' => '#ts, wl',
+            'ProjectionExpression' => '#ts, wl, ss, bl',
             'KeyConditionExpression' =>
                 'sid = :o_id',
             'ScanIndexForward' => false,
@@ -84,18 +81,12 @@ function _getdata_dyndb($reqtype, $filter)
            }
         ');
 */
-/*
-        $sid = '213EP2016000570';
-        $start_time =  '1480565971000';
-        $end_time = '1480567044000';
-*/
         $params = [
             'TableName' => $tableName,
-            'ProjectionExpression' => '#ts, wl',
+            'ProjectionExpression' => '#ts, wl, ss, bl',
             'KeyConditionExpression' =>
                 'sid = :o_id and #ts between :begin and :end',
             'ScanIndexForward' => true,
-            'FilterExpression' => 'attribute_not_exists(md) and (wl = :wl_1)',
             'ExpressionAttributeNames' => ['#ts' => 'ts'],
             'ExpressionAttributeValues' => [
                 ':o_id' => ['S' => $sid],
@@ -130,19 +121,6 @@ function _getdata_dyndb($reqtype, $filter)
             echo $e->getMessage() . "\n";
         }
 
-/*
-        try {
-            $result_dyn = $dynamodb->query($params);
-            foreach ($result_dyn['Items'] as $i) {
-            //$i = $result_dyn['Items'];
-            $result[] = $marshaler->unmarshalItem($i);
-            //print_r($gps_data);
-            }
-        } catch (DynamoDbException $e) {
-            echo "Unable to query:\n";
-            echo $e->getMessage() . "\n";
-        }
-*/
     }
     //dpm($result);
     return $result;
