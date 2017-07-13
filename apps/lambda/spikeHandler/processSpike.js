@@ -14,10 +14,9 @@ module.exports.processSpike = processSpike;
 function processSpike(devMsg, context) {
     // Load the message passed into the Lambda function into a JSON object
     var eventText = JSON.stringify(devMsg, null, 2);
-    // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
     console.log("Received event:", eventText);
     //
-    var thingName = devMsg.sid;
+    var sid = devMsg.sid;
     var mode = devMsg.md;
     var SPIKE_PERIOD_THR = config.spikeDur_Thr; //30*60*1000; // 30mts.
     // If mode != spike, something wrong, send alert and return.
@@ -29,7 +28,7 @@ function processSpike(devMsg, context) {
     // Get Shadow, spike_time
     var devState;
     iotdata.getThingShadow({
-        thingName: thingName
+        thingName: sid
     }, function (err, data) {
         if (err) {
             context.fail(err);
@@ -80,21 +79,23 @@ function processSpike(devMsg, context) {
         // Create a string extracting the click type and serial number from the message sent by the AWS IoT button
 	    var dt = new Date(devMsg.ts);
         var messageText = alertMsg 
-            + " for Station: " + devMsg.sid
+            + " for Station: " + sid
             + " at time: " + dt.toLocaleString();
         // Write the string to the console
         console.log("Message to send: " + messageText);
         return messageText;
     }
 
-    var setShadowState = function (state, status) {
-        var newStatus = status;
+    var setShadowState = function (state, val) {
+        var newStatus = val;
         var update;
+	// Whenever there is a mode change, spike_time is reset.
         if(state === "mode") {
             update = {
                 "state": {
                     "desired": {
-                        "mode": newStatus
+                        "mode": newStatus,
+                        "spike_time": -1
                     }
                 }
             };
@@ -111,7 +112,7 @@ function processSpike(devMsg, context) {
         }
         iotdata.updateThingShadow({
             payload: JSON.stringify(update),
-            thingName: thingName
+            thingName: sid
         }, function (err, data) {
             if (err) {
                 //context.fail(err);
