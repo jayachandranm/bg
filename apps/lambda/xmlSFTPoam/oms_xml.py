@@ -16,6 +16,8 @@ import urllib2
 from datetime import datetime
 import time
 
+from lxml import etree, objectify
+
 with open("station-ids.json") as json_file:
     try:
         json_data = json.load(json_file)
@@ -40,6 +42,32 @@ port = config['port']
 myuser = config['user']
 mypass = config['pass']
 remote_dir = config['remote_dir']
+
+#----------------------------------------------------------------------
+def create_series(data):
+    """
+    Create a time series XML element for single div
+    """
+    dt = data["dt"]
+    tm = data["tm"]
+    wa = data["wa"]
+    series = objectify.Element("series")
+    header = objectify.SubElement(series, "header")
+    header.type = "instantaneous" #data["type"]
+    header.locationId = data["locationId"]
+    header.parameterId = "WaterLevel"
+    header.timeStep = objectify.Element("timeStep", unit="nonequidistant")
+    header.startDate = objectify.Element("startDate", date=dt, time=tm, tz="Asia/Singapore")
+    header.endDate = objectify.Element("endDate", date=dt, time=tm, tz="Asia/Singapore")
+    header.missVal = -999.9
+    header.x = data["x"]
+    header.y = data["y"]
+    header.fileDescription = data["fileDescription"]
+    event = objectify.SubElement(series, "event", date=dt, time=tm, value=str(wa))
+    return series
+ 
+#----------------------------------------------------------------------
+
 
 def lambda_handler(event, context):
 
@@ -66,14 +94,21 @@ def lambda_handler(event, context):
     dest = tm + ".xml"
     file=sftp.file(dest, "w", -1)
     file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
-    for x in stations:
+ 
+    xml = '''<?xml version="1.0" encoding="UTF-8"?>
+    <TimeSeries>
+    </TimeSeries>
+    '''
+    root = objectify.fromstring(xml)
+
+    for sid in stations:
         #print("<-------------------->")
         #print(x)
         try:
             response = table.query(
                 Limit=1,
                 ScanIndexForward=False,
-                KeyConditionExpression=Key('sid').eq(x)
+                KeyConditionExpression=Key('sid').eq(sid)
             )
         except:
             print("DB access error.")
@@ -98,7 +133,7 @@ def lambda_handler(event, context):
         dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
         hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
         try:
-            sid = data_row0['sid']
+            #sid = data_row0['sid']
             #print(sid)
             al = data_row0['al']
             #print(al)
@@ -146,37 +181,37 @@ def lambda_handler(event, context):
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
         #               + "<x>" + "31810.18</x>" \
         #               + "<y>" + "41013.21" + "</y>" \
-        xml_to_write = "<series>" \
-                       + "<header>" \
-                       + "<type>instantaneous</type>" \
-                       + "<locationId>" + str(sid) + "</locationId>" \
-                       + "<parameterId>" + "WaterLevel" + "</parameterId>" \
-                       + "<timeStep unit=""nonequidistant""/>" \
-                       + "<startDate date=" + "\"" + dt1 + "\"" + " time=" + "\"" + hm1 + "\"" + " />" \
-                       + "<endDate date=" + "\"" + dt1 + "\""  + " time=" + "\"" + hm1 + "\"" + " />" \
-                       + "<missVal>" + "-999.9" + "</missVal>" \
-                       + "<x>" + lat_str + "</x>" \
-                       + "<y>" + lon_str + "</y>" \
-                       + "<fileDescription>cope_level=" + str(cope) \
-                       + " invert_level=" + str(invert) \
-                       + "</fileDescription>" \
-                       + "</header>" \
-                       + "<event date=" + "\""  + dt1 + "\"" + " time=" + "\"" + hm1 + "\"" + " value=" + str(wa) + " />" \
-                       + "</series>"
-        print(xml_to_write)
-        try:
-            file.write(xml_to_write)  
-            #file.flush()
-        except:
-            print("File write error.")
-    #      print ("Print completed")
-    #    sftp.put(source, dest)
-    #      print ("Transfer completed")
+
+        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"100.00\""}
+
+        appt = create_series({
+                        "locationId": sid,
+                        "dt": dt1,
+                        "tm": hm1,
+                        "x": lat_str,
+                        "y": lon_str,
+                        "fileDescription": desc
+                        "wl": wa
+                        })
+
+        root.append(appt)
+
+    # remove lxml annotation
+    objectify.deannotate(root)
+    etree.cleanup_namespaces(root)
+
+    # create the xml string
+    obj_xml = etree.tostring(root,
+                             pretty_print=True,
+                             xml_declaration=True)
+    print(obj_xml)
+
     try:
-        file.write("</TimeSeries>")
+        file.write(obj_xml)  
         file.flush()
     except:
         print("File write error.")
+    #    sftp.put(source, dest)
 
     return "File uploaded."
 
