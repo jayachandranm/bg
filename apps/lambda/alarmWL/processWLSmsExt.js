@@ -43,6 +43,11 @@ function processWL(stream, context) {
     var ts_unix = msg_0.ts.N;
     var ts_r = msg_0.ts_r.S;
 
+    // If md is defined, do nothing, just return.
+    if (typeof msg_0.md.S !== 'undefined') { // && msg.md !== null) {
+        return;
+    }
+
     var msg = {
         sid: sid,
         wl: currWL,
