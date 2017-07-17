@@ -12,7 +12,6 @@ from boto3.dynamodb.conditions import Key, Attr
 
 import urllib2
 
-#import datetime
 from datetime import datetime
 import time
 
@@ -51,6 +50,7 @@ def create_series(data):
     dt = data["dt"]
     tm = data["tm"]
     wa = data["wa"]
+    mrl = data["mrl"]
     series = objectify.Element("series")
     header = objectify.SubElement(series, "header")
     header.type = "instantaneous" #data["type"]
@@ -63,7 +63,7 @@ def create_series(data):
     header.x = data["x"]
     header.y = data["y"]
     header.fileDescription = data["fileDescription"]
-    event = objectify.SubElement(series, "event", date=dt, time=tm, value=str(wa))
+    event = objectify.SubElement(series, "event", date=dt, time=tm, tz="Asia/Singapore", value=mrl)
     return series
  
 #----------------------------------------------------------------------
@@ -140,6 +140,7 @@ def lambda_handler(event, context):
         except:
             print("No SID")
 
+        # TODO:
         if al > 2:
             al = 2
         flag = al
@@ -149,6 +150,7 @@ def lambda_handler(event, context):
                 #print("There is md here")
                 md = data_row0['md']
                 #print(md)
+                # TODO:
                 if md == "spike":
                     flag = 3
             #else:
@@ -177,6 +179,8 @@ def lambda_handler(event, context):
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
+        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
+        mrl_str = "{0:.2f}".format(mrl_val)
         #print(loc2)
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
         #               + "<x>" + "31810.18</x>" \
@@ -190,8 +194,9 @@ def lambda_handler(event, context):
                         "tm": hm1,
                         "x": lat_str,
                         "y": lon_str,
-                        "fileDescription": desc
-                        "wl": wa
+                        "fileDescription": desc,
+                        "wa": wa,
+                        "mrl": mrl_str
                         })
 
         root.append(appt)
