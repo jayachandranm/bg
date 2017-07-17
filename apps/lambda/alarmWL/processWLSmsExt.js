@@ -16,6 +16,7 @@ var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-sou
 
 AWS.config.update({ region: 'ap-southeast-1' });
 dynDoc = new AWS.DynamoDB.DocumentClient();
+var parse = AWS.DynamoDB.Converter.output;
 
 // Create an SNS object
 var sns = new AWS.SNS({region: 'ap-southeast-1'});
@@ -34,6 +35,8 @@ function processWL(stream, context) {
     //console.log("Received DDB record-0:", eventText);
 
     var msg_0 = record_0.NewImage;
+    var msg = parse({ "M": record_0.NewImage });
+    console.log("New msg:", msg);
     //console.log("Received DDB record-0 (NewImage):", JSON.stringify(msg_0, null, 2));
     var currWL = msg_0.wl.N;
     var lastWL = currWL;
@@ -44,17 +47,21 @@ function processWL(stream, context) {
     var ts_r = msg_0.ts_r.S;
 
     // If md is defined, do nothing, just return.
-    if (typeof msg_0.md.S !== 'undefined') { // && msg.md !== null) {
+    //if (msg.hasOwnProperty(md) ) { // && msg.md !== null) {
+    if (typeof(msg.md) !== 'undefined') { // && msg.md !== null) {
+	console.log("Flag md set, either maintenance or spike. Recieved Record: ", eventText);
         return;
     }
 
+/*
     var msg = {
         sid: sid,
         wl: currWL,
         wa: msg_0.wa.N,
         ts: ts_unix
     };
-    
+*/  
+
     // If md does not exist in the message, this lambda will not be called.
     // If md is set and md =0, this lambda may be called.
     /*
