@@ -14,6 +14,7 @@ import urllib2
 
 from datetime import datetime
 import time
+import pytz
 
 from lxml import etree, objectify
 
@@ -130,8 +131,14 @@ def lambda_handler(event, context):
         #
         wa = wa/100
         ts = int(ts_millis / 1000)
-        dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
-        hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
+        #dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
+        #hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
+        utc_dt = datetime.fromtimestamp(ts)
+        utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+        sg_tz = pytz.timezone('Asia/Singapore')
+        sg_time = utc_time.astimezone(sg_tz)
+        dt1 = sg_time.strftime('%Y-%m-%d')
+        hm1 = sg_time.strftime('%H:%M:%S')
         try:
             #sid = data_row0['sid']
             #print(sid)

@@ -15,6 +15,7 @@ import urllib2
 #import datetime
 from datetime import datetime
 import time
+import pytz
 
 with open("station-ids.json") as json_file:
     try:
@@ -61,9 +62,14 @@ def lambda_handler(event, context):
 #    except:
 #        print("chdir failure") 
 
-    curr_t = int(time.time())
+    #curr_t = int(time.time())
     #tm = time.strftime('%Y-%m-%d_%H-%M-%S')
-    tm = datetime.fromtimestamp(curr_t+28800).strftime('%Y-%m-%d_%H-%M-%S')
+    #tm = datetime.fromtimestamp(curr_t+28800).strftime('%Y-%m-%d_%H-%M-%S')
+    utc_time = datetime.utcnow()
+    utc_time = utc_time.replace(tzinfo=pytz.UTC)
+    sg_tz = pytz.timezone('Asia/Singapore')
+    sg_time = utc_time.astimezone(sg_tz)
+    tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
     dest = tm + ".csv"
     file=sftp.file(dest, "w", -1)
     for sid in stations:
