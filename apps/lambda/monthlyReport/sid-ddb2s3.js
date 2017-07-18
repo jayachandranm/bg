@@ -1,10 +1,11 @@
 var aws = require('aws-sdk');
 var stream = require('stream');
-var DynStream = require('./dyn-stream');
-var CSVTransform = require('./transform-stream');
 //var MyStream = require('json2csv-stream');
 var zlib = require('zlib');
 var dateFormat = require('dateformat');
+var moment = require('moment');
+var DynStream = require('./dyn-stream');
+var CSVTransform = require('./transform-stream');
 var sids_j = require('./station-ids.json');
 
 var sids = sids_j.stations;
@@ -18,28 +19,34 @@ function sidRawToCsv(context) {
   var bucket_name = 'pubc5wl';
   var folder_name = 'monthly_report';
   //
-  var d = new Date();
-  //d.setHours(0,0,0,0);
-  var end_t = d.getTime();
-  //self._end_t = end_t;
-  d.setDate(d.getDate() - 1);
-  var start_t = d.getTime();
+  // moment().local();
+  var currMonthStart = moment().utcOffset('+0800').startOf('month');
+  var lastMonthStart = moment(currMonthStart).subtract(1, 'months');
+  var lastMonthEnd = moment(lastMonthStart).endOf('month');
+  //console.log(currMonthStart.format(), lastMonthStart.format(), lastMonthEnd.format());
+  //console.log(currMonthStart.valueOf(), lastMonthStart.valueOf(), lastMonthEnd.valueOf())
+  end_t = lastMonthEnd.valueOf();
+  start_t = lastMonthStart.valueOf();
   //self._start_t = start_t;
   console.log("Start/end times..", start_t, end_t);
-
   //
-  sids.forEach(function(sid){
-    var data_stream = DynStream(table_name, sid, start_t, end_t);
-    var gzip = zlib.createGzip();
-    var csv = CSVTransform();
-    //var parser = new MyStream();
+  var count = 0;
+  function streamToS3() {
+    if(count < sids.length) {
+      var sid = sids[count];
+      count++;
+      //console.log("Processing, ", sid);
+      var data_stream = DynStream(table_name, sid, start_t, end_t);
+      var gzip = zlib.createGzip();
+      var csv = CSVTransform();
+      //var parser = new MyStream();
 
-    // body will contain the compressed content to ship to s3
-    //var body = data_stream.pipe(csv).pipe(process.stdout);
-    var body = data_stream.pipe(csv).pipe(gzip);
+      // body will contain the compressed content to ship to s3
+      //var body = data_stream.pipe(csv).pipe(process.stdout);
+      var body = data_stream.pipe(csv).pipe(gzip);
 
-    var s3obj = new aws.S3({params: {Bucket: bucket_name, Key: folder_name + '/' + sid + '-' + ts + '.xls.gz'}});
-    s3obj.upload({Body: body}).
+      var s3obj = new aws.S3({params: {Bucket: bucket_name, Key: folder_name + '/' + sid + '-' + ts + '.xls.gz'}});
+      s3obj.upload({Body: body}).
       on('httpUploadProgress', function(evt) {
         console.log(evt);
       }).
@@ -47,7 +54,10 @@ function sidRawToCsv(context) {
         console.log(err, data);
       });
       //send(function(err, data) { console.log(err, data); callback(); });
-  }); // forEach
+      setTimeout(streamToS3, 500);
+    }// if count
+  } // streamToS3
+  streamToS3();
 } // sidRawToCsv
 
 module.exports.sidRawToCsv = sidRawToCsv;

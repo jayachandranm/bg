@@ -42,8 +42,8 @@ DynStream.prototype._read = function read() {
       console.log(err, err.stack);
     }
     else {
-      console.log(data);
-      console.log(self._sid, self._start_t, self._end_t);
+      //console.log(data);
+      //console.log(self._sid, self._start_t, self._end_t);
       table = data.Table;
       // Write table metadata to first line
       //self.push(table);
