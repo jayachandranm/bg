@@ -1,5 +1,5 @@
 var aws = require('aws-sdk');
-var Readable = require('stream').Readable;  
+var Readable = require('stream').Readable;
 var util = require('util');
 
 aws.config.update({ region: 'ap-southeast-1' });
@@ -8,8 +8,9 @@ dynDoc = new aws.DynamoDB.DocumentClient();
 
 module.exports = DynStream;
 
-function DynStream(tablename, sid, start_t, end_t, options) {  
-  if (! (this instanceof DynStream)) return new DynStream(tablename, options);
+function DynStream(tablename, sid, start_t, end_t, options) {
+  if ( !(this instanceof DynStream) ) 
+	return new DynStream(tablename, sid, start_t, end_t, options);
   this._tablename = tablename;
   this.connecting = false;
   this.ended  = false;
@@ -25,39 +26,38 @@ function DynStream(tablename, sid, start_t, end_t, options) {
 
 util.inherits(DynStream, Readable);
 
-DynStream.prototype._read = function read() {  
+DynStream.prototype._read = function read() {
   //console.log("******* _ read() ********");
   var self = this;
   if (this.connecting || this.ended) return;
 
   this.connecting = true;
- 
+
   // create parameters hash for table scan
   //var params = {TableName: this._tablename, ReturnConsumedCapacity: 'NONE', Limit: '1'};
 
   // describe the table and write metadata to the backup
   dynamo.describeTable({TableName: this._tablename}, function(err, data) {
-    if (err) console.log(err, err.stack);
+    if (err) {
+      console.log(err, err.stack);
+    }
     else {
-      //console.log(data);
-      table = data.Table
+      console.log(data);
+      console.log(self._sid, self._start_t, self._end_t);
+      table = data.Table;
       // Write table metadata to first line
       //self.push(table);
-  //var fields = ['timestamp', 'gps_data.latitude', 'gps_data.longitude', 'obd_dev_id'];
       // Create one dummy row of data, where the values goes for title.
       var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
       self.push(title);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
-
-      //self._scan(params);
-
       var params = {
         TableName: self._tablename,
         //IndexName: 'Index',
         KeyConditionExpression: 'sid = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
         ExpressionAttributeValues: {
-          ':hkey': self._sids,
+          ':hkey': self._sid,
           ':rkey_l': self._start_t,
           ':rkey_h': self._end_t
         },
@@ -65,28 +65,11 @@ DynStream.prototype._read = function read() {
           '#ts': 'ts',
         },
       };
-      
+      //
       self._query(params);
-
-      function multiQuery() {
-        //console.log("Multi query..", self._count, self._sidSize, "===============");
-        if(self._count < self._sidSize) {
-          params.ExpressionAttributeValues = { ':hkey': sids[self._count], ':rkey_l': self._start_t, ':rkey_h': self._end_t };
-          self._query(params, function(err){
-            self._count++;
-            setTimeout(multiQuery, 1000);
-          });
-        }
-        else {
-          //console.log("ENDED");
-          self.ended = true;
-          self.push(null);
-        }
-      }
-      multiQuery();
-    }
-  });
-};
+    } // else (no_err)
+  }); //describeTable
+}; // read
 
 DynStream.prototype._query = function (params) {
   var self = this;
@@ -101,7 +84,7 @@ DynStream.prototype._query = function (params) {
         self.push(data.Items[idx]);
         //self._count++;
       }
-     
+      //
       if (typeof data.LastEvaluatedKey != "undefined") {
         params.ExclusiveStartKey = data.LastEvaluatedKey;
         //dynamo.scan(params, onScan);
@@ -111,8 +94,10 @@ DynStream.prototype._query = function (params) {
         //data_stream.end()
         self.push(null);
       }
-  });
-};
+
+    } // else (no_err)
+  }); //dynDoc.query
+}; //_query
 
 DynStream.prototype._scan = function (params) {
   var self = this;
@@ -137,4 +122,3 @@ DynStream.prototype._scan = function (params) {
     }
   });
 };
-
