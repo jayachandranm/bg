@@ -30,13 +30,14 @@ function sidRawToCsv(context) {
   //self._start_t = start_t;
   file_dt_tag = lastMonthStart.format("MM-YYYY");
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
+  console.log("Number of sids..", sids.length);
   //
   var count = 0;
   function streamToS3() {
     if(count < sids.length) {
       var sid = sids[count];
       count++;
-      //console.log("Processing, ", sid);
+      console.log("Processing, ", sid);
       var data_stream = DynStream(table_name, sid, start_t, end_t);
       var gzip = zlib.createGzip();
       var csv = CSVTransform();
