@@ -34,6 +34,21 @@ function sidRawToCsv(context) {
   console.log("Number of sids..", sids.length);
   //
   var archive = archiver('zip');
+  var s3obj = new aws.S3(
+   { params:
+     { Bucket: bucket_name,
+       Key: folder_name + '/' + 'test.zip'
+     }
+   }
+  );
+  s3obj.upload({Body: archive}).
+  on('httpUploadProgress', function(evt) {
+    console.log(evt);
+  }).
+  send(function(err, data) {
+    console.log(err, data);
+  });
+
   var count = 0;
   function streamToS3(callback) {
     if(count < sids.length) {
@@ -52,8 +67,7 @@ function sidRawToCsv(context) {
       var abs_filename = folder_name + '/' + file_dt_tag + '/' + sid + '_' + file_dt_tag + '.xls.gz';
       console.log("Filename=", abs_filename);
       var rel_filename = sid + '_' + file_dt_tag + '.xls.gz';
-      archive
-        .append(body, { name: rel_filename });
+      archive.append(body, { name: rel_filename });
       //send(function(err, data) { console.log(err, data); callback(); });
       setTimeout(streamToS3, 500);
     }// if count
