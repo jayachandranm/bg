@@ -28,7 +28,8 @@ function sidRawToCsv(context) {
   end_t = lastMonthEnd.valueOf();
   start_t = lastMonthStart.valueOf();
   //self._start_t = start_t;
-  console.log("Start/end times..", start_t, end_t);
+  file_dt_tag = lastMonthStart.format("MM-YYYY");
+  console.log("Start/end times..", start_t, end_t, file_dt_tag);
   //
   var count = 0;
   function streamToS3() {
@@ -45,7 +46,16 @@ function sidRawToCsv(context) {
       //var body = data_stream.pipe(csv).pipe(process.stdout);
       var body = data_stream.pipe(csv).pipe(gzip);
 
-      var s3obj = new aws.S3({params: {Bucket: bucket_name, Key: folder_name + '/' + sid + '-' + ts + '.xls.gz'}});
+      var abs_filename = folder_name + '/' + file_dt_tag + '/' + sid + '_' + file_dt_tag + '.xls.gz';
+      console.log("Filename=", abs_filename);
+
+      var s3obj = new aws.S3(
+        { params:
+          { Bucket: bucket_name,
+            Key: abs_filename
+          }
+        }
+      );
       s3obj.upload({Body: body}).
       on('httpUploadProgress', function(evt) {
         console.log(evt);
