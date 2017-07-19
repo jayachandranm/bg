@@ -4,6 +4,7 @@ var stream = require('stream');
 var zlib = require('zlib');
 var dateFormat = require('dateformat');
 var moment = require('moment');
+var archiver = require('archiver');
 var DynStream = require('./dyn-stream');
 var CSVTransform = require('./transform-stream');
 var sids_j = require('./station-ids.json');
@@ -32,8 +33,9 @@ function sidRawToCsv(context) {
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
   console.log("Number of sids..", sids.length);
   //
+  var archive = archiver('zip');
   var count = 0;
-  function streamToS3() {
+  function streamToS3(callback) {
     if(count < sids.length) {
       var sid = sids[count];
       count++;
@@ -49,24 +51,15 @@ function sidRawToCsv(context) {
 
       var abs_filename = folder_name + '/' + file_dt_tag + '/' + sid + '_' + file_dt_tag + '.xls.gz';
       console.log("Filename=", abs_filename);
-
-      var s3obj = new aws.S3(
-        { params:
-          { Bucket: bucket_name,
-            Key: abs_filename
-          }
-        }
-      );
-      s3obj.upload({Body: body}).
-      on('httpUploadProgress', function(evt) {
-        console.log(evt);
-      }).
-      send(function(err, data) {
-        console.log(err, data);
-      });
+      var rel_filename = sid + '_' + file_dt_tag + '.xls.gz';
+      archive
+        .append(body, { name: rel_filename });
       //send(function(err, data) { console.log(err, data); callback(); });
       setTimeout(streamToS3, 500);
     }// if count
+    else{
+      console.log("All stations processed.");;
+    }
   } // streamToS3
   streamToS3();
 } // sidRawToCsv
