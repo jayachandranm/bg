@@ -8,19 +8,20 @@ var archiver = require('archiver');
 var DynStream = require('./dyn-stream');
 var CSVTransform = require('./transform-stream');
 var sids_j = require('./station-ids.json');
+var config = require('./config.json');
 
 var sids = sids_j.stations;
 
-//var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
 
 function sidRawToCsv(context) {
   //function backupTable(tablename, callback) {
   //console.log("backup..");
-  var table_name = 'pubc5wl-ddb';
-  var bucket_name = 'pubc5wl';
-  var folder_name = 'monthly_report';
+  var table_name = config.table;
+  var bucket_name = config.bucket;
+  var folder_name = config.folder;
   //
   // moment().local();
+  //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
   var currMonthStart = moment().utcOffset('+0800').startOf('month');
   var lastMonthStart = moment(currMonthStart).subtract(1, 'months');
   var lastMonthEnd = moment(lastMonthStart).endOf('month');
@@ -74,7 +75,7 @@ function sidRawToCsv(context) {
       //console.log("Filename=", abs_filename);
       archive.append(body, { name: filename });
       //send(function(err, data) { console.log(err, data); callback(); });
-      setTimeout(getMultiFileStream, 500);
+      setTimeout(getMultiFileStream, config.pause);
     }// if count
     else{
       console.log("All stations processed.");
