@@ -2,7 +2,7 @@ var aws = require('aws-sdk');
 var stream = require('stream');
 //var MyStream = require('json2csv-stream');
 var zlib = require('zlib');
-var dateFormat = require('dateformat');
+//var dateFormat = require('dateformat');
 var moment = require('moment');
 var archiver = require('archiver');
 var DynStream = require('./dyn-stream');
@@ -11,7 +11,7 @@ var sids_j = require('./station-ids.json');
 
 var sids = sids_j.stations;
 
-var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
+//var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
 
 function sidRawToCsv(context) {
   //function backupTable(tablename, callback) {
@@ -34,13 +34,18 @@ function sidRawToCsv(context) {
   console.log("Number of sids..", sids.length);
   //
   var archive = archiver('zip');
+  archive.on('error', function(err) {
+    throw err;
+  });
+  //
   var s3obj = new aws.S3(
    { params:
      { Bucket: bucket_name,
-       Key: folder_name + '/' + 'test.zip'
+       Key: folder_name + '/' + file_dt_tag + '.zip'
      }
    }
   );
+  //
   s3obj.upload({Body: archive}).
   on('httpUploadProgress', function(evt) {
     console.log(evt);
@@ -50,7 +55,7 @@ function sidRawToCsv(context) {
   });
 
   var count = 0;
-  function streamToS3(callback) {
+  function getMultiFileStream(callback) {
     if(count < sids.length) {
       var sid = sids[count];
       count++;
@@ -58,24 +63,25 @@ function sidRawToCsv(context) {
       var data_stream = DynStream(table_name, sid, start_t, end_t);
       var gzip = zlib.createGzip();
       var csv = CSVTransform();
-      //var parser = new MyStream();
 
-      // body will contain the compressed content to ship to s3
+      // body will contain the stream content to ship to s3
       //var body = data_stream.pipe(csv).pipe(process.stdout);
-      var body = data_stream.pipe(csv).pipe(gzip);
+      //var body = data_stream.pipe(csv).pipe(gzip);
+      var body = data_stream.pipe(csv);
 
-      var abs_filename = folder_name + '/' + file_dt_tag + '/' + sid + '_' + file_dt_tag + '.xls.gz';
-      console.log("Filename=", abs_filename);
-      var rel_filename = sid + '_' + file_dt_tag + '.xls.gz';
-      archive.append(body, { name: rel_filename });
+      var filename = sid + '_' + file_dt_tag + '.xls';
+      //var abs_filename = folder_name + '/' + file_dt_tag + '/' + filename;
+      //console.log("Filename=", abs_filename);
+      archive.append(body, { name: filename });
       //send(function(err, data) { console.log(err, data); callback(); });
-      setTimeout(streamToS3, 500);
+      setTimeout(getMultiFileStream, 500);
     }// if count
     else{
-      console.log("All stations processed.");;
+      console.log("All stations processed.");
+      archive.finalize();
     }
-  } // streamToS3
-  streamToS3();
+  } // getMultiFileStream
+  getMultiFileStream();
 } // sidRawToCsv
 
 module.exports.sidRawToCsv = sidRawToCsv;
