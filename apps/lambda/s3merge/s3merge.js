@@ -26,8 +26,8 @@ function s3merge(context) {
   //self._start_t = start_t;
   //day_prefix = lastDayStart.format("MMDDYYYY");
   // TODO: temp.
-  //month_prefix = lastDayStart.format("MM-YYYY");
-  month_prefix = currMonthStart.format("MM-YYYY");
+  month_prefix = lastDayStart.format("MM-YYYY");
+  //month_prefix = currMonthStart.format("MM-YYYY");
   console.log("Day to process..", month_prefix);
   //console.log("Number of sids..", sids.length);
   /*
