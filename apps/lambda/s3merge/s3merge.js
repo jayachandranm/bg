@@ -10,9 +10,6 @@ var CombinedStream = require('combined-stream2');
 //var sids_j = require('./station-ids.json');
 var config = require('./config.json');
 
-//var sids = sids_j.stations;
-
-
 function s3merge(context) {
   //function backupTable(tablename, callback) {
   //console.log("backup..");
@@ -23,14 +20,15 @@ function s3merge(context) {
   //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
   var currMonthStart = moment().utcOffset('+0800').startOf('month');
   var lastMonthStart = moment(currMonthStart).subtract(1, 'months');
-  var lastMonthEnd = moment(lastMonthStart).endOf('month');
-  //console.log(currMonthStart.format(), lastMonthStart.format(), lastMonthEnd.format());
-  //console.log(currMonthStart.valueOf(), lastMonthStart.valueOf(), lastMonthEnd.valueOf())
-  end_t = lastMonthEnd.valueOf();
-  start_t = lastMonthStart.valueOf();
+  //var lastDayEnd = moment(lastMonthStart).endOf('day');
+  //console.log(currMonthStart.format());
+  //console.log(currMonthStart.valueOf());
   //self._start_t = start_t;
-  file_dt_tag = lastMonthStart.format("MM-YYYY");
-  console.log("Start/end times..", start_t, end_t, file_dt_tag);
+  //day_prefix = lastDayStart.format("MMDDYYYY");
+  // TODO: temp.
+  //month_prefix = lastDayStart.format("MM-YYYY");
+  month_prefix = currMonthStart.format("MM-YYYY");
+  console.log("Day to process..", month_prefix);
   //console.log("Number of sids..", sids.length);
   /*
   var archive = archiver('zip');
@@ -38,60 +36,56 @@ function s3merge(context) {
     throw err;
   });
   */
+  var s3l = new aws.S3();
+  var s3r = new aws.S3();
   //
-  var combinedStream = CombinedStream.create();
-  //
-  var s3obj = new aws.S3(
-   { params:
-     { Bucket: bucket_name,
-       Key: folder_name + '/merge/' + file_dt_tag + 'sms.xls'
-     }
-   }
-  );
-  //
-  s3obj.upload({Body: combinedStream}).
-  on('httpUploadProgress', function(evt) {
-    console.log(evt);
-  }).
-  send(function(err, data) {
-    console.log(err, data);
-  });
+  var prefix = folder_name + '/m' + month_prefix
+  console.log("Prefix=", prefix);
+  var params_l = {
+    Bucket: bucket_name,
+    //Delimiter: '/',
+    Prefix: prefix
+  }
 
-  var count = 0;
-  //
-  var s3 = new aws.S3();
-  //
-  function getMultiFileStream(callback) {
-      //var sid = sids[count];
-      count++;
-      console.log("Processing, CWS001+CWS002");
-      var file1 = folder_name + '/' + "CWS001-06152017-020028-sms.log";
-      var file2 = folder_name + '/' + "CWS002-06082017-082125-sms.log";
-      //
-      var params = {Bucket: bucket_name, Key: file1};
-      var stream1, stream2;
-      stream1 = s3.getObject(params).createReadStream();
-      var params = {Bucket: bucket_name, Key: file2};
-      stream2 = s3.getObject(params).createReadStream();
-      /*
-      try {
-        stream1 = s3.getObject(params).createReadStream();
-      } catch(error) {
-        // Catching NoSuchKey & StreamContentLengthMismatch
-      }
-      */
-      //var filename = sid + '_' + file_dt_tag + '.xls';
-      //var abs_filename = folder_name + '/' + file_dt_tag + '/' + filename;
-      //console.log("Filename=", abs_filename);
-      buffnl = Buffer.from('\n');
-      //archive.append(stream1, { name: filename });
-      combinedStream.append(stream1);
-      combinedStream.append(buffnl);
-      combinedStream.append(stream2);
-      //send(function(err, data) { console.log(err, data); callback(); });
-      //setTimeout(getMultiFileStream, config.pause);
-  } // getMultiFileStream
-  getMultiFileStream();
+  var log_filenames = [];
+  //var buffnl = Buffer.from('\n');
+  s3l.listObjectsV2(params_l, function (err, data) {
+    //if(err) throw err;
+    if(err) {
+      console.log(err, err.stack);
+      return err;
+    }
+    //console.log(data);
+    //
+    var combinedStream = CombinedStream.create();
+    //
+    var monthly_file = folder_name + '/log_' + month_prefix + '_sms.xls'
+    var s3obj = new aws.S3(
+     { params:
+       { Bucket: bucket_name,
+         Key: monthly_file
+       }
+     }
+    );
+    //
+    s3obj.upload({Body: combinedStream}).
+    on('httpUploadProgress', function(evt) {
+      console.log(evt);
+    }).
+    send(function(err, data) {
+      console.log(err, data);
+    });
+
+    data.Contents.forEach(function(fileobj, index) {
+      console.log(fileobj.Key);
+      //log_filenames.push(fileobj.Key);
+      var params_r = {Bucket: bucket_name, Key: fileobj.Key};
+      var stream = s3r.getObject(params_r).createReadStream();
+      combinedStream.append(stream);
+      //combinedStream.append(buffnl);
+    });
+    //console.log("Filename List: ", log_filenames);
+  });
 } // sidRawToCsv
 
 module.exports.s3merge = s3merge;

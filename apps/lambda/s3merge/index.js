@@ -1,7 +1,7 @@
-var s3merge = require('./s3merge_daily');
+var s3merge = require('./s3merge');
 
 exports.handler = function (event, context) {
   //
   console.log("Loading..");
-  s3merge.s3merge_daily(context);
+  s3merge.s3merge(context);
 };
