@@ -12,46 +12,75 @@ from boto3.dynamodb.conditions import Key, Attr
 
 import urllib2
 
-#import datetime
 from datetime import datetime
 import time
+import pytz
 
-#stations = ["CWS001", "CWS002", "CWS003", "CWS007", "CWS012", "CWS014", "CWS015"]
-stations = ["CWS001", "CWS002", "CWS003", "CWS007", "CWS010", "CWS011", "CWS012", "CWS013", "CWS014", "CWS015", "CWS155", "CWS017", "CWS019", "CWS020", \
-"CWS021", "CWS022", "CWS023", "CWS156", "CWS025", "CWS027", "CWS029", "CWS030", \
-"CWS041", "CWS043", "CWS044", "CWS045", "CWS046", "CWS047", "CWS048", "CWS049", "CWS050", \
-"CWS051", "CWS052", "CWS055", "CWS056", "CWS057", "CWS058", "CWS060", \
-"CWS061", "CWS083", "CWS096", "CWS141", "CWS099", "CWS100", "CWS101", "CWS135", "CWS137", "CWS140", \
-"CWS143", "CWS148", "EWS001", "EWS002", "EWS003", "EWS004", "EWS005", "EWS006", "EWS007", \
-"EWS008", "EWS010", "EWS011", "EWS012", "EWS014", "EWS015", "EWS016", "EWS017", \
-"EWS018", "EWS086", "EWS020", "EWS021", "EWS087", "EWS023", "EWS024", "EWS050", \
-"EWS053", "EWS084", "EWS085", "WWS001", "WWS003", "WWS004", "WWS005", "WWS006", \
-"WWS008", "WWS009", "WWS011", "WWS012", "WWS013", "WWS016", "WWS019", "WWS020", \
-"WWS021", "WWS022", "WWS023", "WWS061", "WWS062", "WWS063", "WWS088", "WWS089"]
+from lxml import etree, objectify
+
+with open("station-ids.json") as json_file:
+    try:
+        json_data = json.load(json_file)
+    except:
+        print("Error loading JSON file.")
+
+stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
 table = dynamodb.Table('pubc5wl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 
-hostname = "localhost"
-port = 22
-myuser = "user"
-mypass = "tst"
-#remote_dir = "/home/ubuntu/SFTP\ Folders/Shared\ Folder/Blugraph/"
-remote_dir = "SFTP Folders/Shared Folder/Blugraph"
+with open("config.json") as config_json_file:
+    try:
+        config = json.load(config_json_file)
+    except:
+        print("Error loading config JSON file.")
+
+hostname = config['host']
+port = config['port']
+myuser = config['user']
+mypass = config['pass']
+remote_dir = config['remote_dir']
+
+#----------------------------------------------------------------------
+def create_series(data):
+    """
+    Create a time series XML element for single div
+    """
+    dt = data["dt"]
+    tm = data["tm"]
+    wa = data["wa"]
+    mrl = data["mrl"]
+    series = objectify.Element("series")
+    header = objectify.SubElement(series, "header")
+    header.type = "instantaneous" #data["type"]
+    header.locationId = data["locationId"]
+    header.parameterId = "WaterLevel"
+    header.timeStep = objectify.Element("timeStep", unit="nonequidistant")
+    header.startDate = objectify.Element("startDate", date=dt, time=tm, tz="Asia/Singapore")
+    header.endDate = objectify.Element("endDate", date=dt, time=tm, tz="Asia/Singapore")
+    header.missVal = -999.9
+    header.x = data["x"]
+    header.y = data["y"]
+    header.fileDescription = data["fileDescription"]
+    event = objectify.SubElement(series, "event", date=dt, time=tm, tz="Asia/Singapore", value=mrl)
+    return series
+ 
+#----------------------------------------------------------------------
+
 
 def lambda_handler(event, context):
 
     try:
-        t = paramiko.Transport(hostname, port)
+        trans = paramiko.Transport(hostname, port)
         #print(t)
-        t.connect(username=myuser, password=mypass)
+        trans.connect(username=myuser, password=mypass)
         print("Connected")
     except:
         print("Connect Error.")
     try:
-        sftp = paramiko.SFTPClient.from_transport(t)
+        sftp = paramiko.SFTPClient.from_transport(trans)
         print(sftp)
     except paramiko.SSHException:
         print("Connection Error")
@@ -66,14 +95,21 @@ def lambda_handler(event, context):
     dest = tm + ".xml"
     file=sftp.file(dest, "w", -1)
     file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
-    for x in stations:
+ 
+    xml = '''<?xml version="1.0" encoding="UTF-8"?>
+    <TimeSeries>
+    </TimeSeries>
+    '''
+    root = objectify.fromstring(xml)
+
+    for sid in stations:
         #print("<-------------------->")
         #print(x)
         try:
             response = table.query(
                 Limit=1,
                 ScanIndexForward=False,
-                KeyConditionExpression=Key('sid').eq(x)
+                KeyConditionExpression=Key('sid').eq(sid)
             )
         except:
             print("DB access error.")
@@ -95,18 +131,23 @@ def lambda_handler(event, context):
         #
         wa = wa/100
         ts = int(ts_millis / 1000)
-        #dt1 = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
-        #hm1 = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-        dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
-        hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
+        #dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
+        #hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
+        utc_dt = datetime.fromtimestamp(ts)
+        utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+        sg_tz = pytz.timezone('Asia/Singapore')
+        sg_time = utc_time.astimezone(sg_tz)
+        dt1 = sg_time.strftime('%Y-%m-%d')
+        hm1 = sg_time.strftime('%H:%M:%S')
         try:
-            sid = data_row0['sid']
+            #sid = data_row0['sid']
             #print(sid)
             al = data_row0['al']
             #print(al)
         except:
             print("No SID")
 
+        # TODO:
         if al > 2:
             al = 2
         flag = al
@@ -116,6 +157,7 @@ def lambda_handler(event, context):
                 #print("There is md here")
                 md = data_row0['md']
                 #print(md)
+                # TODO:
                 if md == "spike":
                     flag = 3
             #else:
@@ -144,41 +186,44 @@ def lambda_handler(event, context):
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
+        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
+        mrl_str = "{0:.2f}".format(mrl_val)
         #print(loc2)
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
         #               + "<x>" + "31810.18</x>" \
         #               + "<y>" + "41013.21" + "</y>" \
-        xml_to_write = "<series>" \
-                       + "<header>" \
-                       + "<type>instantaneous</type>" \
-                       + "<locationId>" + str(sid) + "</locationId>" \
-                       + "<parameterId>" + "WaterLevel" + "</parameterId>" \
-                       + "<timeStep unit=""nonequidistant""/>" \
-                       + "<startDate date=" + "\"" + dt1 + "\"" + " time=" + "\"" + hm1 + "\"" + " />" \
-                       + "<endDate date=" + "\"" + dt1 + "\""  + " time=" + "\"" + hm1 + "\"" + " />" \
-                       + "<missVal>" + "-999.9" + "</missVal>" \
-                       + "<x>" + lat_str + "</x>" \
-                       + "<y>" + lon_str + "</y>" \
-                       + "<fileDescription>cope_level=" + str(cope) \
-                       + " invert_level=" + str(invert) \
-                       + "</fileDescription>" \
-                       + "</header>" \
-                       + "<event date=" + "\""  + dt1 + "\"" + " time=" + "\"" + hm1 + "\"" + " value=" + str(wa) + " />" \
-                       + "</series>"
-        print(xml_to_write)
-        try:
-            file.write(xml_to_write)  
-            #file.flush()
-        except:
-            print("File write error.")
-    #      print ("Print completed")
-    #    sftp.put(source, dest)
-    #      print ("Transfer completed")
+
+        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"100.00\""}
+
+        appt = create_series({
+                        "locationId": sid,
+                        "dt": dt1,
+                        "tm": hm1,
+                        "x": lat_str,
+                        "y": lon_str,
+                        "fileDescription": desc,
+                        "wa": wa,
+                        "mrl": mrl_str
+                        })
+
+        root.append(appt)
+
+    # remove lxml annotation
+    objectify.deannotate(root)
+    etree.cleanup_namespaces(root)
+
+    # create the xml string
+    obj_xml = etree.tostring(root,
+                             pretty_print=True,
+                             xml_declaration=True)
+    print(obj_xml)
+
     try:
-        file.write("</TimeSeries>")
+        file.write(obj_xml)  
         file.flush()
     except:
         print("File write error.")
+    #    sftp.put(source, dest)
 
     return "File uploaded."
 

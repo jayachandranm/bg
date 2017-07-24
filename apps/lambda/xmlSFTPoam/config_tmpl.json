@@ -1,0 +1,7 @@
+{
+    "host" : "localhost",
+    "port" : 22,
+    "user" : "user",
+    "pass" : "tst",
+    "remote_dir" : "dir"
+}
