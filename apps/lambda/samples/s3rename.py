@@ -5,21 +5,21 @@ import json
 s3rc = boto3.resource('s3')
 s3client = boto3.client('s3')
 
-with open("../xmlSFTPoam/station-ids.json") as json_file:
-    try:
-        json_data = json.load(json_file)
-    except:
-        print("Error loading JSON file.")
+#with open("../xmlSFTPoam/station-ids.json") as json_file:
+#    try:
+#        json_data = json.load(json_file)
+#    except:
+#        print("Error loading JSON file.")
 
-stations = json_data['stations']
-
-bucket_name = 'pubc5wl'
+#stations = json_data['stations']
 
 # List objects for each station-id.
 # Rearrange the name.
 # Copy and delete old.
 #for sid in stations:
 #    print(sid)
+
+bucket_name = 'pubc5wl'
 
 res = s3client.list_objects_v2(
     Bucket='pubc5wl',
@@ -49,5 +49,3 @@ for obj in res['CommonPrefixes']:
             src = bucket_name + '/' + objkey
             s3rc.Object(bucket_name, newkey).copy_from(CopySource=src)
             s3rc.Object(bucket_name, objkey).delete()
-
-

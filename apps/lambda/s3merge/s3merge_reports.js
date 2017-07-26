@@ -10,38 +10,20 @@ var CombinedStream = require('combined-stream2');
 //var sids_j = require('./station-ids.json');
 var config = require('./config.json');
 
-function s3merge_daily(context) {
+function s3merge_reports(context) {
   //function backupTable(tablename, callback) {
   //console.log("backup..");
   var bucket_name = config.bucket;
   var folder_name = config.folder;
   //
   // moment().local();
-  //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
-  var currDayStart = moment().utcOffset('+0800').startOf('day');
-  var lastDayStart = moment(currDayStart).subtract(1, 'days');
-  //var lastDayEnd = moment(lastMonthStart).endOf('day');
-  //console.log(currMonthStart.format());
-  //console.log(currMonthStart.valueOf());
-  //self._start_t = start_t;
-  day_prefix = lastDayStart.format("MMDDYYYY");
-  month_prefix = lastDayStart.format("MM-YYYY");
-  console.log("Day to process..", day_prefix);
-  //console.log("Number of sids..", sids.length);
-  /*
-  var archive = archiver('zip');
-  archive.on('error', function(err) {
-    throw err;
-  });
-  */
   var s3l = new aws.S3();
   var s3r = new aws.S3();
   //
-  var prefix = folder_name + '/d' + day_prefix
+  var prefix = folder_name + '/reports/'
   console.log("Prefix=", prefix);
   var params_l = {
     Bucket: bucket_name,
-    //Delimiter: '/',
     Prefix: prefix
   }
 
@@ -57,12 +39,11 @@ function s3merge_daily(context) {
     //
     var combinedStream = CombinedStream.create();
     //
-    var daily_file = folder_name + '/m' + month_prefix
-                      + '/log_' + day_prefix + '_sms.xls'
+    var rep_file = folder_name + '/reports' + '/log_' + 'WWS001' + '_sms.xls'
     var s3obj = new aws.S3(
      { params:
        { Bucket: bucket_name,
-         Key: daily_file
+         Key: rep_file
        }
      }
     );
@@ -87,4 +68,4 @@ function s3merge_daily(context) {
   });
 } // sidRawToCsv
 
-module.exports.s3merge_daily = s3merge_daily;
+module.exports.s3merge_reports = s3merge_reports;
