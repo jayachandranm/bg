@@ -4,7 +4,7 @@ var stream = require('stream');
 //var zlib = require('zlib');
 var fs = require('fs');
 //var dateFormat = require('dateformat');
-var moment = require('moment');
+//var moment = require('moment');
 //var archiver = require('archiver');
 var CombinedStream = require('combined-stream2');
 //var sids_j = require('./station-ids.json');
@@ -20,7 +20,7 @@ function s3merge_reports(context) {
   var s3l = new aws.S3();
   var s3r = new aws.S3();
   //
-  var prefix = folder_name + '/reports/'
+  var prefix = folder_name + '/reports/shadows/'
   console.log("Prefix=", prefix);
   var params_l = {
     Bucket: bucket_name,
@@ -39,7 +39,8 @@ function s3merge_reports(context) {
     //
     var combinedStream = CombinedStream.create();
     //
-    var rep_file = folder_name + '/reports' + '/log_' + 'WWS001' + '_sms.xls'
+    var rep_file = folder_name + '/reports/shadows' + '/shadows_all.xls'
+    //var rep_file = folder_name + '/reports' + '/log_' + 'WWS001' + '_sms.xls'
     var s3obj = new aws.S3(
      { params:
        { Bucket: bucket_name,
@@ -62,7 +63,7 @@ function s3merge_reports(context) {
       var params_r = {Bucket: bucket_name, Key: fileobj.Key};
       var stream = s3r.getObject(params_r).createReadStream();
       combinedStream.append(stream);
-      combinedStream.append(buffnl);
+      //combinedStream.append(buffnl);
     });
     //console.log("Filename List: ", log_filenames);
   });
