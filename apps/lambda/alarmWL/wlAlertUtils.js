@@ -9,6 +9,7 @@ module.exports = {
     getAlertlevelRise,
     getAlertlevelFall,
     getShadowState,
+    setShadowState,
     composeSMS
 };
 
@@ -90,13 +91,12 @@ function getShadowState(iotdata, config) {
     });
 }
 
-/*
 function setShadowState(iotdata, config) {
-    var newStatus = "5 battery rd";
+    var newStatus = config.mode;
     var update = {
         "state": {
             "desired": {
-                "location": newStatus
+                "mode": newStatus
             }
         }
     };
@@ -114,7 +114,6 @@ function setShadowState(iotdata, config) {
         }
     });
 }
-*/
 
 //
 function composeSMS(msg, alertLevel, wlRise, devState) {
