@@ -1,4 +1,5 @@
 var aws = require('aws-sdk');
+var moment = require('moment');
 var Readable = require('stream').Readable;
 var util = require('util');
 
@@ -8,15 +9,18 @@ dynDoc = new aws.DynamoDB.DocumentClient();
 
 module.exports = DynStream;
 
-function DynStream(tablename, sid, start_t, end_t, options) {
-  if ( !(this instanceof DynStream) ) 
-	return new DynStream(tablename, sid, start_t, end_t, options);
+function DynStream(tablename, sid, devState, start_t, end_t, options) {
+  if ( !(this instanceof DynStream) ) {
+  	return new DynStream(tablename, sid, devState, start_t, end_t, options);
+  }
+  console.log(tablename, sid, devState.location, start_t, end_t);
   this._tablename = tablename;
   this.connecting = false;
   this.ended  = false;
   this._count = 0;
   //this._sidSize = sids.length;
   this._sid = sid;
+  this._dev_state = devState;
   this._end_t = end_t;
   this._start_t = start_t;
   if (! options) options = {};
@@ -48,10 +52,15 @@ DynStream.prototype._read = function read() {
       // Write table metadata to first line
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
-      var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
+      //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
+      var loc = self._dev_state.location;
+      var desc = { dt: self._sid, wa: loc, mrl: '', md: '' }
+      self.push(desc);
+      var title = { dt: 'DATE-TIME', wa: 'WATER-LVL(m)', mrl: 'WATER-LVL(mrl)', md: 'STATUS' }
       self.push(title);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
+      console.log(self._sid, self._start_t, self._end_t);
       var params = {
         TableName: self._tablename,
         //IndexName: 'Index',
@@ -81,7 +90,13 @@ DynStream.prototype._query = function (params) {
     }
     else {
       for (var idx = 0; idx < data.Items.length; idx++) {
-        self.push(data.Items[idx]);
+        var record = data.Items[idx];
+        var dt_local = moment(record.ts).utcOffset('+0800').format("DD-MMM-YYYY HH:mm:ss");
+        record.mrl = record.wa + self._dev_state.invert_level;
+        record.dt = dt_local;
+        record.wa = record.wa/100;
+        //self.push(data.Items[idx]);
+        self.push(record);
         //self._count++;
       }
       //
