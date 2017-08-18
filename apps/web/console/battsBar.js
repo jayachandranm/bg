@@ -1,6 +1,5 @@
 var chartData1 = []; // = generateChartData();
-
-var data_url1 = 'battsBarJson.php';
+var attr = 'wl';
 
 var chart1 = AmCharts.makeChart("chartdivbar", {
     "type": "serial",
@@ -12,12 +11,14 @@ var chart1 = AmCharts.makeChart("chartdivbar", {
         "gridColor": "#FFFFFF",
         "gridAlpha": 0.2,
         "dashLength": 0,
-        "title": "Battery Level"
+        "title": "Level"
     }],
     "gridAboveGraphs": true,
     "startDuration": 1,
     "graphs": [{
         "id": "g1",
+        "alphaField": "alpha",
+        "dashLengthField": "dashLength",
         "balloonText": "[[category]]:<b>[[value]]</b></div>",
         "fillAlphas": 0.4,
         "lineAlpha": 0.2,
@@ -41,7 +42,10 @@ var chart1 = AmCharts.makeChart("chartdivbar", {
     }
 });
 
-function getData1() {
+function getData1(type) {
+  attr = type;
+  var data_url1 = 'battsBarJson.php?attr=' + attr;
+  console.log(data_url1);
   $.getJSON(data_url1, function (data) {
     console.log(data);
     chart1.dataProvider = data;
@@ -49,7 +53,7 @@ function getData1() {
   });
 }
 
-getData1();
+getData1(attr);
 
 // add click listener
 chart1.addListener("clickGraphItem", handleClick1);
@@ -58,7 +62,8 @@ function handleClick1(event)
 {
     sid = event.item.category;
     console.log(event.item.category + ": " + event.item.values.value);
-    getData(sid);
+    $("#sid").text(sid);
+    getData(sid, attr);
 }
 
 chart1.addListener("dataUpdated", zoomChart1);

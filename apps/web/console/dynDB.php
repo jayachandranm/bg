@@ -32,9 +32,10 @@ function _getdata_dyndb($reqtype, $filter)
     
     if ($reqtype == 'rt') {
         $sid = $filter->sid;
+        //$type = $filter->attr;
         $params = [
             'TableName' => $tableName,
-            'ProjectionExpression' => '#ts, wl, ss, bl',
+            'ProjectionExpression' => 'sid, #ts, wl, ss, bl, md',
             'KeyConditionExpression' =>
                 'sid = :o_id',
             'ScanIndexForward' => false,

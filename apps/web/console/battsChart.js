@@ -1,6 +1,5 @@
 var chartData = []; // = generateChartData();
 
-
 var chart = AmCharts.makeChart("chartdiv", {
     "type": "serial",
     "theme": "light",
@@ -8,7 +7,7 @@ var chart = AmCharts.makeChart("chartdiv", {
     "dataProvider": chartData,
     "valueAxes": [{
         "position": "left",
-        "title": "Battery Level",
+        "title": "Level",
         "guides": [{
            "fillAlpha": 0.20,
            "fillColor": "#CC0000",
@@ -59,9 +58,11 @@ var chart = AmCharts.makeChart("chartdiv", {
     }
 });
 
-function getData(selectedSid) {
+function getData(selectedSid, selectedType) {
   var sid = selectedSid;
-  var data_url = 'battsJson.php?sid=' + sid;
+  var type = selectedType;
+  var data_url = 'battsJson.php?sid=' + sid + '&type=' + type;
+  console.log(data_url);
   $.getJSON(data_url, function (data) {
     console.log(data);
     chart.dataProvider = data;
@@ -69,7 +70,8 @@ function getData(selectedSid) {
   });
 }
 
-getData("CWS001");
+//getData("CWS001", "wl");
+getData("CWS001", "wl");
 
 chart.addListener("dataUpdated", zoomChart);
 // when we apply theme, the dataUpdated event is fired even before we add listener, so

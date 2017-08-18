@@ -2,22 +2,31 @@
 include 'dynDB.php';
 
 $sid =  $_GET['sid'];
+$type =  $_GET['type'];
 
             $reqtype = 'trc';
             $filter = new stdClass;
 
             //$filter->sid = 'CWS001'; 
             $filter->sid = $sid; 
+            //$filter->attr = $type; 
             $filter->end = round(microtime(true) *1000);
-            $filter->start = $filter->end - (5*3600*24*1000);
+            $filter->start = $filter->end - (30*3600*24*1000);
             //print_r($filter);
             $result = _getdata_dyndb($reqtype, $filter);
             foreach ($result as $row) {
                 //print_r($row);
                 $time = $row['ts'];
-                $bl = $row['bl'];
-                if($bl != null) {
-                    $data[] = (object)array('date'=>$time, 'value'=>$bl);
+                $val = 0.0;
+                if($type === 'wl') {
+                    $val = $row['wl'];
+                } elseif ($type === 'bl') {
+                    $val = $row['bl'];
+                } elseif ($type === 'ss') {
+                    $val = $row['ss'];
+                }
+                if($val != null) {
+                    $data[] = (object)array('date'=>$time, 'value'=>$val);
                     //$timestamps[] = $time;
                 }
             } // foreach

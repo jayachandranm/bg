@@ -1,6 +1,5 @@
 var chartData2 = []; // = generateChartData();
-
-var data_url2 = 'battsBarJson2.php';
+var attr = 'wl';
 
 var chart2 = AmCharts.makeChart("chartdivbar2", {
     "type": "serial",
@@ -12,7 +11,7 @@ var chart2 = AmCharts.makeChart("chartdivbar2", {
         "gridColor": "#FFFFFF",
         "gridAlpha": 0.2,
         "dashLength": 0,
-        "title": "Battery Level"
+        "title": "Level"
     }],
     "gridAboveGraphs": true,
     "startDuration": 1,
@@ -41,7 +40,9 @@ var chart2 = AmCharts.makeChart("chartdivbar2", {
     }
 });
 
-function getData2() {
+function getData2( type ) {
+  attr = type;
+  var data_url2 = 'battsBarJson2.php?attr=' + attr;
   $.getJSON(data_url2, function (data) {
     console.log(data);
     chart2.dataProvider = data;
@@ -49,7 +50,7 @@ function getData2() {
   });
 }
 
-getData2();
+getData2(attr);
 
 // add click listener
 chart2.addListener("clickGraphItem", handleClick2);
@@ -58,7 +59,8 @@ function handleClick2(event)
 {
     sid = event.item.category;
     console.log(event.item.category + ": " + event.item.values.value);
-    getData(sid);
+    $("#sid").text(sid);
+    getData(sid, attr);
 }
 
 chart2.addListener("dataUpdated", zoomChart2);
