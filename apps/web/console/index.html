@@ -19,9 +19,10 @@
     <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
     <script src="https://www.amcharts.com/lib/3/serial.js"></script>
     <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
-    <script type="text/javascript" src="battsChart.js" ></script>  
-    <script type="text/javascript" src="battsBar.js" ></script> 
-    <script type="text/javascript" src="battsBar2.js" ></script> 
+    <script type="text/javascript" src="detailsChart.js" ></script>  
+    <script type="text/javascript" src="currStatus.js" ></script> 
+    <!-- <script type="text/javascript" src="battsBar.js" ></script> 
+    <script type="text/javascript" src="battsBar2.js" ></script> -->
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -32,12 +33,62 @@
   </head>
   <body>
     <h1>Status Monitoring!</h1>
+<div class="row">
+  <div class="col-md-4">
+    <select class="form-control select-val">
+      <option>wl</option>
+      <option>bl</option>
+      <option>ss</option>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <div class="checkbox1">
+      <label>
+        <input id="na" type="checkbox" value="12">
+          Not active. |
+      </label>
+      <label>
+        <input id="md" type="checkbox" value="12">
+          Maintenance.
+      </label>
+      <label>
+    </div>
+  </div>
+</div>
     <div id="chartdivbar"></div>
     <div id="chartdivbar2"></div>
+    <div id="sid">CWS001</div>
     <div id="chartdiv"></div>
 
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <!-- <script src="js/bootstrap.min.js"></script> -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+    $(function() {
+
+  $('.select-val').on('change', function(){
+    var selected = $(this).find("option:selected").val();
+    console.log(selected);
+    updateDataAllDev("list1", selected); 
+    updateDataAllDev("list2", selected);
+    //getData2(selected);
+    getData("CWS001", selected);
+  });
+
+  $('#na').on('change', function(){
+    //alert($(this).prop('checked'));
+    console.log("Change event: " + this.id);
+    // If true, show diff color for some elements in the graph.
+    // If false, change to default.
+  });
+
+  $('#md').on('change', function(){
+    //alert($(this).prop('checked'));
+    console.log("Change event: " + this.id);
+    // If true, show diff color for some elements in the graph.
+    // If false, change to default.
+  });
+});
+    </script>
   </body>
 </html>

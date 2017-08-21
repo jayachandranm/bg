@@ -14,13 +14,13 @@ var chart = AmCharts.makeChart("chartdiv", {
            "value": 90,
            "toValue": 95
         },{
-           "value": 110,
+           "value": 75,
            "lineColor": "#CC0000",
            "lineAlpha": 1,
            "dashLength": 2,
             "inside": true,
             "labelRotation": 90,
-            "label": "motorcycle fee introduced"
+            "label": "75% level"
         }]
     }],
 
@@ -61,10 +61,10 @@ var chart = AmCharts.makeChart("chartdiv", {
 function getData(selectedSid, selectedType) {
   var sid = selectedSid;
   var type = selectedType;
-  var data_url = 'battsJson.php?sid=' + sid + '&type=' + type;
+  var data_url = 'detailsJson.php?sid=' + sid + '&type=' + type;
   console.log(data_url);
   $.getJSON(data_url, function (data) {
-    console.log(data);
+    //console.log(data);
     chart.dataProvider = data;
     chart.validateData();
   });

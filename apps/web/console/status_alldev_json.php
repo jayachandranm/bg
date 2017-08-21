@@ -2,18 +2,18 @@
    include 'dynDB.php';
 
    $type =  $_GET['attr'];
+   $list =  $_GET['list'];
    //echo "Hello";
 
    $reqtype = 'rt';
    $filter = new stdClass;
    
-   //$sid_list = array("CWS001", "CWS002");
-   //$sid_list = ["CWS001", "CWS002"];
-   $sid_list = ["CWS001", "CWS002", "CWS003", "CWS007", "CWS010", "CWS011", "CWS012", "CWS013", "CWS014", "CWS015", "CWS155", "CWS017", "CWS019", "CWS020", 
-"CWS021", "CWS022", "CWS023", "CWS156", "CWS025", "CWS027", "CWS029", "CWS030", 
-"CWS031", "CWS032", "CWS033", "CWS034", "CWS035", "CWS036", "CWS038", "CWS039", "CWS040", "CWS041", "CWS043", "CWS044", "CWS045", "CWS046", "CWS047", "CWS048", "CWS049", "CWS050", 
-"CWS051", "CWS052", "CWS055", "CWS056", "CWS057", "CWS058", "CWS060", "CWS061", "CWS083", "CWS096", "CWS141", "CWS099", "CWS100", "CWS101", "CWS135", "CWS137", "CWS140", 
-"CWS143", "CWS148", "TST001", "TST002"];
+   $list_file = "station_" . $list . ".json";
+   //echo $list_file;
+   //$string = file_get_contents("station_list1.json");
+   $string = file_get_contents($list_file);
+   $json_a = json_decode($string, true);
+   $sid_list = $json_a['sids'];
 
    //print_r($sid_list);
 
@@ -45,11 +45,14 @@
            $data_arr = array('sid'=>$sid, 'value'=>$val);
            if( $diff > 15*60) {
              $data_arr += array('alpha'=> 0.9);
+             $data_arr += array('color'=> "#FEC514");
+             //$data_arr += array('bullet'=> "triangleDown");
            }
            if( isset( $row['md'] ) ){
                //$md = "maintenance";
                //$md = $raw['md'];
-               $data_arr += array('dashLength'=> 8);
+               //$data_arr += array('dashLength'=> 8);
+               $data_arr += array('bullet'=> "https://www.amcharts.com/lib/images/faces/C02.png");
            }
            $data[] = (object)$data_arr;
          }
