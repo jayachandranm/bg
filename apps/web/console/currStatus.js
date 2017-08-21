@@ -1,3 +1,5 @@
+$(function() {
+
 var chartData1 = []; // = generateChartData();
 var chartData2 = []; 
 var attr = 'wl';
@@ -61,6 +63,10 @@ var chart2 = AmCharts.makeChart("chartdivbar2", {
     "startDuration": 1,
     "graphs": [{
         "id": "g1",
+        "alphaField": "alpha",
+        "dashLengthField": "dashLength",
+        "colorField": "color",
+        "customBulletField": "bullet",
         "balloonText": "[[category]]:<b>[[value]]</b></div>",
         "fillAlphas": 0.4,
         "lineAlpha": 0.2,
@@ -127,4 +133,28 @@ function zoomChart() {
     //console.log("zoom", chartData1);
     //chart.zoomToIndexes(chartData.length - 250, chartData.length - 100);
 }
+
+  $('.select-val').on('change', function(){
+    var selected = $(this).find("option:selected").val();
+    console.log(selected);
+    updateDataAllDev("list1", selected); 
+    updateDataAllDev("list2", selected);
+    //getData2(selected);
+    getData("CWS001", selected);
+  });
+
+  $('#na').on('change', function(){
+    //alert($(this).prop('checked'));
+    console.log("Change event: " + this.id);
+    // If true, show diff color for some elements in the graph.
+    // If false, change to default.
+  });
+
+  $('#md').on('change', function(){
+    //alert($(this).prop('checked'));
+    console.log("Change event: " + this.id);
+    // If true, show diff color for some elements in the graph.
+    // If false, change to default.
+  });
+});
 

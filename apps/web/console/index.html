@@ -36,9 +36,9 @@
 <div class="row">
   <div class="col-md-4">
     <select class="form-control select-val">
-      <option>wl</option>
-      <option>bl</option>
-      <option>ss</option>
+      <option value="wl">Water Level</option>
+      <option value="bl">Battery Level</option>
+      <option value="ss">3G Signal Strenth</option>
     </select>
   </div>
   <div class="col-md-6">
@@ -63,32 +63,5 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <!-- <script src="js/bootstrap.min.js"></script> -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script type="text/javascript">
-    $(function() {
-
-  $('.select-val').on('change', function(){
-    var selected = $(this).find("option:selected").val();
-    console.log(selected);
-    updateDataAllDev("list1", selected); 
-    updateDataAllDev("list2", selected);
-    //getData2(selected);
-    getData("CWS001", selected);
-  });
-
-  $('#na').on('change', function(){
-    //alert($(this).prop('checked'));
-    console.log("Change event: " + this.id);
-    // If true, show diff color for some elements in the graph.
-    // If false, change to default.
-  });
-
-  $('#md').on('change', function(){
-    //alert($(this).prop('checked'));
-    console.log("Change event: " + this.id);
-    // If true, show diff color for some elements in the graph.
-    // If false, change to default.
-  });
-});
-    </script>
   </body>
 </html>
