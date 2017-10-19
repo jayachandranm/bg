@@ -103,9 +103,15 @@ def lambda_handler(event, context):
         ts = int(ts_millis / 1000)
         #dt1 = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         #hm1 = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-        dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
-        hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
-        dt_hm1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d %H:%M:%S')
+        #dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
+        #hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
+        #dt_hm1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d %H:%M:%S')
+        utc_dt = datetime.fromtimestamp(ts)
+        utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+        sg_time = utc_dt.astimezone(sg_tz)
+        dt1 = sg_time.strftime('%Y-%m-%d')
+        hm1 = sg_time.strftime('%H:%M:%S')
+        dt_hm1 = sg_time.strftime('%Y-%m-%d %H:%M:%S')
         try:
             #sid = data_row0['sid']
             #print(sid)
@@ -146,7 +152,10 @@ def lambda_handler(event, context):
         streamingBody = response["payload"]
         jsonState = json.loads(streamingBody.read())
         invert = jsonState["state"]["reported"]["invert_level"]
+        offset_o = jsonState["state"]["reported"]["offset_o"]
         #
+        if wa <= ( 0.08 + (offset_o / 100) ):
+            wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
         mrl_str = "{0:.2f}".format(mrl_val)
         csv_to_write = str(sid) + "," \
