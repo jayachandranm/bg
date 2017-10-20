@@ -10,8 +10,9 @@ var CSVTransform = require('./transform-stream');
 var sids_j = require('./station-ids.json');
 var config = require('./config.json');
 
-var sids = sids_j.stations;
+var iotdata = new aws.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 
+var sids = sids_j.stations;
 
 function sidRawToCsv(context) {
   //function backupTable(tablename, callback) {
@@ -61,21 +62,34 @@ function sidRawToCsv(context) {
       var sid = sids[count];
       count++;
       console.log("Processing, ", sid);
-      var data_stream = DynStream(table_name, sid, start_t, end_t);
-      var gzip = zlib.createGzip();
-      var csv = CSVTransform();
+      var devState;
+      iotdata.getThingShadow({
+        thingName: sid
+      }, function (err, data) {
+        if (err) {
+          context.fail(err);
+          console.log("Error in getting Shadow.", err);
+        } else {
+          var jsonPayload = JSON.parse(data.payload);
+          //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
+          devState = jsonPayload.state.reported;
+          var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
+          var gzip = zlib.createGzip();
+          var csv = CSVTransform();
 
-      // body will contain the stream content to ship to s3
-      //var body = data_stream.pipe(csv).pipe(process.stdout);
-      //var body = data_stream.pipe(csv).pipe(gzip);
-      var body = data_stream.pipe(csv);
+          // body will contain the stream content to ship to s3
+          //var body = data_stream.pipe(csv).pipe(process.stdout);
+          //var body = data_stream.pipe(csv).pipe(gzip);
+          var body = data_stream.pipe(csv);
 
-      var filename = sid + '_' + file_dt_tag + '.xls';
-      //var abs_filename = folder_name + '/' + file_dt_tag + '/' + filename;
-      //console.log("Filename=", abs_filename);
-      archive.append(body, { name: filename });
-      //send(function(err, data) { console.log(err, data); callback(); });
-      setTimeout(getMultiFileStream, config.pause);
+          var filename = sid + '_' + file_dt_tag + '.xls';
+          //var abs_filename = folder_name + '/' + file_dt_tag + '/' + filename;
+          //console.log("Filename=", abs_filename);
+          archive.append(body, { name: filename });
+          //send(function(err, data) { console.log(err, data); callback(); });
+          setTimeout(getMultiFileStream, config.pause);
+        }
+      }); // getThingShadow
     }// if count
     else{
       console.log("All stations processed.");

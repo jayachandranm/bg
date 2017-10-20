@@ -1,0 +1,29 @@
+body {
+  font-family: Verdana;
+  font-size: 12px;
+  padding: 10px;
+}
+
+#chartdivbar {
+  width: 100%;
+  height: 250px;
+  font-size: 11px;
+}
+
+#chartdivbar2 {
+  width: 100%;
+  height: 250px;
+  font-size: 11px;
+}
+
+#chartdiv {
+  width: 100%;
+  height: 250px;
+}
+
+.note {
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+

@@ -94,8 +94,9 @@ def lambda_handler(event, context):
     tm = time.strftime('%Y-%m-%d_%H-%M-%S')
     dest = tm + ".xml"
     file=sftp.file(dest, "w", -1)
-    file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
+    #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
  
+    #xml = '''<?xml version="1.0" ?>
     xml = '''<?xml version="1.0" encoding="UTF-8"?>
     <TimeSeries>
     </TimeSeries>
@@ -136,7 +137,7 @@ def lambda_handler(event, context):
         utc_dt = datetime.fromtimestamp(ts)
         utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
         sg_tz = pytz.timezone('Asia/Singapore')
-        sg_time = utc_time.astimezone(sg_tz)
+        sg_time = utc_dt.astimezone(sg_tz)
         dt1 = sg_time.strftime('%Y-%m-%d')
         hm1 = sg_time.strftime('%H:%M:%S')
         try:
@@ -176,6 +177,7 @@ def lambda_handler(event, context):
         loc = jsonState["state"]["reported"]["location"]
         cope = jsonState["state"]["reported"]["cope_level"]
         invert = jsonState["state"]["reported"]["invert_level"]
+        offset_o = jsonState["state"]["reported"]["offset_o"]
         #print(loc)
         get_sid_url = "http://13.228.68.232/coords.php?sid=" + sid
         lat_lon_j = urllib2.urlopen(get_sid_url).read()
@@ -186,14 +188,18 @@ def lambda_handler(event, context):
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
+        # Calibrate near zero.
+        if wa <= ( 0.08 + (offset_o / 100) ):
+            wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
         mrl_str = "{0:.2f}".format(mrl_val)
+        op_level = invert + (offset_o / 100)
         #print(loc2)
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
         #               + "<x>" + "31810.18</x>" \
         #               + "<y>" + "41013.21" + "</y>" \
 
-        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"100.00\""}
+        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"" + str(op_level) + "\""
 
         appt = create_series({
                         "locationId": sid,
