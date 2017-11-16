@@ -73,14 +73,14 @@ def create_series(data, stype):
     header.startDate = objectify.Element("startDate", date=dt, time=tm)
     header.endDate = objectify.Element("endDate", date=dt, time=tm)
     header.missVal = -999.9
+    header.x = gps_x
+    header.y = gps_y
     header.units = "mRL"
     #if stype == "level":
     #    header.units = "mRL"
     #elif stype == "depth":
     if stype == "depth":
         header.units = "m"
-    header.x = gps_x
-    header.y = gps_y
     header.fileDescription = desc
     event = objectify.SubElement(series, "event", date=dt, time=tm, value=val, flag=str(md))
     return series
