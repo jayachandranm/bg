@@ -30,7 +30,6 @@ function _get_geojson($rqtype)
     module_load_include("config.inc", "bgmap");
     $bg_db = getExtDBConfig();
     module_load_include("api.inc", "bgmap");
-    $result = _getdata_exdb($bg_db, $reqtype, $filter);
     //
     date_default_timezone_set('Asia/Singapore');
     $geojson = array(
@@ -41,18 +40,21 @@ function _get_geojson($rqtype)
     $items2 = array();
     switch ($reqtype) {
         case 'trc':
+            // The list only has one value.
+            $filter->sid = $filter->sidList[0];;
+            $result = _getdata_dyndb($reqtype, $filter);
             foreach ($result as $row) {
-                // TODO: Or use float/double?
-                $time = intval($row->timestamp);
-                //$noise = round($row->noise_data, 2);
-                // In DB as double.
-                $lat = floatval($row->latitude);
-                $lng = floatval($row->longitude);
-
-                //$polygon[] = array($lat, $lng);
-                $polygon[] = array($lng, $lat);
-                $timestamps[] = $time;
-                //
+                //dpm($row);
+                $time = $row['timestamp'];
+                $gps_data = $row['gps_data'];
+                //$lat = 1.421; $lng = 103.829;
+                // If for any timestamp, gps_data does not exist, just skip that item.
+                if($gps_data != null) {
+                    $lat = $gps_data['latitude'];
+                    $lng = $gps_data['longitude'];
+                    $polygon[] = array($lng, $lat);
+                    $timestamps[] = $time;
+                }
             } // foreach
             //dpm($polygon);
             // Add this feature only if there are some values.
@@ -85,13 +87,28 @@ function _get_geojson($rqtype)
             break;
 
         case 'rt': // both single and multi.
-            foreach ($result as $row) {
-                //$noise = round($row->noise_data, 2);
-                $time = intval($row->timestamp);
-                $lat = floatval($row->latitude);
-                $lng = floatval($row->longitude);
-                $sid = $row->sid;
+            //$result = _getdata_exdb($bg_db, $reqtype, $filter);
+            $sid_list = $filter->sidList;
+            foreach ($sid_list as $sid) {
+                $filter->sid = $sid;
+                $result = _getdata_dyndb($reqtype, $filter);
+                //dpm($result);
+                $row = $result;
+                //$time = intval($row['timestamp']);
+                $time = $row['timestamp'];
+                $gps_data = $row['gps_data'];
+                //dpm($gps_data);
+                //$lat = floatval($row->latitude);
+                //$lng = floatval($row->longitude);
                 //$title = $row->title; //$row['name']
+                // home: (lat = 1.421, lng = 103.829);
+                // TODO: handle null/empty conditions.
+                $lat = 1.421; $lng = 103.829;
+                if($gps_data != null) {
+                    $lat = $gps_data['latitude'];
+                    $lng = $gps_data['longitude'];
+                }
+                //dpm($lat, $lng);
 
                 $feature = array(
                     'type' => 'Feature',
@@ -121,5 +138,4 @@ function _get_geojson($rqtype)
     //dpm($geojson);
     return drupal_json_output($geojson);
 }
-
 

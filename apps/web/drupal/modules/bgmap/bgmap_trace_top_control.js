@@ -21,7 +21,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
                     '                    <span id="trc_play_icon" class="glyphicon glyphicon-play" aria-hidden="true"></span>' +
                     '                </button> ' +
                     '            </span> ' +
-                    '            <input class="form-control" class="pull-left" type="text" name="daterange"' +
+                    '            <input class="form-control pull-left" type="text" id="daterange" name="daterange"' +
                     '                   value="01/01/2015 1:30 PM - 01/01/2015 2:00 PM">' +
                     '        </div> <!-- input-group -->' +
                     '        <span class="form-control-feedback glyphicon glyphicon-calendar"></span>' +
@@ -40,32 +40,27 @@ var BGMAP = (function (me, $, Drupal, undefined) {
 
                     onAdd: function (map) {
                         var controlDiv = L.DomUtil.create('div', 'row');
+                        this._controlDiv = controlDiv;
+                        // This option will not stop event propagation from the calendar itself,
+                        // but only from the input element. The calendar div is created by JS separately.
+                        L.DomEvent.disableClickPropagation(this._controlDiv);
                         //var controlDiv = L.DomUtil.create('div', 'col-md-6');
-                        controlDiv.innerHTML = this._html;
+                        this._controlDiv.innerHTML = this._html;
                         //var stop = L.DomEvent.stopPropagation;
-                        L.DomEvent.disableClickPropagation(controlDiv);
                         //this.setup();
 
-                        /*
+/*
                          L.DomEvent
-                         .on(this._slider, 'click', stop)
-                         .on(this._slider, 'mousedown', stop)
-                         .on(this._slider, 'dblclick', stop)
-                         .on(this._slider, 'click', L.DomEvent.preventDefault)
+                         .on(controlDiv, 'click', stop)
+                         .on(controlDiv, 'mousedown', stop)
+                         .on(controlDiv, 'dblclick', stop)
+                         .on(controlDiv, 'click', L.DomEvent.preventDefault)
                          //.on(this._slider, 'mousemove', L.DomEvent.preventDefault)
-                         .on(this._slider, 'change', onSliderChange, this)
-                         .on(this._slider, 'mousemove', onSliderChange, this);
+                         .on(controlDiv, 'change', onSliderChange, this)
+                         .on(controlDiv, 'mousemove', onSliderChange, this);
+*/
 
-                         function onSliderChange(e) {
-                         //var val = Number(e.target.value);
-                         //playback.setCursor(val);
-                         }
-                         */
-
-                        // just an empty container
-                        // TODO: dont do this
-                        //return L.DomUtil.create('div');
-                        return controlDiv;
+                        return this._controlDiv;
                     },
 
                     onRemove: function (map) {
@@ -94,12 +89,37 @@ var BGMAP = (function (me, $, Drupal, undefined) {
                                 }
                             },
                             function (start, end, label) {
-                                console.log('Apply datetime: ', start.format('x'), end.valueOf());
+                                console.log('Apply datetime: ', start.format('x'), end.valueOf(), label);
                                 startTime = start.valueOf();
                                 endTime = end.valueOf();
                                 me.requestTraceData(startTime, endTime);
                             }
                         );
+                        //L.DomEvent.disableClickPropagation(this._controlDiv);
+                        //L.DomEvent.disableClickPropagation('daterangepicker');
+/*
+                        $('.daterangepicker').click(function (event) {
+                            console.log("Stop event propagation, ", event.type);
+                            //var _parent = $('.daterangepicker').parent();
+                            //event.preventDefault();
+                            event.stopPropagation();
+                        });
+                        $('.daterangepicker').dblclick(function (event) {
+                            //event.preventDefault();
+                            if(! event.isPropagationStopped()) {
+                                console.log("Stop event propagation, ", event.type);
+                                event.stopPropagation();
+                            }
+                        });
+                        $('.daterangepicker').mousedown(function (event) {
+                            console.log("Stop event propagation, ", event.type);
+                            //event.preventDefault();
+                            event.stopPropagation();
+                        });
+*/
+                        //var testDiv = L.DomUtil.get('.daterangepicker');
+                        //L.DomEvent.on(this._controlDiv, 'click', L.DomEvent.stopPropagation);
+
                     },
 
                 });

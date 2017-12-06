@@ -1,0 +1,9 @@
+{
+    "endpointAddress": "EP",
+    "snsArn": "ARN",
+    "snsMntceTopic": "WSS01_alarm",
+    "smsUser": "user",
+    "smsPass": "pass",
+    "smsFrom": "bg"
+}
+
