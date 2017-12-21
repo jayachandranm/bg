@@ -1,0 +1,457 @@
+<?php
+/**
+ * @file
+ * A module that creates blocks for JAV.
+ */
+
+/**
+ * Implements hook_help().
+ *
+ * Displays help and module information.
+ *
+ * @param path
+ *   Which path of the site we're using to display help
+ * @param arg
+ *   Array that holds the current path as returned from arg() function
+ */
+function jav_help($path, $arg)
+{
+    switch ($path) {
+        case "admin/help#jav":
+            return '<p>' . t("Manage JAV data.") . '</p>';
+            break;
+    }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function jav_block_info()
+{
+    $blocks = array();
+    $blocks['rtsingle'] = array(
+        // The name that will appear in the block list.
+        'info' => t('JAV Tracking'),
+        // Default setting.
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+        //'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    $blocks['rtmulti'] = array(
+        'info' => t('JAV Tracking All'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    return $blocks;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function jav_permission()
+{
+    return array(
+        'access jav content' => array(
+            'title' => t('Access content for the jav module'),
+        )
+    );
+}
+
+function jav_init()
+{
+    // Any init code goes here. eg. drupal_add_js.
+    if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
+        // The library is installed. 
+        //dpm($lib_avail);
+    } else {
+        // Something went wrong. :(
+        print_r("Error: Library datatables is not installed</br>");
+        // This contains a short status code of what went wrong, such as 'not found'.
+        $error = $lib_avail['error'];
+        // This contains a detailed (localized) error message.
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
+
+// Try to load the library and check if that worked.
+    if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
+        //dpm($lib_load);
+        // Do something with the library here.
+        //print_r("Library datatables loaded.");
+    } else {
+        print_r("Error: Library datatables is not loaded.");
+    }
+
+//drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function jav_libraries_info()
+{
+    $libraries = array();
+
+    // TODO: How to handle if the library is missing?
+    //
+    if (($library_path = libraries_get_path('moment'))) {
+        //print_r("Moment lib path OK.");
+        $libraries['moment'] = array(
+            'name' => 'Moment JS',
+            'vendor url' => 'http://momentjs.com/',
+            'download url' => 'http://momentjs.com/downloads/moment.js',
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'moment.min.js',
+                ),
+            ),
+        );
+    }
+    if (($library_path = libraries_get_path('daterangepicker'))) {
+        //print_r("Daterange lib path OK.");
+
+        $libraries['daterangepicker'] = array(
+            'library path' => $library_path,
+            'name' => 'Daterange Picker',
+            'vendor url' => 'http://www.daterangepicker.com/',
+            'download url' => 'https://github.com/dangrossman/bootstrap-daterangepicker/archive/master.zip',
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'daterangepicker.js',
+                ),
+                'css' => array(
+                    'daterangepicker.css',
+                ),
+            ),
+            'dependencies' => array(
+                'moment',
+            ),
+        );
+    }
+    if (($library_path = libraries_get_path('leaflet'))) {
+        $libraries['leaflet'] = array(
+            //'title' => 'Vertical Tabs',
+            //'website' => 'http://drupal.org/node/323112',
+            'name' => 'Leaflet',
+            'vendor url' => 'http://www.leaflet.com/',
+            'download url' => 'http://www.leaflet.com/download',
+            /*
+            // TODO: automatically get version number from Changelog or readme.
+            'version arguments' => array(
+            'file' => 'highcharts.js',
+            // jQuery FlexSlider v2.1
+            'pattern' => '/Highcharts v(\d+\.+\d+)/',
+            'lines' => 2,
+          ),
+          */
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'leaflet.js',
+                    //'fs/Control.FullScreen.js',
+                    'leaflet-fullscreen/Leaflet.fullscreen.js',
+                    'snake/L.Polyline.SnakeAnim.js',
+                    'playback/LeafletPlayback.js',
+                    'beautify/leaflet-beautify-marker-icon.js',
+                    'beautify/leaflet-beautify-marker.js',
+                ),
+                'css' => array(
+                    'leaflet.css' => array(),
+                    //'fs/Control.FullScreen.css' => array(),
+                    'leaflet-fullscreen/leaflet.fullscreen.css' => array(),
+                    'beautify/leaflet-beautify-marker-icon.css' => array(),
+                ),
+            ),
+        );
+    }
+    if (($library_path = libraries_get_path('datatables'))) {
+        $libraries['datatables'] = array(
+            'name' => 'Datatables',
+            'vendor url' => 'http://www.datatables.net/',
+            'download url' => 'http://www.datatables.net/download',
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'media/js/jquery.dataTables.js',
+                    'media/js/dataTables.bootstrap.js',
+                ),
+                'css' => array(
+                    //'jquery.dataTables.css' => array(),
+                    'media/css/dataTables.bootstrap.css' => array(),
+                ),
+            ),
+        );
+    }
+    //print_r($libraries);
+    return $libraries;
+}
+
+/**
+ * Short-circuit the version argument.
+ */
+function jav_short_circuit_version()
+{
+    return TRUE;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function jav_menu()
+{
+    $items = array();
+
+    // Provide configuration options for the module from Admin page.
+    $items['admin/config/content/jav'] = array(
+        'title' => 'JAV',
+        'description' => 'Configuration for JAV module',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('jav_admin_config'),
+        'access arguments' => array('access administration pages'),
+        'file' => 'jav.admin.inc',
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['jav'] = array(
+        'title' => 'Real time updates',
+        'page callback' => '_jav_page',
+        'access arguments' => array('access jav content'),
+        //Will appear in Navigation menu.
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['jav/get'] = array(
+        'title' => 'Real time updates',
+        'page callback' => '_get_json',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access jav content'),
+        'file' => 'jav.svcjson.inc',
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function _jav_page()
+{
+    $items = array();
+    //return "Hello There!";
+    return $items;
+}
+
+/**
+ * Implements hook_node_insert().
+ *
+ * As a new node is being inserted into the database, we need to do our own
+ * database inserts.
+ */
+function jav_node_insert($node)
+{
+    if ($node->type == 'vehicle') {
+        $nid = $node->nid;
+        $sid = $node->field_dev_id['und'][0]['value'];
+        $vnum = $node->field_dev_num['und'][0]['value'];
+        $vgroup = 'test';
+        $flag = true;
+        module_load_include("config.inc", "jav");
+        // TODO: Improve the config option.
+        $bg_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+        _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag);
+    }
+    /*
+    // Notice that we are ignoring any revision information using $node->nid
+  }
+  */
+}
+
+/**
+ * Implements hook_node_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ *
+ * This hook is called when an existing node has been changed.
+ */
+function jav_node_update($node)
+{
+    //if ($node->type == 'stations' && !isset($node->nid)) {
+    if ($node->type == 'jav') {
+        //dpm($node);
+        $nid = $node->nid;
+        $sid = $node->field_dev_id['und'][0]['value'];
+        $vnum = $node->field_dev_num['und'][0]['value'];
+        $vgroup = 'test';
+        $flag = false;
+        module_load_include("config.inc", "jav");
+        $bg_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+        _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag);
+    }
+}
+
+
+/**
+ * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3
+ *
+ * Implements hook_theme().
+ */
+function jav_theme()
+{
+    $theme_subfolder = drupal_get_path('module', 'jav') . "/theme";
+    return array(
+        'jav_trace' => array(
+            'path' => $theme_subfolder,
+            'template' => 'jav_trace',
+            'arguments' => array('items' => NULL),
+            // All preprocess hooks in .theme.inc.
+            //'file' => 'jav.theme.inc',
+        ),
+    );
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Prepares the contents of the block.
+ */
+function jav_block_view($delta = '')
+{
+    // Set sid invalid by default, means to select all.
+    //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
+    $block = array();
+    // TODO: exit if it is not a node but a view or something else. But should allow selected views.
+    // TODO: Move this to init? For the case of view this happens outside.
+    $mpath = drupal_get_path('module', 'jav');
+
+    if ($node = menu_get_object()) {
+        // TODO: if($node) {}
+        if ($node->type == 'jav') {
+            //dpm($node);
+            $nid = $node->nid;
+            // Always read these fields in English.
+            $field_dev = field_get_items('node', $node, 'field_dev_id', 'en');
+            $sid = $field_obd[0]['safe_value'];
+            $field_vnum = field_get_items('node', $node, 'field_dev_num', 'en');
+            $vnum = $field_vnum[0]['safe_value'];
+            $field_color = field_get_items('node', $node, 'field_display_color', 'en');
+            $color = $field_color[0]['safe_value'];
+            //dpm($field_dev);
+        } // if node-type.
+    } // if node.
+    else {
+        $sid = "Unknown";
+        $vnum = -1;
+    }
+
+    // Always pass as an array of values, for generic handling at JS side.
+    $sid_list[] = $sid;
+    //$sid = (string)$sid_tmp;
+
+    switch ($delta) {
+        /*
+        * The real time block may appear in a page that shows all items or on a page that
+        * shows single item. Create a filter to reflect this context. The filter can be
+        * presented as a JSON, where some parameters may be missing, if some fields on the page
+        * is missing (eg. sensor_id).
+        */
+        case 'rtsingle':
+            // Pass any node related parameters here, which can then be used by the JS during Ajax.
+            // Here will be an array that contains the filter values.
+            // if(isset($sid)) {
+            // vnum/sid list.
+            $block['subject'] = t('Location...');
+            if (user_access('access content')) {
+                $block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
+            }
+            $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            // If not in libraries directory,
+            //$block['content']['#attached']['library'][] = array('system','ui.droppable');
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav_rt.js',),
+                array(
+                    'type' => 'setting',
+                    'data' => array(
+                        'rt' => array(
+                            'veh_list' => array(
+                                $sid => array(
+                                    'sid' => $sid,
+                                    'nid' => $nid,
+                                    'vnum' => $vnum,
+                                    'color' => $color
+                                ),
+                            ),
+                        ),
+                    ),
+                )
+            );
+            break;
+        case 'rtmulti':
+            // Only appears in a view.
+            // TODO: What if this block is enabled for a node?
+            // TODO: nidList already set in the view preprocess.
+            //drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
+            if (user_access('access content')) {
+                //$block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
+                $block = array
+                (
+                    'subject' => t('JAV Events...'),
+                    'content' => array
+                    (
+                        'rtmulti_block' => array
+                        (
+                            '#prefix' => "<div id='rt_map'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Map will display here....."),
+                        ),
+                    ),
+                );
+            }
+            $block['content']['#attached']['libraries_load'][] = array('leaflet');
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav_rt.js',),
+            );
+            break;
+        case 'aob':
+            if (user_access('access content')) {
+                print_r("Unexpected switch");
+            } // if user_access
+            break;
+    } // switch
+    //libraries_info('moment');
+    return $block;
+}
+
+/*
+* https://www.drupal.org/node/1993228
+*/
+function jav_preprocess_views_view(&$vars)
+{
+    $mpath = drupal_get_path('module', 'jav');
+    //dpm($vars['view']);
+    if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
+        $selected_devs = array();
+        $dev_details = array();
+        foreach ($vars['view']->result as $cnum => $cell) {
+            //print_r($cell->node_title);
+            //dpm($cell);
+            $nid = $cell->nid;
+            $vnum_content = $cell->field_field_dev_num[0];
+            $vnum = $vnum_content['raw']['value'];
+            $sid_content = $cell->field_field_dev_id[0];
+            $sid = $sid_content['raw']['value'];
+            $color_content = $cell->field_field_display_color[0];
+            $color = $color_content['raw']['value'];
+            $veh_details = array('sid' => $sid,
+                'nid' => $nid,
+                'vnum' => $vnum,
+                'color' => $color);
+            $selected_devs[$sid] = $dev_details;
+            //$active_sids[] = $sid_content['raw']['value'];
+        }
+        //print_r($visible_vehs);
+        //dpm($active_sids);
+        drupal_add_js(array('rt' => array('dev_list' => $selected_devs)), 'setting');
+    }
+}

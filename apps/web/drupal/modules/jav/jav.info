@@ -1,0 +1,6 @@
+name = Custom JAV module
+description = Show real time data from custom db table.
+core = 7.x
+dependencies[] = libraries
+; NEW LINE
+configure = admin/config/content/jav
