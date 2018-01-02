@@ -15,7 +15,7 @@ pip install paramiko
 pip install pytz  
 pip install lxml  
 deactivate  
---  
+
 cp -rf wsftp-env/lib/python2.7/site-packages/* zipall/.  
 cp -rf wsftp-env/lib64/python2.7/site-packages/* zipall/.  
 cd zipall/  
