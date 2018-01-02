@@ -1,7 +1,7 @@
 Use virtualenv to install necessary python packages.  
-
+  
 Then copy over the required packages to zipall directory, edit the main file and zip for lambda.  
-
+  
 sudo pip install virtualenv  
 sudo pip install --upgrade pip  
 rm -rf wsftp-env/  
