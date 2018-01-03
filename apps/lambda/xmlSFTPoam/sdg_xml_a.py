@@ -37,11 +37,11 @@ with open("config.json") as config_json_file:
     except:
         print("Error loading config JSON file.")
 
-hostname = config['host']
-port = config['port']
-myuser = config['user']
-mypass = config['pass']
-remote_dir = config['remote_dir']
+config_host = config['host']
+config_port = config['port']
+config_user = config['user']
+config_pass = config['pass']
+config_dir = config['remote_dir']
 
 #----------------------------------------------------------------------
 def create_series(data, stype):
@@ -89,25 +89,33 @@ def create_series(data, stype):
 
 
 def lambda_handler(event, context):
+    #
+    ssh_host = os.environ.get('SSH_HOST', config_host)
+    ssh_username = os.environ.get('SSH_USERNAME', config_user)
+    ssh_password = os.environ.get('SSH_PASSWORD', config_pass)
+    #ssh_dir = os.environ.get('SSH_DIR', config_dir)
+    ssh_dir = os.environ.get('SSH_DIR')
+    ssh_port = int(os.environ.get('SSH_PORT', config_port))
+    #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
 
     try:
-        trans = paramiko.Transport(hostname, port)
+        trans = paramiko.Transport(ssh_host, ssh_port)
         #print(t)
-        trans.connect(username=myuser, password=mypass)
+        trans.connect(username=ssh_username, password=ssh_password)
         print("Connected")
     except:
-        print("Connect Error.")
+        print("SFTP connect Error.")
     try:
         sftp = paramiko.SFTPClient.from_transport(trans)
-        print(sftp)
+        print("SFTP client created.")
     except paramiko.SSHException:
-        print("Connection Error")
+        print("SFTP client creation error.")
 
     try:
-        sftp.chdir(remote_dir)
-        print("Changed remote to: " + remote_dir)
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
     except:
-        print("chdir failure") 
+        print("chdir failure.") 
 
     tm = time.strftime('%Y-%m-%d_%H-%M-%S')
     dest = tm + ".xml"
