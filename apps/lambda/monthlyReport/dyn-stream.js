@@ -115,8 +115,8 @@ DynStream.prototype._query = function (params) {
         record.dt = dt_local;
 	if(last_ts != -1) {
 	  var wa_diff = record.wa - last_wa;
-	  var ts_diff = record.ts - last_ts;
-	  roc = wa_diff / ts_diff;
+	  var ts_diff_mts = (record.ts - last_ts)/60000;
+	  roc = wa_diff / ts_diff_mts;
 	}
 	last_ts = record.ts;
 	last_wa = record.wa;
