@@ -6,6 +6,19 @@ import paramiko
 
 PRIVATE_KEY = ''
 
+# default values based on config.
+# will be overwritten based on Lambda ENV VAR settings.
+with open("config.json") as config_json_file:
+    try:
+        config = json.load(config_json_file)
+    except:
+        print("Error loading config JSON file.")
+
+ssh_host = config['host']
+ssh_port = config['port']
+ssh_username = config['user']
+ssh_password = config['pass']
+ssh_dir = config['remote_dir']
 
 def lambda_handler(event, context):
     ssh_username = os.environ['SSH_USERNAME']
