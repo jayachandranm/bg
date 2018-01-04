@@ -40,6 +40,10 @@ function jav_block_info()
         'info' => t('JAV Tracking All'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
+    $blocks['eventlist'] = array(
+        'info' => t('JAV Events'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
     return $blocks;
 }
 
@@ -244,17 +248,17 @@ function _jav_page()
  */
 function jav_node_insert($node)
 {
-    if ($node->type == 'vehicle') {
+    if ($node->type == 'lifts') {
         $nid = $node->nid;
-        $sid = $node->field_dev_id['und'][0]['value'];
-        $vnum = $node->field_dev_num['und'][0]['value'];
+        $sid = $node->field_lift_id['und'][0]['value'];
+        $vnum = -1;
         $vgroup = 'test';
         $flag = true;
         module_load_include("config.inc", "jav");
         // TODO: Improve the config option.
-        $bg_db = getExtDBConfig();
+        $jav_db = getExtDBConfig();
         module_load_include("api.inc", "jav");
-        _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag);
+        _update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
     }
     /*
     // Notice that we are ignoring any revision information using $node->nid
@@ -273,17 +277,17 @@ function jav_node_insert($node)
 function jav_node_update($node)
 {
     //if ($node->type == 'stations' && !isset($node->nid)) {
-    if ($node->type == 'jav') {
+    if ($node->type == 'lifts') {
         //dpm($node);
         $nid = $node->nid;
-        $sid = $node->field_dev_id['und'][0]['value'];
-        $vnum = $node->field_dev_num['und'][0]['value'];
+        $sid = $node->field_lift_id['und'][0]['value'];
+        $vnum = -1;
         $vgroup = 'test';
         $flag = false;
         module_load_include("config.inc", "jav");
-        $bg_db = getExtDBConfig();
+        $jav_db = getExtDBConfig();
         module_load_include("api.inc", "jav");
-        _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag);
+        _update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
     }
 }
 
@@ -293,19 +297,6 @@ function jav_node_update($node)
  *
  * Implements hook_theme().
  */
-function jav_theme()
-{
-    $theme_subfolder = drupal_get_path('module', 'jav') . "/theme";
-    return array(
-        'jav_trace' => array(
-            'path' => $theme_subfolder,
-            'template' => 'jav_trace',
-            'arguments' => array('items' => NULL),
-            // All preprocess hooks in .theme.inc.
-            //'file' => 'jav.theme.inc',
-        ),
-    );
-}
 
 /**
  * Implements hook_block_view().
@@ -323,16 +314,13 @@ function jav_block_view($delta = '')
 
     if ($node = menu_get_object()) {
         // TODO: if($node) {}
-        if ($node->type == 'jav') {
+        if ($node->type == 'lifts') {
             //dpm($node);
             $nid = $node->nid;
             // Always read these fields in English.
-            $field_dev = field_get_items('node', $node, 'field_dev_id', 'en');
+            $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
             $sid = $field_obd[0]['safe_value'];
-            $field_vnum = field_get_items('node', $node, 'field_dev_num', 'en');
-            $vnum = $field_vnum[0]['safe_value'];
-            $field_color = field_get_items('node', $node, 'field_display_color', 'en');
-            $color = $field_color[0]['safe_value'];
+            $vnum = -1;
             //dpm($field_dev);
         } // if node-type.
     } // if node.
@@ -376,8 +364,7 @@ function jav_block_view($delta = '')
                                 $sid => array(
                                     'sid' => $sid,
                                     'nid' => $nid,
-                                    'vnum' => $vnum,
-                                    'color' => $color
+                                    'vnum' => $vnum
                                 ),
                             ),
                         ),
@@ -394,7 +381,7 @@ function jav_block_view($delta = '')
                 //$block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
                 $block = array
                 (
-                    'subject' => t('JAV Events...'),
+                    'subject' => t('JAV Locations...'),
                     'content' => array
                     (
                         'rtmulti_block' => array
@@ -412,6 +399,47 @@ function jav_block_view($delta = '')
                     'type' => 'file',
                     'data' => $mpath . '/jav_rt.js',),
             );
+            break;
+        case 'eventlist':
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t('JAV Events...'),
+                    'content' => array
+                    (
+                        'eventlist_block' => array
+                        (
+                            '#prefix' => "<div id='rt_map'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Event table....."),
+                        ),
+                    ),
+                );
+               
+                $header = array(
+                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+                    array('data' => t('Time')),
+                    //array('data' => t('Address'), 'colspan' => 3),
+                    array('data' => t('Lift SNUM')),
+                    array('data' => t('Lift Location')),
+                    array('data' => t('Event Type')),
+                    array('data' => t('Remarks')),
+                );
+
+                $result = _getExtDBevents('block');
+                $items = array();
+                foreach ($result as $row) {
+                    date_default_timezone_set('Asia/Singapore');
+                    $date = new DateTime();
+                    $date->setTimestamp(($row->ts)/1000);
+                    $timeHr = $date->format('g:i a');
+                }
+
+                $items[] = array($timeHr, $row->snum, 'Loc', $row->etype, $row->remarks);
+
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+
+            } // if user_access
             break;
         case 'aob':
             if (user_access('access content')) {
@@ -437,21 +465,18 @@ function jav_preprocess_views_view(&$vars)
             //print_r($cell->node_title);
             //dpm($cell);
             $nid = $cell->nid;
-            $vnum_content = $cell->field_field_dev_num[0];
-            $vnum = $vnum_content['raw']['value'];
-            $sid_content = $cell->field_field_dev_id[0];
+            $vnum = -1;
+            $sid_content = $cell->field_field_lift_id[0];
             $sid = $sid_content['raw']['value'];
-            $color_content = $cell->field_field_display_color[0];
-            $color = $color_content['raw']['value'];
-            $veh_details = array('sid' => $sid,
+            $lift_details = array('sid' => $sid,
                 'nid' => $nid,
                 'vnum' => $vnum,
-                'color' => $color);
-            $selected_devs[$sid] = $dev_details;
+            );
+            $selected_lifts[$sid] = $lift_details;
             //$active_sids[] = $sid_content['raw']['value'];
         }
         //print_r($visible_vehs);
         //dpm($active_sids);
-        drupal_add_js(array('rt' => array('dev_list' => $selected_devs)), 'setting');
+        drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
     }
 }
