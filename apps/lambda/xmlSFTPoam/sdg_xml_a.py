@@ -18,7 +18,7 @@ import pytz
 
 from lxml import etree, objectify
 
-with open("station-B-ids.json") as json_file:
+with open("station-ids.json") as json_file:
     try:
         json_data = json.load(json_file)
     except:
@@ -37,21 +37,21 @@ with open("config.json") as config_json_file:
     except:
         print("Error loading config JSON file.")
 
-hostname = config['host']
-port = config['port']
-myuser = config['user']
-mypass = config['pass']
-remote_dir = config['remote_dir']
+config_host = config['host']
+config_port = config['port']
+config_user = config['user']
+config_pass = config['pass']
+config_dir = config['remote_dir']
 
 #----------------------------------------------------------------------
-def create_series(data):
+def create_series(data, stype):
     """
     Create a time series XML element for single div
     """
     dt = data["dt"]
     tm = data["tm"]
     wa = data["wa"]
-    mrl = data["mrl"]
+    val = data["val"]
     loc = data["locationId"]
     gps_x = data["x"]
     gps_y = data["y"]
@@ -62,44 +62,65 @@ def create_series(data):
     header.type = "instantaneous" #data["type"]
     header.locationId = loc
     header.parameterId = "Level"
+    #if stype == "level":
+    #    header.parameterId = "Level"
+    #elif stype == "depth":
+    if stype == "depth":
+        header.parameterId = "Depth"
+    #else:
+        #TODO: undefined.
     header.timeStep = objectify.Element("timeStep", unit="nonequidistant")
     header.startDate = objectify.Element("startDate", date=dt, time=tm)
     header.endDate = objectify.Element("endDate", date=dt, time=tm)
     header.missVal = -999.9
     header.x = gps_x
     header.y = gps_y
+    header.units = "mRL"
+    #if stype == "level":
+    #    header.units = "mRL"
+    #elif stype == "depth":
+    if stype == "depth":
+        header.units = "m"
     header.fileDescription = desc
-    event = objectify.SubElement(series, "event", date=dt, time=tm, value=mrl, status=md)
+    event = objectify.SubElement(series, "event", date=dt, time=tm, value=val, flag=str(md))
     return series
  
 #----------------------------------------------------------------------
 
 
 def lambda_handler(event, context):
+    #
+    ssh_host = os.environ.get('SSH_HOST', config_host)
+    ssh_username = os.environ.get('SSH_USERNAME', config_user)
+    ssh_password = os.environ.get('SSH_PASSWORD', config_pass)
+    #ssh_dir = os.environ.get('SSH_DIR', config_dir)
+    ssh_dir = os.environ.get('SSH_DIR')
+    ssh_port = int(os.environ.get('SSH_PORT', config_port))
+    #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
 
     try:
-        trans = paramiko.Transport(hostname, port)
+        trans = paramiko.Transport(ssh_host, ssh_port)
         #print(t)
-        trans.connect(username=myuser, password=mypass)
+        trans.connect(username=ssh_username, password=ssh_password)
         print("Connected")
     except:
-        print("Connect Error.")
+        print("SFTP connect Error.")
     try:
         sftp = paramiko.SFTPClient.from_transport(trans)
-        print(sftp)
+        print("SFTP client created.")
     except paramiko.SSHException:
-        print("Connection Error")
+        print("SFTP client creation error.")
 
     try:
-        sftp.chdir(remote_dir)
-        print("Changed remote to: " + remote_dir)
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
     except:
-        print("chdir failure") 
+        print("chdir failure.") 
 
     tm = time.strftime('%Y-%m-%d_%H-%M-%S')
     dest = tm + ".xml"
     file=sftp.file(dest, "w", -1)
-    file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
+    #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
  
     xml = '''<?xml version="1.0" encoding="UTF-8"?>
     <TimeSeries>
@@ -136,12 +157,15 @@ def lambda_handler(event, context):
         #
         wa = wa/100
         ts = int(ts_millis / 1000)
+        curr_t = int(time.time())
+        time_lag = curr_t - ts
+
         #dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
         #hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
         utc_dt = datetime.fromtimestamp(ts)
         utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
         sg_tz = pytz.timezone('Asia/Singapore')
-        sg_time = utc_time.astimezone(sg_tz)
+        sg_time = utc_dt.astimezone(sg_tz)
         dt1 = sg_time.strftime('%Y-%m-%d')
         hm1 = sg_time.strftime('%H:%M:%S')
         try:
@@ -164,13 +188,17 @@ def lambda_handler(event, context):
                 md = data_row0['md']
                 #print(md)
                 # TODO:
-                if md == "spike":
-                    md = "normal"
+                if md == "maintenance":
+                    flag = 3
             #else:
             #    print("There is no md here")
             #
         except:
             print("No time")
+
+        # if no data for more than 30mts, set to maintenance
+        if time_lag > 1800:
+            flag = 3
 
         #print(flag)
         #
@@ -182,6 +210,7 @@ def lambda_handler(event, context):
         loc = jsonState["state"]["reported"]["location"]
         cope = jsonState["state"]["reported"]["cope_level"]
         invert = jsonState["state"]["reported"]["invert_level"]
+        offset_o = jsonState["state"]["reported"]["offset_o"]
         #print(loc)
         get_sid_url = "http://13.228.68.232/coords.php?sid=" + sid
         lat_lon_j = urllib2.urlopen(get_sid_url).read()
@@ -192,16 +221,20 @@ def lambda_handler(event, context):
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
+        # Calibrate near zero.
+        if wa <= ( 0.08 + (offset_o / 100) ):
+            wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
         mrl_str = "{0:.2f}".format(mrl_val)
+        op_level = invert + (offset_o / 100)
         #print(loc2)
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
         #               + "<x>" + "31810.18</x>" \
         #               + "<y>" + "41013.21" + "</y>" \
 
-        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"100.00\""}
+        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"" + str(op_level) + "\""
 
-        appt = create_series({
+        appt1 = create_series({
                         "locationId": sid,
                         "dt": dt1,
                         "tm": hm1,
@@ -209,11 +242,26 @@ def lambda_handler(event, context):
                         "y": lon_str,
                         "fileDescription": desc,
                         "wa": wa,
-                        "mrl": mrl_str,
-                        "md": md
-                        })
+                        "val": mrl_str,
+                        "md": flag
+                        }, "level")
 
-        root.append(appt)
+        root.append(appt1)
+
+        wa_str = "{0:.2f}".format(wa)
+        appt2 = create_series({
+                        "locationId": sid,
+                        "dt": dt1,
+                        "tm": hm1,
+                        "x": lat_str,
+                        "y": lon_str,
+                        "fileDescription": desc,
+                        "wa": wa,
+                        "val": wa_str,
+                        "md": flag
+                        }, "depth")
+
+        root.append(appt2)
 
     # remove lxml annotation
     objectify.deannotate(root)

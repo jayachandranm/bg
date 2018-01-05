@@ -7,12 +7,12 @@ var moment = require('moment');
 var archiver = require('archiver');
 var DynStream = require('./dyn-stream');
 var CSVTransform = require('./transform-stream');
-var sids_j = require('./station-ids.json');
+var sids_json = require('./station-B-ids.json');
 var config = require('./config.json');
 
 var iotdata = new aws.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 
-var sids = sids_j.stations;
+var sids = sids_json.stations;
 
 function sidRawToCsv(context) {
   //function backupTable(tablename, callback) {
@@ -43,7 +43,7 @@ function sidRawToCsv(context) {
   var s3obj = new aws.S3(
    { params:
      { Bucket: bucket_name,
-       Key: folder_name + '/' + file_dt_tag + '.zip'
+       Key: folder_name + '/' + file_dt_tag + '_B.zip'
      }
    }
   );
