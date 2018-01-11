@@ -101,7 +101,7 @@ function _getdata_dyndb($reqtype, $filter)
     return $result;
 }
 
-function _getdata_exdb($bg_db, $reqtype, $filter)
+function _getdata_exdb($jav_db, $reqtype, $filter)
 {
     // From admin page.
     //$max_num = variable_get('jav_max', 3);
@@ -120,7 +120,7 @@ function _getdata_exdb($bg_db, $reqtype, $filter)
         );
     */
 
-    Database::addConnectionInfo('JAV', 'default', $bg_db);
+    Database::addConnectionInfo('JAV', 'default', $jav_db);
     db_set_active('JAV');
 
     // TODO: Sanitize sids array before using in the query statement.
@@ -128,30 +128,30 @@ function _getdata_exdb($bg_db, $reqtype, $filter)
 
     $query = array();
     if ($reqtype == 'rt') {
-        $query_inner = db_select('data_gps', 'a')
-            ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-            ->condition('sid', $sid_list, 'IN')
-            ->orderBy('timestamp', 'DESC');
+        $query_inner = db_select('lift_events', 'a')
+            ->fields('a', array('snum', 'ts', 'etype', 'remarks'))
+            ->condition('snum', $sid_list, 'IN')
+            ->orderBy('ts', 'DESC');
         //$query->addExpression('MAX(id)');
         // TODO: Can be conditional, different for block and page.
         //$query->range(0, $max_num);
         // TODO: Use timestamp condition instead?
-        $query_inner->range(0, 1000);
+        $query_inner->range(0, 100);
         //
         $query = db_select($query_inner, 'b')
-            ->fields('b', array('sid', 'timestamp', 'longitude', 'latitude'))
-            ->groupBy('sid');
+            ->fields('b', array('snum', 'ts', 'etype', 'remarks'))
+            ->groupBy('snum');
 
     }
     if ($reqtype == 'trc') {
-        $query = db_select('data_gps', 'a')
-            ->fields('a', array('sid', 'timestamp', 'longitude', 'latitude'))
-            ->condition('sid', $sid_list, 'IN')
+        $query = db_select('lift_events', 'a')
+            ->fields('a', array('snum', 'ts', 'etype', 'remarks'))
+            ->condition('snum', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
-            ->condition('timestamp', array($start_time, $end_time), 'BETWEEN')
+            ->condition('ts', array($start_time, $end_time), 'BETWEEN')
             //->orderBy('datetime', 'DESC');
-            ->orderBy('datetime', 'ASC');
+            ->orderBy('ts', 'ASC');
     }
 
     $result = $query->execute();

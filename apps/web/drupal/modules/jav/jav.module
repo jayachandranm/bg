@@ -153,17 +153,17 @@ function jav_libraries_info()
                 'js' => array(
                     'leaflet.js',
                     //'fs/Control.FullScreen.js',
-                    'leaflet-fullscreen/Leaflet.fullscreen.js',
-                    'snake/L.Polyline.SnakeAnim.js',
-                    'playback/LeafletPlayback.js',
-                    'beautify/leaflet-beautify-marker-icon.js',
-                    'beautify/leaflet-beautify-marker.js',
+                    //'leaflet-fullscreen/Leaflet.fullscreen.js',
+                    //'snake/L.Polyline.SnakeAnim.js',
+                    //'playback/LeafletPlayback.js',
+                    //'beautify/leaflet-beautify-marker-icon.js',
+                    //'beautify/leaflet-beautify-marker.js',
                 ),
                 'css' => array(
                     'leaflet.css' => array(),
                     //'fs/Control.FullScreen.css' => array(),
-                    'leaflet-fullscreen/leaflet.fullscreen.css' => array(),
-                    'beautify/leaflet-beautify-marker-icon.css' => array(),
+                    //'leaflet-fullscreen/leaflet.fullscreen.css' => array(),
+                    //'beautify/leaflet-beautify-marker-icon.css' => array(),
                 ),
             ),
         );
@@ -258,7 +258,8 @@ function jav_node_insert($node)
         // TODO: Improve the config option.
         $jav_db = getExtDBConfig();
         module_load_include("api.inc", "jav");
-        _update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
+        // TODO: temp
+        //_update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
     }
     /*
     // Notice that we are ignoring any revision information using $node->nid
@@ -287,7 +288,8 @@ function jav_node_update($node)
         module_load_include("config.inc", "jav");
         $jav_db = getExtDBConfig();
         module_load_include("api.inc", "jav");
-        _update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
+        // TODO: temp
+        //_update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
     }
 }
 
@@ -307,6 +309,22 @@ function jav_block_view($delta = '')
 {
     // Set sid invalid by default, means to select all.
     //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
+    //$view_1 = views_get_view('dashboard');
+    //$info = views_embed_view('dashboard');
+    $dev_list = _jav_set_list();
+    //$dev_list = drupal_static('jav');
+    //dpm($this);
+    //dpm($dev_list);
+    //print_r($dev_list);
+    $sid_list = array();
+    if($dev_list) {
+        foreach($dev_list as $key => $value) {
+        //foreach($dev_list as $dev) {
+            //dpm($dev);
+            //print_r($dev["sid"]);
+            $sid_list[] = $key;
+        }
+    }
     $block = array();
     // TODO: exit if it is not a node but a view or something else. But should allow selected views.
     // TODO: Move this to init? For the case of view this happens outside.
@@ -330,7 +348,7 @@ function jav_block_view($delta = '')
     }
 
     // Always pass as an array of values, for generic handling at JS side.
-    $sid_list[] = $sid;
+    //$sid_list[] = $sid;
     //$sid = (string)$sid_tmp;
 
     switch ($delta) {
@@ -404,7 +422,7 @@ function jav_block_view($delta = '')
             if (user_access('access content')) {
                 $block = array
                 (
-                    'subject' => t('JAV Events...'),
+                    'subject' => t('Lift Events'),
                     'content' => array
                     (
                         'eventlist_block' => array
@@ -418,7 +436,7 @@ function jav_block_view($delta = '')
                
                 $header = array(
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
-                    array('data' => t('Time')),
+                    array('data' => t('Date Time')),
                     //array('data' => t('Address'), 'colspan' => 3),
                     array('data' => t('Lift SNUM')),
                     array('data' => t('Lift Location')),
@@ -426,16 +444,30 @@ function jav_block_view($delta = '')
                     array('data' => t('Remarks')),
                 );
 
-                $result = _getExtDBevents('block');
+                $reqtype = 'rt';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = -1;
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
                 $items = array();
                 foreach ($result as $row) {
-                    date_default_timezone_set('Asia/Singapore');
                     $date = new DateTime();
-                    $date->setTimestamp(($row->ts)/1000);
-                    $timeHr = $date->format('g:i a');
+                    $date->setTimestamp(intval($row->ts)/1000);
+                    $dtime = $date->format('j-M-y g:i a');
+                    //print_r($dtime, $row->snum);
+                    $items[] = array($dtime, $row->snum, '510 Bt Batok St 22', $row->etype, $row->remarks);
                 }
+                //dpm($items);
 
-                $items[] = array($timeHr, $row->snum, 'Loc', $row->etype, $row->remarks);
 
                 $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
 
@@ -450,6 +482,16 @@ function jav_block_view($delta = '')
     //libraries_info('moment');
     return $block;
 }
+
+
+function _jav_set_list($lift_list = NULL) {
+  static $stored_lift_list = NULL;
+  if ($lift_list) {
+    $stored_lift_list = $lift_list;
+  }
+  return $stored_lift_list;
+}
+
 
 /*
 * https://www.drupal.org/node/1993228
@@ -468,7 +510,8 @@ function jav_preprocess_views_view(&$vars)
             $vnum = -1;
             $sid_content = $cell->field_field_lift_id[0];
             $sid = $sid_content['raw']['value'];
-            $lift_details = array('sid' => $sid,
+            $lift_details = array(
+                'sid' => $sid,
                 'nid' => $nid,
                 'vnum' => $vnum,
             );
@@ -477,6 +520,10 @@ function jav_preprocess_views_view(&$vars)
         }
         //print_r($visible_vehs);
         //dpm($active_sids);
+        //$vars['dev_list'] = $selected_lifts;
+        _jav_set_list($selected_lifts);
+        //$lift_list = &drupal_static('jav');
+        //$lift_list = $selected_lifts;
         drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
     }
 }
