@@ -84,7 +84,7 @@ function jav_init()
         print_r("Error: Library datatables is not loaded.");
     }
 
-//drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
+    drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
 }
 
 /**
@@ -419,6 +419,11 @@ function jav_block_view($delta = '')
             );
             break;
         case 'eventlist':
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav.js',),
+            );
             if (user_access('access content')) {
                 $block = array
                 (

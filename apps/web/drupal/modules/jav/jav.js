@@ -1,8 +1,6 @@
 (function ($) {
-/*
     $(document).ready(function() {
-        $('#example').DataTable();
+        $('#sort-table').DataTable();
     });
-*/
 })(jQuery);
 
