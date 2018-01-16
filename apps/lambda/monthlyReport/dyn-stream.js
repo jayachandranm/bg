@@ -7,11 +7,13 @@ aws.config.update({ region: 'ap-southeast-1' });
 dynamo = new aws.DynamoDB();
 dynDoc = new aws.DynamoDB.DocumentClient();
 
+//
+
 module.exports = DynStream;
 
-function DynStream(tablename, sid, devState, start_t, end_t, options) {
+function DynStream(tablename, sid, devState, devs_b_state, start_t, end_t, options) {
   if ( !(this instanceof DynStream) ) {
-  	return new DynStream(tablename, sid, devState, start_t, end_t, options);
+  	return new DynStream(tablename, sid, devState, devs_b_state, start_t, end_t, options);
   }
   console.log(tablename, sid, devState.location, start_t, end_t);
   this._tablename = tablename;
@@ -21,6 +23,7 @@ function DynStream(tablename, sid, devState, start_t, end_t, options) {
   //this._sidSize = sids.length;
   this._sid = sid;
   this._dev_state = devState;
+  this._devs_b_state = devs_b_state;
   this._end_t = end_t;
   this._start_t = start_t;
   if (! options) options = {};
@@ -53,14 +56,16 @@ DynStream.prototype._read = function read() {
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
       //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
+      var sid = self._sid;
       var loc = self._dev_state.location;
-      var desc = { dt: "Station ID: ", wa: self._sid, mrl: '', md: '' }
+      var desc = { dt: "Station ID: ", wa: sid, mrl: '', md: '' }
       self.push(desc);
       var desc = { dt: "Station Name: ", wa: loc, mrl: '', md: '' }
       self.push(desc);
       desc = "";
       self.push(desc);
-      var desc = { dt: "Critical level " , wa: '', mrl: 100.0 + " mRL", md: '' }
+      var cl = self._devs_b_state.sid.critical_level.toFixed(3);
+      var desc = { dt: "Critical level " , wa: '', mrl: cl + " mRL", md: '' }
       self.push(desc);
       var desc = { dt: "Cope level ", wa: '', mrl: self._dev_state.cope_level.toFixed(3) + " mRL", md: '' }
       self.push(desc);

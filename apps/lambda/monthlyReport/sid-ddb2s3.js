@@ -13,6 +13,7 @@ var config = require('./config.json');
 var iotdata = new aws.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 
 var sids = sids_json.stations;
+var devs_b_state;
 
 function sidRawToCsv(context) {
   //function backupTable(tablename, callback) {
@@ -20,6 +21,9 @@ function sidRawToCsv(context) {
   var table_name = config.table;
   var bucket_name = config.bucket;
   var folder_name = config.folder;
+  //
+  var iot_folder_name = config.folder_iot;
+
   //
   // moment().local();
   //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
@@ -56,6 +60,21 @@ function sidRawToCsv(context) {
     console.log(err, data);
   });
 
+  //
+  var s3dev = new aws.S3(
+   { params:
+     { Bucket: bucket_name,
+       Key: iot_folder_name + '/devs_B_state.json'
+     }
+   }
+  );
+
+  s3dev.GetObject(function(err, data) {
+    var fileContents = data.Body.toString();
+    devs_b_state = JSON.parse(fileContents);
+    console.log(devs_b_state);
+  });
+
   var count = 0;
   function getMultiFileStream(callback) {
     if(count < sids.length) {
@@ -73,7 +92,7 @@ function sidRawToCsv(context) {
           var jsonPayload = JSON.parse(data.payload);
           //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
           devState = jsonPayload.state.reported;
-          var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
+          var data_stream = DynStream(table_name, sid, devState, devs_b_state, start_t, end_t);
           var gzip = zlib.createGzip();
           var csv = CSVTransform();
 
