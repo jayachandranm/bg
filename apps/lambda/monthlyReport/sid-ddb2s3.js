@@ -61,18 +61,17 @@ function sidRawToCsv(context) {
   });
 
   //
-  var s3dev = new aws.S3(
-   { params:
+  var s3dev = new aws.S3();
+  var params_dev = 
      { Bucket: bucket_name,
        Key: iot_folder_name + '/devs_B_state.json'
-     }
-   }
-  );
+     };
 
-  s3dev.GetObject(function(err, data) {
+  s3dev.getObject(params_dev, function(err, data) {
     var fileContents = data.Body.toString();
     devs_b_state = JSON.parse(fileContents);
-    console.log(devs_b_state);
+    //console.log(devs_b_state);
+    getMultiFileStream();
   });
 
   var count = 0;
@@ -92,7 +91,9 @@ function sidRawToCsv(context) {
           var jsonPayload = JSON.parse(data.payload);
           //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
           devState = jsonPayload.state.reported;
-          var data_stream = DynStream(table_name, sid, devState, devs_b_state, start_t, end_t);
+          var cl = devs_b_state.dev_state[sid].critical_level.toFixed(3);
+          devState.critical_level = cl;
+          var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
           var gzip = zlib.createGzip();
           var csv = CSVTransform();
 
@@ -115,7 +116,7 @@ function sidRawToCsv(context) {
       archive.finalize();
     }
   } // getMultiFileStream
-  getMultiFileStream();
+  //getMultiFileStream();
 } // sidRawToCsv
 
 module.exports.sidRawToCsv = sidRawToCsv;

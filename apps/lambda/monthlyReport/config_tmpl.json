@@ -1,0 +1,8 @@
+{
+    "endpointAddress": "IoT-EP",
+    "table" : "DDB-table",
+    "bucket" : "S3-bucket",
+    "folder" : "monthly_report",
+    "folder_iot" : "iot_data",
+    "pause" : 250
+}
