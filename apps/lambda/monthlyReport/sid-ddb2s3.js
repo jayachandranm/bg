@@ -13,6 +13,7 @@ var config = require('./config.json');
 var iotdata = new aws.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 
 var sids = sids_json.stations;
+var devs_b_state;
 
 function sidRawToCsv(context) {
   //function backupTable(tablename, callback) {
@@ -21,6 +22,9 @@ function sidRawToCsv(context) {
   var bucket_name = config.bucket;
   var folder_name = config.folder;
   //
+  var iot_folder_name = config.folder_iot;
+
+  //
   // moment().local();
   //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
   var currMonthStart = moment().utcOffset('+0800').startOf('month');
@@ -28,10 +32,10 @@ function sidRawToCsv(context) {
   var lastMonthEnd = moment(lastMonthStart).endOf('month');
   //console.log(currMonthStart.format(), lastMonthStart.format(), lastMonthEnd.format());
   //console.log(currMonthStart.valueOf(), lastMonthStart.valueOf(), lastMonthEnd.valueOf())
-  end_t = lastMonthEnd.valueOf();
-  start_t = lastMonthStart.valueOf();
+  var end_t = lastMonthEnd.valueOf();
+  var start_t = lastMonthStart.valueOf();
   //self._start_t = start_t;
-  file_dt_tag = lastMonthStart.format("MM-YYYY");
+  var file_dt_tag = lastMonthStart.format("MM-YYYY");
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
   console.log("Number of sids..", sids.length);
   //
@@ -56,6 +60,20 @@ function sidRawToCsv(context) {
     console.log(err, data);
   });
 
+  //
+  var s3dev = new aws.S3();
+  var params_dev = 
+     { Bucket: bucket_name,
+       Key: iot_folder_name + '/devs_B_state.json'
+     };
+
+  s3dev.getObject(params_dev, function(err, data) {
+    var fileContents = data.Body.toString();
+    devs_b_state = JSON.parse(fileContents);
+    //console.log(devs_b_state);
+    getMultiFileStream();
+  });
+
   var count = 0;
   function getMultiFileStream(callback) {
     if(count < sids.length) {
@@ -73,6 +91,8 @@ function sidRawToCsv(context) {
           var jsonPayload = JSON.parse(data.payload);
           //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
           devState = jsonPayload.state.reported;
+          var cl = devs_b_state.dev_state[sid].critical_level.toFixed(3);
+          devState.critical_level = cl;
           var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
           var gzip = zlib.createGzip();
           var csv = CSVTransform();
@@ -96,7 +116,7 @@ function sidRawToCsv(context) {
       archive.finalize();
     }
   } // getMultiFileStream
-  getMultiFileStream();
+  //getMultiFileStream();
 } // sidRawToCsv
 
 module.exports.sidRawToCsv = sidRawToCsv;

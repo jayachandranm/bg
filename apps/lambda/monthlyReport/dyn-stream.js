@@ -7,6 +7,8 @@ aws.config.update({ region: 'ap-southeast-1' });
 dynamo = new aws.DynamoDB();
 dynDoc = new aws.DynamoDB.DocumentClient();
 
+//
+
 module.exports = DynStream;
 
 function DynStream(tablename, sid, devState, start_t, end_t, options) {
@@ -53,14 +55,16 @@ DynStream.prototype._read = function read() {
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
       //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
+      var sid = self._sid;
       var loc = self._dev_state.location;
-      var desc = { dt: "Station ID: ", wa: self._sid, mrl: '', md: '' }
+      var cl = self._dev_state.critical_level;
+      var desc = { dt: "Station ID: ", wa: sid, mrl: '', md: '' }
       self.push(desc);
       var desc = { dt: "Station Name: ", wa: loc, mrl: '', md: '' }
       self.push(desc);
       desc = "";
       self.push(desc);
-      var desc = { dt: "Critical level " , wa: '', mrl: 100.0 + " mRL", md: '' }
+      var desc = { dt: "Critical level " , wa: '', mrl: cl + " mRL", md: '' }
       self.push(desc);
       var desc = { dt: "Cope level ", wa: '', mrl: self._dev_state.cope_level.toFixed(3) + " mRL", md: '' }
       self.push(desc);
