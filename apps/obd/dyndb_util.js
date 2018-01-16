@@ -6,12 +6,12 @@ module.exports.add2dyndb = add2dyndb;
 module.exports.add2dyndbBatch = add2dyndbBatch;
 
 AWS.config.update({
-    region: "ap-southeast-1",
-    endpoint: "https://dynamodb.ap-southeast-1.amazonaws.com"
+    region: 'ap-southeast-1'
+    //endpoint: "https://dynamodb.ap-southeast-1.amazonaws.com"
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
-var table = "OBDTable_mmmYYYY";
+var table = 'OBDTable_mmmYYYY';
 
 function import2db(obdID, timestamp, gpsJson) {
     var items = {};
@@ -26,7 +26,7 @@ function import2db(obdID, timestamp, gpsJson) {
     //console.log(params);
     docClient.put(params, function (err, data) {
         if (err) {
-            console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+            console.error("Unable to add GPS to DynDB", ". Error JSON:", JSON.stringify(err, null, 2));
         } else {
             //console.log("PutItem succeeded:");
         }
@@ -48,8 +48,8 @@ function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     }
     if (arrAlarms != null) {
         var alarms = {};
-        for (i = 0; i < arrAlarmVals.length; i++) {
-            var alarmVals = arrAlarmVals[i];
+        for (i = 0; i < arrAlarms.length; i++) {
+            var alarmVals = arrAlarms[i];
             var alarmType = alarmVals.alarm_type;
 
             console.log("Alarm type: ", alarmType);
@@ -69,7 +69,7 @@ function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     //console.log(params);
     docClient.put(params, function (err, data) {
         if (err) {
-            console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+            console.error("Unable to add Items to DynDB", ". Error JSON:", JSON.stringify(err, null, 2));
         } else {
             //console.log("PutItem succeeded:");
         }
@@ -98,7 +98,7 @@ function add2dyndbBatch(obdID, arrGPS, arrRPM) {
             //console.log(params);
             docClient.put(params, function (err, data) {
                 if (err) {
-                    console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+                    console.error("Unable to add GPS in batch to DynDB", ". Error JSON:", JSON.stringify(err, null, 2));
                 } else {
                     //console.log("PutItem succeeded:");
                 }
