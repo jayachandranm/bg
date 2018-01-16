@@ -1,9 +1,12 @@
 var AWS = require("aws-sdk");
 var fs = require('fs');
+var config = require('./config');
 
 module.exports.import2db = import2db;
 module.exports.add2dyndb = add2dyndb;
 module.exports.add2dyndbBatch = add2dyndbBatch;
+
+//console.log(config);
 
 AWS.config.update({
     region: 'ap-southeast-1'
@@ -11,12 +14,13 @@ AWS.config.update({
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
-var table = 'OBDTable_mmmYYYY';
+//var table = config.ddb.table;
+var table = 'bgnav-ddb';
 
 function import2db(obdID, timestamp, gpsJson) {
     var items = {};
-    items["obd_dev_id"] = obdID;
-    items["timestamp"] = timestamp;
+    items["sid"] = obdID;
+    items["ts"] = timestamp;
     items["gps_data"] = gpsJson;
 
     var params = {
@@ -36,14 +40,14 @@ function import2db(obdID, timestamp, gpsJson) {
 function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     //
     var items = {};
-    items["obd_dev_id"] = obdID;
+    items["sid"] = obdID;
     if (statData != null) {
         items["stat_data"] = statData;
-        items["timestamp"] = statData.utc_time * 1000;
+        items["ts"] = statData.utc_time * 1000;
     }
     if (gpsItem != null) {
         // If GPS available, overwrite sample time with GPS time.
-        items["timestamp"] = getUnixTime(gpsItem.date_time);
+        items["ts"] = getUnixTime(gpsItem.date_time);
         items["gps_data"] = getGpsJson(gpsItem);
     }
     if (arrAlarms != null) {
@@ -84,9 +88,9 @@ function add2dyndbBatch(obdID, arrGPS, arrRPM) {
         var numItems4db = arrGPS.length - 1;
         for (i = 0; i < numItems4db; i++) {
             var items = {};
-            items["obd_dev_id"] = obdID;
+            items["sid"] = obdID;
             var gpsItem = arrGPS[i];
-            items["timestamp"] = getUnixTime(gpsItem.date_time);
+            items["ts"] = getUnixTime(gpsItem.date_time);
             items["gps_data"] = getGpsJson(gpsItem);
 
             var params = {
