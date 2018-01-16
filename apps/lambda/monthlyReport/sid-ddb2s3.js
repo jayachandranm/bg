@@ -32,10 +32,10 @@ function sidRawToCsv(context) {
   var lastMonthEnd = moment(lastMonthStart).endOf('month');
   //console.log(currMonthStart.format(), lastMonthStart.format(), lastMonthEnd.format());
   //console.log(currMonthStart.valueOf(), lastMonthStart.valueOf(), lastMonthEnd.valueOf())
-  end_t = lastMonthEnd.valueOf();
-  start_t = lastMonthStart.valueOf();
+  var end_t = lastMonthEnd.valueOf();
+  var start_t = lastMonthStart.valueOf();
   //self._start_t = start_t;
-  file_dt_tag = lastMonthStart.format("MM-YYYY");
+  var file_dt_tag = lastMonthStart.format("MM-YYYY");
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
   console.log("Number of sids..", sids.length);
   //
