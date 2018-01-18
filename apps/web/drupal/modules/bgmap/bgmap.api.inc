@@ -51,9 +51,10 @@ function _getdata_dyndb($reqtype, $filter)
         try {
             $result_dyn = $dynamodb->query($params);
             foreach ($result_dyn['Items'] as $i) {
-            //$i = $result_dyn['Items'];
-            $result = $marshaler->unmarshalItem($i);
-            //print_r($gps_data);
+                //$i = $result_dyn['Items'];
+                // Only single item, most recent, expected in each query.
+                $result = $marshaler->unmarshalItem($i);
+                //print_r($gps_data);
             }
             //$gps_data = $marshaler->unmarshalItem($result);
             //print_r($result);
@@ -91,9 +92,9 @@ function _getdata_dyndb($reqtype, $filter)
         try {
             $result_dyn = $dynamodb->query($params);
             foreach ($result_dyn['Items'] as $i) {
-            //$i = $result_dyn['Items'];
-            $result[] = $marshaler->unmarshalItem($i);
-            //print_r($gps_data);
+                //$i = $result_dyn['Items'];
+                $result[] = $marshaler->unmarshalItem($i);
+                //print_r($gps_data);
             }
         } catch (DynamoDbException $e) {
             echo "Unable to query:\n";
