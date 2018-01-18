@@ -154,8 +154,10 @@ var BGMAP = (function (me, $, Drupal, undefined) {
         var lat = 1.421, lng = 103.829;
         //center: [51.505, -0.09], zoom: 13
         map2.setView([lat, lng], 13);
-        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        //L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            //attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map2);
 
         // Create additional Control placeholders

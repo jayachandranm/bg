@@ -63,8 +63,10 @@
                 //
                 var rtGeoJsonLayer = L.geoJson().addTo(map);
 
-                L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                //L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    //attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
 
                 /*
@@ -163,7 +165,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestCurrentLoc, 20000);
+                            setTimeout(requestCurrentLoc, 10000);
                         },
                         error: function (xhr, status, error) {
                             //error: function () {
