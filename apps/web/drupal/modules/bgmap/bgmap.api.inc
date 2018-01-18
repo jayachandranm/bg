@@ -11,10 +11,6 @@ function _getdata_dyndb($reqtype, $filter)
     $sdk = new Aws\Sdk([
         'region' => 'ap-southeast-1',
         'version' => 'latest',
-        'credentials' => [
-            'key' => 'mykey',
-            'secret' => 'mysecret',
-        ],
     ]);
 
 //global $sdk;
@@ -25,7 +21,7 @@ function _getdata_dyndb($reqtype, $filter)
     }
 
     $marshaler = new Marshaler();
-    $tableName = 'OBDTable_mmmYYYY';
+    $tableName = 'bgnav-ddb';
     //global $dynamodb, $marshaler, $tableName;
     // From admin page.
     //$max_num = variable_get('bgmap_max', 3);
@@ -42,10 +38,10 @@ function _getdata_dyndb($reqtype, $filter)
             'TableName' => $tableName,
             'ProjectionExpression' => '#ts, gps_data',
             'KeyConditionExpression' =>
-                'obd_dev_id = :o_id',
+                'sid = :o_id',
             'ScanIndexForward' => false,
             'Limit' => 1,
-            'ExpressionAttributeNames' => ['#ts' => 'timestamp'],
+            'ExpressionAttributeNames' => ['#ts' => 'ts'],
             'ExpressionAttributeValues' => [
                 ':o_id' => ['S' => $sid]
             ],
@@ -81,9 +77,9 @@ function _getdata_dyndb($reqtype, $filter)
             'TableName' => $tableName,
             'ProjectionExpression' => '#ts, gps_data',
             'KeyConditionExpression' =>
-                'obd_dev_id = :o_id and #ts between :begin and :end',
+                'sid = :o_id and #ts between :begin and :end',
             'ScanIndexForward' => true,
-            'ExpressionAttributeNames' => ['#ts' => 'timestamp'],
+            'ExpressionAttributeNames' => ['#ts' => 'ts'],
             'ExpressionAttributeValues' => [
                 ':o_id' => ['S' => $sid],
                 ':begin' => ['N' => $start_time],

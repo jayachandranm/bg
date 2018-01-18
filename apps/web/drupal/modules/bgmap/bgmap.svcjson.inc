@@ -45,7 +45,7 @@ function _get_geojson($rqtype)
             $result = _getdata_dyndb($reqtype, $filter);
             foreach ($result as $row) {
                 //dpm($row);
-                $time = $row['timestamp'];
+                $time = $row['ts'];
                 $gps_data = $row['gps_data'];
                 //$lat = 1.421; $lng = 103.829;
                 // If for any timestamp, gps_data does not exist, just skip that item.
@@ -95,8 +95,15 @@ function _get_geojson($rqtype)
                 //dpm($result);
                 $row = $result;
                 //$time = intval($row['timestamp']);
-                $time = $row['timestamp'];
-                $gps_data = $row['gps_data'];
+		$time = null;
+		if($row['ts'] != null) {
+		    $time = $row['ts'];
+		}
+		$gps_data = null;
+		if($row['gps_data'] != null) {
+	            $gps_data = $row['gps_data'];
+	        }
+                //$gps_data = $row['gps_data'];
                 //dpm($gps_data);
                 //$lat = floatval($row->latitude);
                 //$lng = floatval($row->longitude);
