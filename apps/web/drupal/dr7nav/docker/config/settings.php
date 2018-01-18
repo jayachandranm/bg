@@ -415,6 +415,38 @@ ini_set('session.cookie_lifetime', 2000000);
  */
 # $conf['reverse_proxy_header'] = 'HTTP_X_CLUSTER_CLIENT_IP';
 
+
+/**
+ * @file
+ * Amazon Elastic Load Balancer Settings.
+ * Force server to use https:// path if SSL is handled at load balancer.
+ * @see http://drupal.org/node/185161#comment-5452038
+ * @see https://gist.github.com/mpezzi/2413502
+ */
+// We're running HTTPS natively in the web server.
+if ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ) {
+  $base_root = 'https';
+}
+// We're behind a proxy that talks to the web server via HTTP.
+elseif ( isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ) {
+  $base_root = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+}
+// There's no HTTPS spoor -- we must be running HTTP.
+else {
+  $base_root = 'http';
+}
+$base_url = $base_root .= '://'. $_SERVER['HTTP_HOST'];
+// $_SERVER['SCRIPT_NAME'] can, in contrast to $_SERVER['PHP_SELF'], not be modified by a visitor.
+if ( $dir = trim(dirname($_SERVER['SCRIPT_NAME']), '\,/') ) {
+  $base_path = "/$dir";
+  $base_url .= $base_path;
+  $base_path .= '/';
+}
+else {
+  $base_path = '/';
+}
+
+
 /**
  * Page caching:
  *
