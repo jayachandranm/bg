@@ -5,11 +5,11 @@
  * these variables directly from ../bootstrap/less/variables.less to this file.
  */
 /*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
-@import url(http://fonts.googleapis.com/css?family=Playfair+Display+SC | Londrina+Outline);
-@import url(http://fonts.googleapis.com/css?family=Tangerine);
-@import url(http://fonts.googleapis.com/css?family=Open+Sans);
-@import url(http://fonts.googleapis.com/css?family=David+Libre);
-@import url(http://fonts.googleapis.com/css?family=Fjalla+One);
+@import url(https://fonts.googleapis.com/css?family=Playfair+Display+SC | Londrina+Outline);
+@import url(https://fonts.googleapis.com/css?family=Tangerine);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+@import url(https://fonts.googleapis.com/css?family=David+Libre);
+@import url(https://fonts.googleapis.com/css?family=Fjalla+One);
 html {
   font-family: sans-serif;
   -ms-text-size-adjust: 100%;
@@ -7601,6 +7601,25 @@ body {
   padding-right: 30px;
 }
 /* end glyphicon */
+/* add a new control location for leaflet */
+.leaflet-horizcenter {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  padding-top: 10px;
+}
+.leaflet-horizcenter .leaflet-control {
+  margin-bottom: 10px;
+}
+/* ion rangeslider customization */
+.tr-slider {
+  width: 100%;
+  /*background-color: darkslategray;*/
+}
+/* daterangepicker as control on map */
+.tr-cal {
+  width: 100%;
+}
 /*
 .container {
     width: 950px;
