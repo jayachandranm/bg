@@ -4,5 +4,8 @@
         $('#example').DataTable();
     });
 */
-})(jQuery);
+  $('#tbl-dashboard-view').DataTable({
+      "lengthChange": false
+  });
 
+})(jQuery);

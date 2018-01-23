@@ -4,11 +4,13 @@
             console.log('JS attach for RT, initialization.');
             // TODO: Where is the most appropriate place for this code?
             // Depends on Drupal behaviors.
+            /*
             $(document).ready(function() {
                 $('#tbl-dashboard-view').DataTable({
                     "lengthChange": false
                 });
             });
+            */
             //
             if (Drupal.settings.rt) {
                 // No context parameters are required.
@@ -19,8 +21,10 @@
                 var sid_list = [];
                 // ECMAScript 5 and later.
                 sid_list = Object.keys(sid2vehmap);
+
+                var boundsFlag = true;
                 // For older versions of JS.
-                /* 
+                /*
                  for(var k in sid2vehmap) {
                  sid_list.push(k);
                  }
@@ -59,7 +63,7 @@
                 // Default home location.
                 var lat = 1.421, lng = 103.829;
                 //center: [51.505, -0.09], zoom: 13
-                map.setView([lat, lng], 14);
+                map.setView([lat, lng], 14, {noMoveStart: true});
                 //
                 var rtGeoJsonLayer = L.geoJson().addTo(map);
 
@@ -68,6 +72,62 @@
                     //attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
+
+                //dragstart
+                //map.on('movestart zoomstart', function (e) {
+                map.on('movestart', function (e) {
+                    if (e.hard) {
+                        // moved by bounds
+                        console.log("Moved by bounds.");
+                    } else {
+                       // moved by drag/keyboard
+                       console.log("Move start.");
+                       //boundsFlag = false;
+                    }
+                });
+
+                map.on('moveend', function (e) {
+                    if (e.hard) {
+                        // moved by bounds
+                        console.log("Moved by bounds.");
+                    } else {
+                       // moved by drag/keyboard
+                       console.log("Move end.");
+                       //boundsFlag = false;
+                    }
+                });
+
+                map.on('zoomstart', function (e) {
+                    if (e.hard) {
+                        // moved by bounds
+                        console.log("Moved by bounds.");
+                    } else {
+                       // moved by drag/keyboard
+                       console.log("Zoom start.");
+                       boundsFlag = true;
+                    }
+                });
+
+                map.on('dragstart', function (e) {
+                    if (e.hard) {
+                        // moved by bounds
+                        console.log("Moved by bounds.");
+                    } else {
+                       // moved by drag/keyboard
+                       console.log("Zoom end.");
+                       boundsFlag = false;
+                    }
+                });
+
+
+                /*
+                function movePlusStartHandler () {
+                  console.log("Stop Auto-fit.");
+                  boundsFlag = false;
+                }
+
+                map.on('movestart zoomstart', movePlusStartHandler);
+                */
 
                 /*
                  * Real time updates.
@@ -101,13 +161,17 @@
                             var pop;
                             rtGeoJsonLayer = L.geoJson(jsonData, {
                                 pointToLayer: function (feature, latlng) {
-                                    map.panTo(latlng);
+                                    if(boundsFlag) {
+                                        //map.off('movestart zoomstart', movePlusStartHandler);
+                                        map.panTo(latlng);
+                                        //map.on('movestart zoomstart', movePlusStartHandler);
+                                    }
                                     //layer.bindPopup(feature.properties.title);
                                     //return L.circleMarker(latlng, {
                                     var sid = feature.properties.title;
                                     var custom_color = sid2vehmap[sid].color;
-                                    var options = {  
-                                        icon: 'bus',  
+                                    var options = {
+                                        icon: 'bus',
                                         borderColor: custom_color, textColor: custom_color
                                     };
                                     //var options = {};
@@ -155,7 +219,14 @@
                             // popup need map reference. Open only after adding the layer to map
                             // TODO: if valid. Enable multiple pops.
                             //pop.openPopup();
-                            map.fitBounds(rtGeoJsonLayer.getBounds());
+                            // TODO: Have a better logic here.
+                            // First time keep all vehicles bounded, then do not adjust.
+                            if(boundsFlag) {
+                                //map.off('movestart zoomstart', movePlusStartHandler);
+                                map.fitBounds(rtGeoJsonLayer.getBounds());
+                                //map.on('movestart zoomstart', movePlusStartHandler);
+                                //boundsFlag = false;
+                            }
                             rtGeoJsonLayer.eachLayer(function(layer) {
                                 layer.openPopup();
                                 //var popUp = layer._popup;
@@ -165,7 +236,7 @@
                         },
                         complete: function () {
                             console.log('Ajax processing complete, call again after delay');
-                            setTimeout(requestCurrentLoc, 10000);
+                            setTimeout(requestCurrentLoc, 15000);
                         },
                         error: function (xhr, status, error) {
                             //error: function () {
@@ -179,4 +250,3 @@
         } // attach
     } // behaviors, bgmap
 })(jQuery);
-
