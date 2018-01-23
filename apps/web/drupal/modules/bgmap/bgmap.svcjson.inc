@@ -47,10 +47,11 @@ function _get_geojson()
             foreach ($result as $row) {
                 //dpm($row);
                 $time = $row['ts'];
-                $gps_data = $row['gps_data'];
-                //$lat = 1.421; $lng = 103.829;
                 // If for any timestamp, gps_data does not exist, just skip that item.
-                if($gps_data != null) {
+                if(isset($row['gps_data'])) {
+                    $gps_data = $row['gps_data'];
+                    //$lat = 1.421; $lng = 103.829;
+                    //if($gps_data != null) 
                     $lat = $gps_data['latitude'];
                     $lng = $gps_data['longitude'];
                     $polygon[] = array($lng, $lat);
@@ -59,7 +60,7 @@ function _get_geojson()
             } // foreach
             //dpm($polygon);
             // Add this feature only if there are some values.
-            if ($polygon) {
+            if (isset($polygon)) {
                 $feature = array(
                     'type' => 'Feature',
                     'geometry' => array('type' => 'LineString', 'coordinates' => $polygon),
@@ -78,8 +79,8 @@ function _get_geojson()
             'marker-size' => 'small'
             */
             # Add feature arrays to feature collection array
-            // Only if not empty.
-            if ($feature) {
+            // Only if not empty and not null.
+            if (isset($feature)) {
                 array_push($geojson['features'], $feature);
             }
             break;
@@ -101,9 +102,10 @@ function _get_geojson()
                     $row = $result;
                     //$time = intval($row['ts']);
                     $time = $row['ts'];
-                    $gps_data = $row['gps_data'];
-                    // Ignore this row, if now GPS data.
-                    if($gps_data != null) {
+                    if(isset($row['gps_data'])) {
+                        $gps_data = $row['gps_data'];
+                        // Ignore this row, if now GPS data.
+                        //if($gps_data != null) 
                         //dpm($gps_data);
                         $lat = $gps_data['latitude'];
                         $lng = $gps_data['longitude'];
@@ -128,7 +130,9 @@ function _get_geojson()
                             ),
                         );
                         # Add feature arrays to feature collection array
-                        array_push($geojson['features'], $feature);
+                        if (isset($feature)) {
+                            array_push($geojson['features'], $feature);
+                        }
                     } // if $gps_data.
                 } // if $result.
                 //
