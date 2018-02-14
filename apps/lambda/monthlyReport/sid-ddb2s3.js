@@ -91,7 +91,7 @@ function sidRawToCsv(context) {
           var jsonPayload = JSON.parse(data.payload);
           //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
           devState = jsonPayload.state.reported;
-          var cl = devs_b_state.dev_state[sid].critical_level.toFixed(3);
+          var cl = devs_b_state.dev_state[sid].critical_level;
           devState.critical_level = cl;
           var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
           var gzip = zlib.createGzip();
