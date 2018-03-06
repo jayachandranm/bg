@@ -265,7 +265,7 @@ def lambda_handler(event, context):
 
         root.append(appt1)
 
-        wa_str = "{0:.2f}".format(wa)
+        wa_str = "{0:.3f}".format(wa)
         appt2 = create_series({
                         "locationId": sid,
                         "dt": dt1,
