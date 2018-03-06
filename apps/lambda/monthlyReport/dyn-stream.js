@@ -134,7 +134,10 @@ DynStream.prototype._query = function (params) {
         last_wa = record.wa;
         
         if (typeof (record.md) == 'undefined') {
-          record.md = "running";
+          record.md = "Normal";
+        }
+        else if ( record.md === 'maintenance') {
+          record.md = "Maintenance";
         }
         record.wa = (record.wa).toFixed(3);
         record.mrl = (record.mrl).toFixed(3)

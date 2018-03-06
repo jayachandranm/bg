@@ -22,8 +22,8 @@ CSVTransform.prototype._transform = function transform(JSONrecord, encoding, cal
   //var fields = ['timestamp', 'gps_data.latitude', 'gps_data.longitude', 'obd_dev_id'];
   //var fields = ['sid', 'ts', 'wa', 'md'];
   var fields = ['dt', 'wa', 'mrl', 'roc', 'md'];
-  var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "\t" });
-  //var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "," });
+  //var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "\t" });
+  var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "," });
   this.push(csv);
   this.push("\n");
   callback();

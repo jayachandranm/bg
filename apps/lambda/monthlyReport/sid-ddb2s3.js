@@ -35,7 +35,7 @@ function sidRawToCsv(context) {
   var end_t = lastMonthEnd.valueOf();
   var start_t = lastMonthStart.valueOf();
   //self._start_t = start_t;
-  var file_dt_tag = lastMonthStart.format("MM-YYYY");
+  var file_dt_tag = lastMonthStart.format("YYYYMM");
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
   console.log("Number of sids..", sids.length);
   //
@@ -102,7 +102,7 @@ function sidRawToCsv(context) {
           //var body = data_stream.pipe(csv).pipe(gzip);
           var body = data_stream.pipe(csv);
 
-          var filename = sid + '_' + file_dt_tag + '.xls';
+          var filename = sid + '_' + file_dt_tag + '.csv';
           //var abs_filename = folder_name + '/' + file_dt_tag + '/' + filename;
           //console.log("Filename=", abs_filename);
           archive.append(body, { name: filename });
