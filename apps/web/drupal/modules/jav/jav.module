@@ -40,8 +40,12 @@ function jav_block_info()
         'info' => t('JAV Tracking All'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
-    $blocks['eventlist'] = array(
+    $blocks['eventlist_all'] = array(
         'info' => t('JAV Events'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['eventlist_single'] = array(
+        'info' => t('JAV Lift Events'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
     return $blocks;
@@ -307,10 +311,10 @@ function jav_node_update($node)
  */
 function jav_block_view($delta = '')
 {
-    // Set sid invalid by default, means to select all.
-    //drupal_add_js(array('trace' => array('sid' => -1)), 'setting');
+    // For the case of block added to a View.
     //$view_1 = views_get_view('dashboard');
     //$info = views_embed_view('dashboard');
+    // Get the list of lifts based on the active view.
     $dev_list = _jav_set_list();
     //$dev_list = drupal_static('jav');
     //dpm($this);
@@ -330,6 +334,7 @@ function jav_block_view($delta = '')
     // TODO: Move this to init? For the case of view this happens outside.
     $mpath = drupal_get_path('module', 'jav');
 
+    // For the case of block added to a Node.
     if ($node = menu_get_object()) {
         // TODO: if($node) {}
         if ($node->type == 'lifts') {
@@ -338,17 +343,17 @@ function jav_block_view($delta = '')
             // Always read these fields in English.
             $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
             $sid = $field_obd[0]['safe_value'];
-            $vnum = -1;
+            //$vnum = -1;
             //dpm($field_dev);
         } // if node-type.
     } // if node.
     else {
         $sid = "Unknown";
-        $vnum = -1;
+        //$vnum = -1;
     }
 
     // Always pass as an array of values, for generic handling at JS side.
-    //$sid_list[] = $sid;
+    $sid_list[] = $sid;
     //$sid = (string)$sid_tmp;
 
     switch ($delta) {
@@ -418,7 +423,7 @@ function jav_block_view($delta = '')
                     'data' => $mpath . '/jav_rt.js',),
             );
             break;
-        case 'eventlist':
+        case 'eventlist_all':
             $block['content']['#attached']['js'] = array(
                 array(
                     'type' => 'file',
@@ -453,6 +458,66 @@ function jav_block_view($delta = '')
                 $filter = new stdClass(); // (object) [];
                 $filter->start = -1;
                 $filter->end = -1;
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
+                $items = array();
+                foreach ($result as $row) {
+                    $date = new DateTime();
+                    $date->setTimestamp(intval($row->ts)/1000);
+                    $dtime = $date->format('j-M-y g:i a');
+                    //print_r($dtime, $row->snum);
+                    $items[] = array($dtime, $row->snum, '510 Bt Batok St 22', $row->etype, $row->remarks);
+                }
+                //dpm($items);
+
+
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+
+            } // if user_access
+            break;
+        case 'eventlist_single':
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav.js',),
+            );
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t('Lift Events'),
+                    'content' => array
+                    (
+                        'eventlist_block' => array
+                        (
+                            '#prefix' => "<div id='rt_map'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Event table....."),
+                        ),
+                    ),
+                );
+               
+                $header = array(
+                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+                    array('data' => t('Date Time')),
+                    //array('data' => t('Address'), 'colspan' => 3),
+                    array('data' => t('Lift SNUM')),
+                    array('data' => t('Lift Location')),
+                    array('data' => t('Event Type')),
+                    array('data' => t('Remarks')),
+                );
+
+                $reqtype = 'trc';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = time() * 1000;
                 $filter->sidList = $sid_list;
                 //$filter->sidList = ['112233C'];
                 //
