@@ -342,7 +342,7 @@ function jav_block_view($delta = '')
             $nid = $node->nid;
             // Always read these fields in English.
             $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
-            $sid = $field_obd[0]['safe_value'];
+            $sid = $field_dev[0]['safe_value'];
             //$vnum = -1;
             //dpm($field_dev);
         } // if node-type.
