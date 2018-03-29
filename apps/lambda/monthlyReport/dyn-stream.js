@@ -69,7 +69,7 @@ DynStream.prototype._read = function read() {
       self.push(desc);
       var desc = { dt: "Critical level ", wa: '', mrl: cl + " mRL", md: '' }
       self.push(desc);
-      var desc = { dt: "Cope level ", wa: '', mrl: cl + " mRL", md: '' }
+      var desc = { dt: "Cope/Soffit level ", wa: '', mrl: cl + " mRL", md: '' }
       self.push(desc);
       var desc = { dt: "Sensor level ", wa: '', mrl: op_lvl + " mRL", md: '' }
       self.push(desc);
