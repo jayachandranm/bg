@@ -47,7 +47,7 @@ config_file = config['s3_file']
 
 s3dev_state = boto3.resource('s3')
 
-tslice =  1519833600000
+tslice =  1519833600
 
 #----------------------------------------------------------------------
 def create_series(data, stype):
@@ -96,6 +96,7 @@ def create_series(data, stype):
 
 if __name__ == "__main__":
     #
+    print("Starting..")
     content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
     file_content = content_object.get()["Body"].read().decode('utf-8')
     dev_state_s3 = json.loads(file_content)
@@ -104,17 +105,22 @@ if __name__ == "__main__":
 
     while running:
         # add 10 minutes
-        tslice = tslice + 10*60*1000
+        #tslice =  1519833600000
+        tslice = tslice + 10*60
         #2018-03-05_08-23-20.xml
-        tend = 1520238000000 - 10*60*1000
+        #tend = 1520238000 - 10*60
+        #2018-03-28_09-23-17.xml
+        tend = 1522229040 - 10*60
 
-        if tslice < tend:
+        if tslice > tend:
             running = False
             break
 
         #tm = time.strftime('%Y-%m-%d_%H-%M-%S')
-        tm = tslice.strftime('%Y-%m-%d_%H-%M-%S')
-        dest = tm + ".xml"
+        utc_st = datetime.fromtimestamp(tslice)
+        utc_st = utc_st.replace(tzinfo=pytz.UTC)
+        tm = utc_st.strftime('%Y-%m-%d_%H-%M-%S')
+        dest = "./gen_files/" + tm + ".xml"
         #file = sftp.file(dest, "w", -1)
         file = open(dest, "w")
         #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
@@ -128,13 +134,14 @@ if __name__ == "__main__":
 
         for sid in stations:
             #print("<-------------------->")
-            #print(x)
+            #print(sid)
             try:
                 response = table.query(
                     Limit=1,
                     ScanIndexForward=False,
-                    KeyConditionExpression=Key('sid').eq(sid) & Key('ts').le(tslice)
+                    KeyConditionExpression=Key('sid').eq(sid) & Key('ts').lt(tslice*1000)
                 )
+                    #KeyConditionExpression=Key('sid').eq(sid)
             except:
                 print("DB access error.")
             #
@@ -177,7 +184,8 @@ if __name__ == "__main__":
             # TODO:
             if al > 2:
                 al = 2
-            flag = al
+            #flag = al
+            flag = 0
             #
             md = "normal"
             try:
@@ -187,7 +195,8 @@ if __name__ == "__main__":
                     #print(md)
                     # TODO:
                     if md == "maintenance":
-                        flag = 3
+                        #flag = 3
+                        flag = 1
                 #else:
                 #    print("There is no md here")
                 #
@@ -195,8 +204,9 @@ if __name__ == "__main__":
                 print("No time")
 
             # if no data for more than 30mts, set to maintenance
-            if time_lag > 1800:
-                flag = 3
+            #if time_lag > 1800:
+                #flag = 3
+            #    flag = 1
 
             #print(flag)
             #

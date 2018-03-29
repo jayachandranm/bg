@@ -189,7 +189,8 @@ def lambda_handler(event, context):
         # TODO:
         if al > 2:
             al = 2
-        flag = al
+        #flag = al
+        flag = 0
         #
         md = "normal"
         try:
@@ -199,7 +200,8 @@ def lambda_handler(event, context):
                 #print(md)
                 # TODO:
                 if md == "maintenance":
-                    flag = 3
+                    #flag = 3
+                    flag = 1
             #else:
             #    print("There is no md here")
             #
@@ -208,7 +210,8 @@ def lambda_handler(event, context):
 
         # if no data for more than 30mts, set to maintenance
         if time_lag > 1800:
-            flag = 3
+            #flag = 3
+            flag = 1
 
         #print(flag)
         #
