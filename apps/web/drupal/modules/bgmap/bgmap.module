@@ -63,6 +63,10 @@ function bgmap_permission()
     );
 }
 
+function bgmap_block_configure($delta = '') {
+    // Custom configuration options for the block.
+}
+
 function bgmap_init()
 {
     // Any init code goes here. eg. drupal_add_js.
