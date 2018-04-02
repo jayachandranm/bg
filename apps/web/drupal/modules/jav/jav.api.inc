@@ -67,7 +67,7 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     if ($reqtype == 'ss') {
         $query = db_select('sensor_status', 'a')
             ->fields('a', array('lift_id', 'ts', 'name', 'status', 'details'))
-            ->condition('snum', $sid_list, 'IN')
+            ->condition('lift_id', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
             ->condition('ts', array($start_time, $end_time), 'BETWEEN')

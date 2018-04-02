@@ -53,7 +53,7 @@ function jav_block_info()
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
     $blocks['reports'] = array(
-        'info' => t('JAV Sensor Status'),
+        'info' => t('JAV Reports'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
     return $blocks;
@@ -601,7 +601,10 @@ function jav_block_view($delta = '')
                     $date->setTimestamp(intval($row->ts)/1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->name, $row->status, $row->details);
+                    //$items[] = array($dtime, $row->name, $row->status, $row->details);
+                    if($row->status != 'ok') {
+                        $items[] = array($row->name, $dtime, $row->status, $row->details);
+                    }
                 }
                 //dpm($items);
 
