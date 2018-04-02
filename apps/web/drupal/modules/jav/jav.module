@@ -48,6 +48,14 @@ function jav_block_info()
         'info' => t('JAV Lift Events'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
+    $blocks['sensor_status'] = array(
+        'info' => t('JAV Sensor Status'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['reports'] = array(
+        'info' => t('JAV Sensor Status'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
     return $blocks;
 }
 
@@ -508,13 +516,131 @@ function jav_block_view($delta = '')
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     array('data' => t('Date Time')),
                     //array('data' => t('Address'), 'colspan' => 3),
-                    array('data' => t('Lift SNUM')),
+                    array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
                     array('data' => t('Remarks')),
                 );
 
                 $reqtype = 'trc';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = time() * 1000;
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
+                $items = array();
+                foreach ($result as $row) {
+                    $date = new DateTime();
+                    $date->setTimestamp(intval($row->ts)/1000);
+                    $dtime = $date->format('j-M-y g:i a');
+                    //print_r($dtime, $row->snum);
+                    $items[] = array($dtime, $row->snum, '510 Bt Batok St 22', $row->etype, $row->remarks);
+                }
+                //dpm($items);
+
+
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+
+            } // if user_access
+            break;
+        case 'sensor_status':
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav.js',),
+            );
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t('Sensor Status'),
+                    'content' => array
+                    (
+                        'eventlist_block' => array
+                        (
+                            '#prefix' => "<div id='sensor_status'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Sensor status....."),
+                        ),
+                    ),
+                );
+               
+                $header = array(
+                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+                    //array('data' => t('Address'), 'colspan' => 3),
+                    array('data' => t('Sensor Name')),
+                    array('data' => t('Reported Time')),
+                    array('data' => t('Status')),
+                    array('data' => t('Remarks')),
+                );
+
+                $reqtype = 'ss';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = time() * 1000;
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
+                $items = array();
+                foreach ($result as $row) {
+                    $date = new DateTime();
+                    $date->setTimestamp(intval($row->ts)/1000);
+                    $dtime = $date->format('j-M-y g:i a');
+                    //print_r($dtime, $row->snum);
+                    $items[] = array($dtime, $row->name, $row->status, $row->details);
+                }
+                //dpm($items);
+
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+
+            } // if user_access
+            break;
+        case 'reports':
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav.js',),
+            );
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t('Reports'),
+                    'content' => array
+                    (
+                        'eventlist_block' => array
+                        (
+                            '#prefix' => "<div id='reports'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Reports....."),
+                        ),
+                    ),
+                );
+               
+                $header = array(
+                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+                    //array('data' => t('Address'), 'colspan' => 3),
+                    array('data' => t('Zone')),
+                    array('data' => t('Lift ID')),
+                    array('data' => t('Reported Time')),
+                    array('data' => t('Status')),
+                    array('data' => t('Remarks')),
+                );
+
+                $reqtype = 'rpt';
                 $filter = new stdClass(); // (object) [];
                 $filter->start = -1;
                 $filter->end = time() * 1000;
