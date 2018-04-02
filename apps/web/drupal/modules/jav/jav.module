@@ -694,7 +694,6 @@ function _jav_set_list($lift_list = NULL) {
 */
 function jav_preprocess_views_view(&$vars)
 {
-    // TODO: Check for authorization.
     $mpath = drupal_get_path('module', 'jav');
     //dpm($vars['view']);
     if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
@@ -725,3 +724,15 @@ function jav_preprocess_views_view(&$vars)
         drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
     }
 }
+
+/*
+function jav_views_pre_render(&$view) {
+    //dpm($view->field['field_event_ack']);
+    if ($view->name == 'alerts' && isset($view->field['field_event_ack'])) {
+        //dpm($view);
+        $attributes = array('onclick' => "alert('Hello')");
+        //print_r($attributes);
+        $view->field['field_event_ack']->options['alter']['link_attributes'] = $attributes;
+    }
+}
+*/
