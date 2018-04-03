@@ -3,6 +3,13 @@
         $('#sort-table').DataTable();
         $('#tbl-dashboard-view').DataTable();
         $('#status-12345AB').html("Unhealthy");
+                //'copy', 'csv', 'excel', 'pdf', 'print'
+        $('#reports-table').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                'pdf', 'excel', 'print'
+            ]
+        });
         //$('#ack-12345AB').html("Test");
     $(".ack").click(function(event) {
         //alert( "Handler for .click() called." );

@@ -97,6 +97,13 @@ function jav_init()
     }
 
     drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js', 'external');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.flash.min.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js', 'external');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js', 'external');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js', 'external');
 }
 
 /**
@@ -354,6 +361,9 @@ function jav_block_view($delta = '')
             //$vnum = -1;
             //dpm($field_dev);
         } // if node-type.
+        else {
+            $sid = "Unknown";
+        }
     } // if node.
     else {
         $sid = "Unknown";
@@ -361,7 +371,9 @@ function jav_block_view($delta = '')
     }
 
     // Always pass as an array of values, for generic handling at JS side.
-    $sid_list[] = $sid;
+    if($sid) {
+        $sid_list[] = $sid;
+    }
     //$sid = (string)$sid_tmp;
 
     switch ($delta) {
@@ -547,7 +559,7 @@ function jav_block_view($delta = '')
                 //dpm($items);
 
 
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
 
             } // if user_access
             break;
@@ -608,7 +620,7 @@ function jav_block_view($delta = '')
                 }
                 //dpm($items);
 
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sensor-status-table')));
 
             } // if user_access
             break;
@@ -621,7 +633,7 @@ function jav_block_view($delta = '')
             if (user_access('access content')) {
                 $block = array
                 (
-                    'subject' => t('Reports'),
+                    'subject' => t(''),
                     'content' => array
                     (
                         'eventlist_block' => array
@@ -632,6 +644,52 @@ function jav_block_view($delta = '')
                         ),
                     ),
                 );
+
+                $reqtype = 'rpt';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = time() * 1000;
+                // Get all nids of type lifts.
+                $node_type = "lifts";
+                $nids = array();
+                $zonelist = array();
+/*
+                $result_all = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
+                while ($obj = db_fetch_object ($result)) {
+                    $sid_list = $obj->nid;
+                }
+*/ 
+                //$field = field_info_field('field_blk_zone');
+                //dpm($field);
+                //$allowed_values = list_allowed_values($field);
+                //dpm($allowed_values);
+                $nids = db_query("SELECT nid FROM {node} WHERE type = :type", array(':type' => $node_type))->fetchCol();
+                foreach($nids as $nid) {
+                    $node = node_load($nid);
+                    //dpm($node);
+                    $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
+                    $sid = $field_dev[0]['safe_value'];
+                    $sid_list[] = $sid;
+                    
+                    //$field_dev2 = field_get_items('node', $node, 'field_blk_zone', 'en');
+                    //$uid = $field_dev2['target_id'];
+                    //dpm($uids);
+                    //$test = $node->get('tags')->referencedEntities();
+                    $node_wrapper = entity_metadata_wrapper('node', $node);
+                    $zone = $node_wrapper->field_blk_zone->value()->name;
+                    $zonelist[$sid] = $zone;
+                }
+                
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
                
                 $header = array(
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
@@ -643,32 +701,19 @@ function jav_block_view($delta = '')
                     array('data' => t('Remarks')),
                 );
 
-                $reqtype = 'rpt';
-                $filter = new stdClass(); // (object) [];
-                $filter->start = -1;
-                $filter->end = time() * 1000;
-                $filter->sidList = $sid_list;
-                //$filter->sidList = ['112233C'];
-                //
-                module_load_include("config.inc", "jav");
-                $jav_db = getExtDBConfig();
-                module_load_include("api.inc", "jav");
-                $result = _getdata_exdb($jav_db, $reqtype, $filter);
-                //dpm($result);
-                date_default_timezone_set('Asia/Singapore');
-                //
                 $items = array();
                 foreach ($result as $row) {
                     $date = new DateTime();
                     $date->setTimestamp(intval($row->ts)/1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->snum, '510 Bt Batok St 22', $row->etype, $row->remarks);
+                    $zone = $zonelist[$row->snum];
+                    $items[] = array($zone, $row->snum, $dtime, $row->etype, $row->remarks);
                 }
                 //dpm($items);
 
 
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'reports-table')));
 
             } // if user_access
             break;
