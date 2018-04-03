@@ -104,6 +104,14 @@ function jav_init()
     drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js', 'external');
     drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js', 'external');
     drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js', 'external');
+    drupal_add_js('https://code.jquery.com/ui/1.12.1/jquery-ui.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.0/moment.js', 'external');
+    drupal_add_js(drupal_get_path('module', 'jav') . '/bootstrap-datetimepicker.js');
+    drupal_add_css(drupal_get_path('module', 'jav') . '/bootstrap-datetimepicker.css');
+    drupal_add_js(drupal_get_path('module', 'jav') . '/jquery.dataTables.yadcf.js');
+    drupal_add_css(drupal_get_path('module', 'jav') .'/jquery.dataTables.yadcf.css');
+    //drupal_add_css(drupal_get_path('module', 'jav') .'/your-css.css');
+    //drupal_add_css(drupal_get_path('theme', 'hdbjav') .'/your-css.css');
 }
 
 /**
@@ -696,7 +704,8 @@ function jav_block_view($delta = '')
                     //array('data' => t('Address'), 'colspan' => 3),
                     array('data' => t('Zone')),
                     array('data' => t('Lift ID')),
-                    array('data' => t('Reported Time')),
+                    array('data' => t('Reported Date')),
+                    array('data' => t('Time')),
                     array('data' => t('Status')),
                     array('data' => t('Remarks')),
                 );
@@ -705,10 +714,13 @@ function jav_block_view($delta = '')
                 foreach ($result as $row) {
                     $date = new DateTime();
                     $date->setTimestamp(intval($row->ts)/1000);
-                    $dtime = $date->format('j-M-y g:i a');
+                    //$dtime = $date->format('j-M-y g:i a');
+                    //$dt = $date->format('j-M-y');
+                    $dt = $date->format('d-m-Y');
+                    $tt = $date->format('g:i a');
                     //print_r($dtime, $row->snum);
                     $zone = $zonelist[$row->snum];
-                    $items[] = array($zone, $row->snum, $dtime, $row->etype, $row->remarks);
+                    $items[] = array($zone, $row->snum, $dt, $tt, $row->etype, $row->remarks);
                 }
                 //dpm($items);
 
