@@ -27,44 +27,6 @@ $.fn.dataTable.ext.search.push(
         $('#sort-table').DataTable();
         $('#tbl-dashboard-view').DataTable();
         $('#status-12345AB').html("Unhealthy");
-                //'copy', 'csv', 'excel', 'pdf', 'print'
-        var myTable = $('#reports-table').DataTable({
-            dom: 'Bfrtip',
-            stateSave: true,
-            buttons: [
-                'pdf', 'excel', 'print'
-            ]
-        });
-        yadcf.init(myTable, [
-    { column_number : 0,
-      filter_container_id: 'external_filter_container_0'
-    },
-    { 
-        column_number : 1,
-        filter_container_id: 'external_filter_container_1',
-        filter_type: "auto_complete",
-        text_data_delimiter: ","
-    },
-    {
-        column_number : 2, 
-        filter_container_id: 'external_filter_container_2',
-        filter_type: 'range_date',
-        datepicker_type: 'bootstrap-datetimepicker',
-        //date_format: 'YYYY-MM-DD',
-        date_format: 'DD-MM-YYYY',
-        filter_plugin_options: datepickerDefaults
-    },
-    {
-        column_number : 4,
-        filter_container_id: 'external_filter_container_3'
-    },
-    {
-        column_number : 5,
-        filter_container_id: 'external_filter_container_4'
-    }],
-    //{ externally_triggered: true} 
-    );
-});
 /*
        .yadcf([{
             column_number: 0,
@@ -79,6 +41,6 @@ $.fn.dataTable.ext.search.push(
         $("#" + event.target.id).addClass("disabled");
         //alert(event.target.id);
     });
-//    });
+});
 })(jQuery);
 
