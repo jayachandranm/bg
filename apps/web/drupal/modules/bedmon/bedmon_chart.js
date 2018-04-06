@@ -1,111 +1,202 @@
 (function ($) {
-        Drupal.behaviors.bedmon = {
-          attach: function(context, settings) {
-          console.log('hello');
+      Drupal.behaviors.bedmon = {
+        attach: function(context, settings) {
+          console.log('Attached bedmon, Chart JS.');
           if (Drupal.settings.bedmon)  {
-          //if (true)  {
+            //if (true)  {
             //var data = Drupal.settings.bedmon.data.data;
             //var title = Drupal.settings.bedmon.data.title;
+            console.log('Confirmed chart JS based on setting.');
             var basepath = Drupal.settings.basePath;
-            var uid = Drupal.settings.bgchart.uid;
-            var chart1;
-            console.log('helloi222');
-            var title = 'Real Time values';
+            var uid = Drupal.settings.bedmon.uid;
+            var chart1, chart2;
+            var title_p = 'Pulse rate';
+            var title_r = 'Resp rate';
             // Place a div name correcly.
-            $("#block-bedmon-bedmon").append("<div id='show_report'>Graph will display here.....</div>");
-           data_url = basepath + '?q=bedmon/get/' + uid;
+            $("#block-bedmon-bedmon").append("<div id='chart1'>Graph1 display here.....</div>");
+            $("#block-bedmon-bedmon").append("<p></p>");
+            $("#block-bedmon-bedmon").append("<div id='chart2'>Graph2 display here.....</div>");
+            data_url = basepath + '?q=bedmon/get/' + uid;
+            // For one week history data.
+            data_url = data_url + '/1';
+            console.log('urlpath=', data_url);
 
-Highcharts.setOptions({
-            global: {
+            Highcharts.setOptions({
+              global: {
                 useUTC: false
-            }
-        });
+              }
+            });
 
+            $.getJSON(data_url, function (tsdata) {
+              console.log('Retrieved data: ', tsdata);
+              //console.log('Retrieved Pulse data: ', data[0].p);
+              //chart1 = $('#chart1').highcharts({
+              //chart1 = new Highcharts.StockChart({
+              chart1 = $('#chart1').highcharts('StockChart', {
+                chart: {
+                  //renderTo: 'chart1',
+                  //type: 'spline',
+                  defaultSeriesType: 'spline',
+                  events: { 
+                    load: requestData
+                  }
+                },
+                rangeSelector: {
+                  buttons: [
+                    {
+                      count: 5,
+                      type: 'minute',
+                      text: '5M'
+                    },
+                    {
+                      count: 1,
+                      type: 'week',
+                      text: '1W'
+                    },
+                    {
+                      type: 'all',
+                      text: 'All'
+                    },
+                  ],
+                  inputEnabled: false,
+                  selected: 0
+                },
+                title: {
+                  text: title_p
+                },
+                subtitle: {
+                  text: ''
+                },
 
-          $.getJSON(data_url, function (data) {
-                  chart1 = $('#show_report').highcharts({
-                      chart: {
-                          type: 'spline',
-                          events: { 
-                            load: requestData
-                          }
-                      },
-                      title: {
-                          text: title
-                      },
-                      subtitle: {
-                          text: ''
-                      },
-
-        xAxis: {
-            //categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            //    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            type: 'datetime'
-        },
-        yAxis: {
-            title: {
-                text: 'Temperature (°C)'
-            },
-            plotLines: [{
-                value: 0,
-                width: 1,
-                color: '#808080'
-            }]
-        },
-        tooltip: {
-              formatter: function () {
+                xAxis: {
+                  //categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                  //    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                  type: 'datetime'
+                },
+                yAxis: {
+                  title: {
+                    text: 'Pulse Rate (BPM)'
+                  }
+                },
+                tooltip: {
+/*
+                  formatter: function () {
                     return '<b>' + this.series.name + '</b><br/>' +
                         Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
                         Highcharts.numberFormat(this.y, 2);
-                }
-            //valueSuffix: '°C'
-        },
+                  }
+*/
+                  // http://api.highcharts.com/highstock/plotOptions.spline.tooltip 
+		  turboThreshold: 0,
+                  valueDecimals: 0
+                //valueSuffix: '°C'
+                },
 /*
         series: [{
             name: 'Tokyo',
             data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
         }, {
-            name: 'New York',
-            data: [-0.2, 0.8, 5.7, 11.3, 17.0, 22.0, 24.8, 24.1, 20.1, 14.1, 8.6, 2.5]
-        }, {
-            name: 'Berlin',
-            data: [-0.9, 0.6, 3.5, 8.4, 13.5, 17.0, 18.6, 17.9, 14.3, 9.0, 3.9, 1.0]
-        }, {
             name: 'London',
             data: [3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8]
         }]
 */
-           series: [
-                {
-                    name: 'Test',
-                    data: data
-                }
-            ]
+                series: [
+                  {
+                    name: 'Pulse rate',
+                    //data: data[0].p
+                    data: tsdata.p
+                  }
+                ]
+              }); // highcharts
+            }); //getjson
 
-                  }); // highcharts
-               }); //getjson
-             } // if
+            // TODO: Same data is being fetched twice.
+            $.getJSON(data_url, function (tsdata) {
+              //console.log(tsdata.p);
+              //chart2 = $('#chart2').highcharts({
+              chart2 = new Highcharts.StockChart({
+                chart: {
+                  renderTo: 'chart2',
+                  //type: 'spline',
+                  defaultSeriesType: 'spline',
+                  events: { 
+                    load: requestData
+                  }
+                },
+                rangeSelector: {
+                  buttons: [
+                    {
+                      count: 5,
+                      type: 'minute',
+                      text: '5M'
+                    },
+                    {
+                      count: 1,
+                      type: 'week',
+                      text: '1W'
+                    },
+                    {
+                      type: 'all',
+                      text: 'All'
+                    },
+                  ],
+                  inputEnabled: false,
+                  selected: 0
+                },
+                title: {
+                  text: title_r
+                },
 
-           var requestData = (function() { 
-            console.log('helloo3333');
-            data_url = basepath + '?q=bedmon/get/' + uid;
-            $.ajax({
-              url: data_url,
-              success: function(jsonData) {
-                console.log(jsonData);
-              },
-              complete: function() {
+                xAxis: {
+                  type: 'datetime'
+                },
+                yAxis: {
+                  title: {
+                    text: 'Resp Rate (BPM)'
+                  }
+                },
+                tooltip: {
+/*
+                  formatter: function () {
+                    return '<b>' + this.series.name + '</b><br/>' +
+                        Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+                        Highcharts.numberFormat(this.y, 2);
+                  }
+*/
+                  //pointFormat: '<b>' + series.name + '</b><br/>' 
+		  turboThreshold: 0,
+                  valueDecimals: 0
+                },
+                series: [
+                  {
+                    name: 'Resp rate',
+                    //data: data[0].r
+                    data: tsdata.r
+                  }
+                ]
+              }); // highcharts
+            }); //getjson
+            var requestData = (function() { 
+              console.log('Ajax request for real time values.');
+/* Disable real time updates.
+              data_url = basepath + '?q=bedmon/get/' + uid;
+              $.ajax({
+                url: data_url,
+                success: function(jsonData) {
+                  console.log(jsonData);
+                },
+                complete: function() {
                  setTimeout(requestData, 2000);
-              },
-              //error: function(xhr, status, error) {
-              error: function() {
-                alert('Error loading ');
-              }
-            }); // ajax
-
-          });
-          } // attach
-
-        } // behaviors
+                },
+                //error: function(xhr, status, error) {
+                error: function() {
+                  alert('Error loading ');
+                }
+              }); // ajax
+*/
+            });
+          } // if settings
+        } // attach
+      } // behaviors
 })(jQuery);
 
