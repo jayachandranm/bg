@@ -1,8 +1,9 @@
 {
-    "endpointAddress": "IoT-EP",
-    "table" : "DDB-table",
-    "bucket" : "S3-bucket",
+    "endpointAddress": "EP.iot.ap-southeast-1.amazonaws.com",
+    "table" : "table-ddb",
+    "bucket" : "bucket",
     "folder" : "monthly_report",
     "folder_iot" : "iot_data",
+    "dev_file" : "devs_B_state.json",
     "pause" : 250
 }

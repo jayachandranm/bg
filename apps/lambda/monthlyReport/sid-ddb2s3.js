@@ -21,6 +21,7 @@ function sidRawToCsv(context) {
   var table_name = config.table;
   var bucket_name = config.bucket;
   var folder_name = config.folder;
+  var dev_state_file = config.dev_file;
   //
   var iot_folder_name = config.folder_iot;
 
@@ -63,7 +64,7 @@ function sidRawToCsv(context) {
   var s3dev = new aws.S3();
   var params_dev = 
      { Bucket: bucket_name,
-       Key: iot_folder_name + '/devs_B_state.json'
+       Key: iot_folder_name + '/' + dev_state_file
      };
 
   s3dev.getObject(params_dev, function(err, data) {
