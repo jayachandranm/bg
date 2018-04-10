@@ -276,23 +276,14 @@ function _jav_page()
  */
 function jav_node_insert($node)
 {
+    // Action for node creation same as node update.
+    //jav_node_update($node);
+    //if ($node->type == 'stations' && !isset($node->nid)) {
     if ($node->type == 'lifts') {
-        $nid = $node->nid;
-        $sid = $node->field_lift_id['und'][0]['value'];
-        $vnum = -1;
-        $vgroup = 'test';
         $flag = true;
-        module_load_include("config.inc", "jav");
-        // TODO: Improve the config option.
-        $jav_db = getExtDBConfig();
-        module_load_include("api.inc", "jav");
-        // TODO: temp
-        //_update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
+        _lift_details_to_db($node, $flag);
     }
-    /*
     // Notice that we are ignoring any revision information using $node->nid
-  }
-  */
 }
 
 /**
@@ -305,22 +296,53 @@ function jav_node_insert($node)
  */
 function jav_node_update($node)
 {
-    //if ($node->type == 'stations' && !isset($node->nid)) {
     if ($node->type == 'lifts') {
-        //dpm($node);
-        $nid = $node->nid;
-        $sid = $node->field_lift_id['und'][0]['value'];
-        $vnum = -1;
-        $vgroup = 'test';
         $flag = false;
-        module_load_include("config.inc", "jav");
-        $jav_db = getExtDBConfig();
-        module_load_include("api.inc", "jav");
-        // TODO: temp
-        //_update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
+        _lift_details_to_db($node, $flag);
+    }
+    if ($node->type == 'lift_companies') {
+	 $flag = false;
+        _update_db_referencing_lifts($node, $flag);
     }
 }
 
+
+function _lift_details_to_db($node, $flag)
+{
+	//$ref = $node->get($field_lift_supplier)->referencedEntities();
+	//$view = node_view($node);
+        $lift_nid = $node->nid;
+        $lift_id = $node->field_lift_id['und'][0]['value'];
+	$tid_supplier = $node->field_lift_supplier['und'][0]['target_id'];
+	$node_supplier = node_load($tid_supplier);
+	$supplier_nid = $node_supplier->nid;
+	$sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+	dpm($sms_list);
+        //$flag = false;
+        module_load_include("config.inc", "jav");
+        $jav_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+        _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+}
+
+function _update_db_referencing_lifts($node_supplier, $flag)
+{
+	$supplier_nid = $node_supplier->nid;
+	$sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+	// Get all lifts referencing to this node entity.
+        module_load_include("config.inc", "jav");
+        $jav_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+	$results = _get_ext_db_liftlist($jav_db, $supplier_nid);
+	$liftlist = array();
+	foreach($results as $row) {
+	    $lift_id = $row->lift_id;
+	    $lift_nid = intval($row->lift_nid);
+	    $supplier_nid = intval($row->supplier_nid);
+	    $liftlist = $lift_id;
+            _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+	}
+}
 
 /**
  * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3

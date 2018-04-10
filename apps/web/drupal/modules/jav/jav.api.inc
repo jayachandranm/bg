@@ -81,9 +81,9 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
 }
 
 
-function _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag)
+function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag)
 {
-    Database::addConnectionInfo('JAV', 'default', $bg_db);
+    Database::addConnectionInfo('JAV', 'default', $db);
     db_set_active('JAV');
 
     // TODO: consider timezone.
@@ -92,29 +92,40 @@ function _update_ext_db($bg_db, $nid, $sid, $vnum, $vgroup, $flag)
 
     //$query = array();
     if ($flag) {
-        db_insert('jav_node_map')
+        db_insert('contact_list')
             ->fields(array(
-                'timestamp' => $millis,
-                'datetime' => $dt,
-                'sid' => $sid,
-                'nid' => $nid,
-                'jav_num' => $vnum,
-                'jav_type' => $vgroup,
+                'lift_id' => $lift_id,
+                'lift_nid' => $lift_nid,
+                'supplier_nid' => $supplier_nid,
+                'sms_list' => $sms_list,
             ))->execute();
     } else {
-        db_update('obd_node_map')
+        db_update('contact_list')
             ->fields(array(
-                'timestamp' => $millis,
-                'datetime' => $dt,
-                'sid' => $sid,
-                'nid' => $nid,
-                'jav_num' => $vnum,
-                'jav_type' => $vgroup,
+                'lift_id' => $lift_id,
+                'lift_nid' => $lift_nid,
+                'supplier_nid' => $supplier_nid,
+                'sms_list' => $sms_list,
             ))
-            ->condition('nid', $nid)
+            ->condition('lift_id', $lift_id)
             ->execute();
     }
     // without the paramater means set back to the default for the site
     db_set_active();
 }
 
+function _get_ext_db_liftlist($jav_db, $supplier_nid)
+{
+    Database::addConnectionInfo('JAV', 'default', $jav_db);
+    db_set_active('JAV');
+
+    $query = array();
+    $query = db_select('contact_list', 'a')
+            ->fields('a', array('lift_id', 'lift_nid', 'supplier_nid', 'sms_list'))
+            //->condition('supplier_nid', $supplier_nid, 'IN');
+            ->condition('supplier_nid', $supplier_nid);
+
+    $result = $query->execute();
+    db_set_active();
+    return $result;
+}
