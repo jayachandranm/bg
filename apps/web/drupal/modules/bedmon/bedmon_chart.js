@@ -2,20 +2,22 @@
       Drupal.behaviors.bedmon = {
         attach: function(context, settings) {
           console.log('Attached bedmon, Chart JS.');
-          if (Drupal.settings.bedmon)  {
+          if (Drupal.settings.rt_charts)  {
             //if (true)  {
             //var data = Drupal.settings.bedmon.data.data;
             //var title = Drupal.settings.bedmon.data.title;
             console.log('Confirmed chart JS based on setting.');
             var basepath = Drupal.settings.basePath;
-            var uid = Drupal.settings.bedmon.uid;
+            var uid = Drupal.settings.rt_charts.uid;
             var chart1, chart2;
             var title_p = 'Pulse rate';
             var title_r = 'Resp rate';
             // Place a div name correcly.
+	    /*
             $("#block-bedmon-bedmon").append("<div id='chart1'>Graph1 display here.....</div>");
             $("#block-bedmon-bedmon").append("<p></p>");
             $("#block-bedmon-bedmon").append("<div id='chart2'>Graph2 display here.....</div>");
+	    */
             data_url = basepath + '?q=bedmon/get/' + uid;
             // For one week history data.
             data_url = data_url + '/1';
@@ -37,7 +39,7 @@
                   //renderTo: 'chart1',
                   //type: 'spline',
                   defaultSeriesType: 'spline',
-                  events: { 
+                  events: {
                     load: requestData
                   }
                 },
@@ -86,7 +88,7 @@
                         Highcharts.numberFormat(this.y, 2);
                   }
 */
-                  // http://api.highcharts.com/highstock/plotOptions.spline.tooltip 
+                  // http://api.highcharts.com/highstock/plotOptions.spline.tooltip
 		  turboThreshold: 0,
                   valueDecimals: 0
                 //valueSuffix: '°C'
@@ -119,7 +121,7 @@
                   renderTo: 'chart2',
                   //type: 'spline',
                   defaultSeriesType: 'spline',
-                  events: { 
+                  events: {
                     load: requestData
                   }
                 },
@@ -163,7 +165,7 @@
                         Highcharts.numberFormat(this.y, 2);
                   }
 */
-                  //pointFormat: '<b>' + series.name + '</b><br/>' 
+                  //pointFormat: '<b>' + series.name + '</b><br/>'
 		  turboThreshold: 0,
                   valueDecimals: 0
                 },
@@ -176,7 +178,7 @@
                 ]
               }); // highcharts
             }); //getjson
-            var requestData = (function() { 
+            var requestData = (function() {
               console.log('Ajax request for real time values.');
 /* Disable real time updates.
               data_url = basepath + '?q=bedmon/get/' + uid;
@@ -199,4 +201,3 @@
         } // attach
       } // behaviors
 })(jQuery);
-
