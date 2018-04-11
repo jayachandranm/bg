@@ -1,9 +1,9 @@
 <?php
 function getExtDBConfig() {
     $bedmon_db = array(
-        'database' => 'comfort_data',
-        'username' => 'd7_comfort',
-        'password' => 'jVic%aung$1',
+        'database' => 'mydb',
+        'username' => 'user',
+        'password' => 'pass',
         'host' => 'localhost',
         'driver' => 'mysql',
     );
