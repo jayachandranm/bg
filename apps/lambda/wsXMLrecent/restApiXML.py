@@ -7,6 +7,7 @@ import decimal
 from boto3.dynamodb.conditions import Key, Attr
 
 from datetime import datetime
+import time
 
 import os
 from StringIO import StringIO
@@ -46,6 +47,8 @@ dev_state_s3 = json.loads(file_content)
 dev_state_by_sids = dev_state_s3["dev_state"]
 
 stations = dev_state_by_sids.keys()
+stations.sort()
+print(stations)
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
 table = dynamodb.Table('pubc5wl-ddb')
@@ -69,6 +72,9 @@ def lambda_handler(event, context):
         data_row0 = response["Items"][0]
         wa = 0.0
         ts_millis = 0.0
+        ts = 0
+        # assume in maintenance, by default.
+        flag = 3
         try:
             wa = (data_row0['wa'])
         except:
@@ -80,6 +86,9 @@ def lambda_handler(event, context):
             
         wa = wa/100
         ts = int(ts_millis / 1000)
+
+        curr_t = int(time.time())
+        time_lag = curr_t - ts
         
         #ts_UTC = datetime.fromtimestamp(ts).replace(tzinfo=timezone('UTC'))
         dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
@@ -98,22 +107,29 @@ def lambda_handler(event, context):
         except:
             print("No SID")
 
-        if al > 2:
-            al = 2
-        flag = al
-        
+        if al < 2:
+            flag = 0
+        else:
+            flag = al - 1       
+
         try:
             if 'md' in (data_row0):
-                print("There is md here")
+                #print("There is md here")
                 md = data_row0['md']
                 print(md)
-                if md == "spike":
+                if md == "maintenance":
                     flag = 3
-            else:
-                print("There is no md here")
-            print(flag)
+                #if md == "spike":
+                #    flag = 3
+            #else:
+                #print("There is no md here")
+            #print(flag)
         except:
-            print("No time")
+            print("Error in reading md.")
+
+        # if no data for more than 30mts, set to maintenance
+        if time_lag > 1800:
+            flag = 3
 
         response = iot_client.get_thing_shadow(
             thingName=str(sid)
@@ -121,7 +137,11 @@ def lambda_handler(event, context):
         streamingBody = response["payload"]
         jsonState = json.loads(streamingBody.read())
         loc = (jsonState["state"]["reported"]["location"])
-        print(loc)
+        offset_o = (jsonState["state"]["reported"]["offset_o"])
+        #print(loc)
+        # Calibration near zero
+        if wa <= ( 0.08 + (offset_o / 100) ):
+            wa = offset_o / 100
         #
         series = {}
         series["waterlevel"] = str(wa)
