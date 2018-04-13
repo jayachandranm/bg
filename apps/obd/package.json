@@ -1,0 +1,34 @@
+{
+  "name": "obdnav",
+  "version": "1.0.0",
+  "description": "Project to receive data from OBD devices, to decode and to write to DB.",
+  "main": "fleetServer.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.179.0",
+    "binary-parser": "^1.3.1",
+    "concentrate": "^0.2.3",
+    "crc-itu": "^0.1.0",
+    "mysql": "^2.15.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jayachandranm/bg.git"
+  },
+  "keywords": [
+    "obd",
+    "nav"
+  ],
+  "author": "jcn",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jayachandranm/bg/issues"
+  },
+  "homepage": "https://github.com/jayachandranm/bg#readme"
+}

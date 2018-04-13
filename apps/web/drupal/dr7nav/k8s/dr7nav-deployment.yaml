@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "<arn:acm>"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: "name=dr7nav"
+  name: dr7nav
+  labels:
+    app: dr7nav
+    type: drupal
+spec:
+  type: LoadBalancer
+  #loadBalancerIP: "YOUR.IP.ADDRESS.HERE"
+  ports:
+    - name: "http"
+      port: 80
+      targetPort: 80
+      protocol: TCP
+    - name: "https"
+      port: 443
+      targetPort: 80
+      protocol: "TCP"
+  selector:
+    app: dr7nav
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: dr7nav
+  labels:
+    app: dr7nav
+    type: drupal
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dr7nav
+  template:
+    metadata:
+      labels:
+        app: dr7nav
+        type: drupal
+#      annotations:
+#        pod.alpha.kubernetes.io/init-containers: '[
+#        {
+#          "name": "jenkins-init",
+#          "image": "busybox",
+#          "imagePullPolicy": "IfNotPresent",
+#          "command": ["sh", "-c", "chown -R 33:33 /var/www/html/sites/default/files"],
+#          "volumeMounts": [
+#            {
+#              "name": "drupal-persistent-storage",
+#              "mountPath": "/var/www/html/sites/default/files"
+#            }
+#          ]
+#        }
+#        ]'
+    spec:
+      securityContext:
+        fsGroup: 33
+        #runAsUser: 33
+      initContainers:
+      - name: init-dr7nav
+        image: busybox
+        #command: ["sh", "-c", "chown -R 33:33 /var/www/html/sites/default"]
+        command: ['sh', '-c', 'chown -R 33:33 /var/www/html/sites/default/files']
+        volumeMounts:
+        - name: drupal-files-storage
+          mountPath: /var/www/html/sites/default/files
+      containers:
+      - image: jayachandranm/dr7nav:1.19
+        name: dr7nav
+        env:
+        - name: DRUPAL_DB_NAME
+          value: knpnav_d7
+        - name: DRUPAL_DB_USER
+          value: knpnav
+        - name: DRUPAL_DB_HOST
+          value: bgnav1.cfufcybzmvbm.ap-southeast-1.rds.amazonaws.com:3306
+        - name: DRUPAL_DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password
+        ports:
+        - containerPort: 80
+          name: dr7nav
+        #volumeMounts:
+        #- name: drupal-persistent-storage
+        #  mountPath: /var/www/html/sites/default/files
+          #mountPath: /var/www/html/sites/default/files/styles
+      volumes:
+      - name: drupal-files-storage
+        #gcePersistentDisk:
+        #  pdName: drupal-disk
+        #  fsType: ext4
+        persistentVolumeClaim:
+          claimName: nfs

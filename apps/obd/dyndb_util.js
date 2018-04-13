@@ -1,22 +1,26 @@
 var AWS = require("aws-sdk");
 var fs = require('fs');
+var config = require('./config');
 
 module.exports.import2db = import2db;
 module.exports.add2dyndb = add2dyndb;
 module.exports.add2dyndbBatch = add2dyndbBatch;
 
+//console.log(config);
+
 AWS.config.update({
-    region: "ap-southeast-1",
-    endpoint: "https://dynamodb.ap-southeast-1.amazonaws.com"
+    region: 'ap-southeast-1'
+    //endpoint: "https://dynamodb.ap-southeast-1.amazonaws.com"
 });
 
 var docClient = new AWS.DynamoDB.DocumentClient();
-var table = "OBDTable_mmmYYYY";
+//var table = config.ddb.table;
+var table = 'bgnav-ddb';
 
 function import2db(obdID, timestamp, gpsJson) {
     var items = {};
-    items["obd_dev_id"] = obdID;
-    items["timestamp"] = timestamp;
+    items["sid"] = obdID;
+    items["ts"] = timestamp;
     items["gps_data"] = gpsJson;
 
     var params = {
@@ -26,7 +30,7 @@ function import2db(obdID, timestamp, gpsJson) {
     //console.log(params);
     docClient.put(params, function (err, data) {
         if (err) {
-            console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+            console.error("Unable to add GPS to DynDB", ". Error JSON:", JSON.stringify(err, null, 2));
         } else {
             //console.log("PutItem succeeded:");
         }
@@ -36,20 +40,20 @@ function import2db(obdID, timestamp, gpsJson) {
 function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     //
     var items = {};
-    items["obd_dev_id"] = obdID;
+    items["sid"] = obdID;
     if (statData != null) {
         items["stat_data"] = statData;
-        items["timestamp"] = statData.utc_time * 1000;
+        items["ts"] = statData.utc_time * 1000;
     }
     if (gpsItem != null) {
         // If GPS available, overwrite sample time with GPS time.
-        items["timestamp"] = getUnixTime(gpsItem.date_time);
+        items["ts"] = getUnixTime(gpsItem.date_time);
         items["gps_data"] = getGpsJson(gpsItem);
     }
     if (arrAlarms != null) {
         var alarms = {};
-        for (i = 0; i < arrAlarmVals.length; i++) {
-            var alarmVals = arrAlarmVals[i];
+        for (i = 0; i < arrAlarms.length; i++) {
+            var alarmVals = arrAlarms[i];
             var alarmType = alarmVals.alarm_type;
 
             console.log("Alarm type: ", alarmType);
@@ -69,7 +73,7 @@ function add2dyndb(obdID, statData, gpsItem, arrAlarms) {
     //console.log(params);
     docClient.put(params, function (err, data) {
         if (err) {
-            console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+            console.error("Unable to add Items to DynDB", ". Error JSON:", JSON.stringify(err, null, 2));
         } else {
             //console.log("PutItem succeeded:");
         }
@@ -84,9 +88,9 @@ function add2dyndbBatch(obdID, arrGPS, arrRPM) {
         var numItems4db = arrGPS.length - 1;
         for (i = 0; i < numItems4db; i++) {
             var items = {};
-            items["obd_dev_id"] = obdID;
+            items["sid"] = obdID;
             var gpsItem = arrGPS[i];
-            items["timestamp"] = getUnixTime(gpsItem.date_time);
+            items["ts"] = getUnixTime(gpsItem.date_time);
             items["gps_data"] = getGpsJson(gpsItem);
 
             var params = {
@@ -98,7 +102,7 @@ function add2dyndbBatch(obdID, arrGPS, arrRPM) {
             //console.log(params);
             docClient.put(params, function (err, data) {
                 if (err) {
-                    console.error("Unable to add movie", ". Error JSON:", JSON.stringify(err, null, 2));
+                    console.error("Unable to add GPS in batch to DynDB", ". Error JSON:", JSON.stringify(err, null, 2));
                 } else {
                     //console.log("PutItem succeeded:");
                 }

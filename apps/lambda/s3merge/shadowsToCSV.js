@@ -7,13 +7,15 @@ var fs = require('fs');
 //var moment = require('moment');
 //var archiver = require('archiver');
 var CombinedStream = require('combined-stream2');
-var sids_j = require('./station-ids.json');
+//var sids_j = require('./station-ids.json');
 var config = require('./config.json');
 
 var bucket_name = config.bucket;
+var dev_state_file = config.dev_file;
+var iot_folder_name = config.folder_iot;
 
-var sids = sids_j.stations;
 var iotdata = new aws.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
+
 
 function shadowsToCSV(context) {
     //function backupTable(tablename, callback) {
@@ -51,39 +53,55 @@ function shadowsToCSV(context) {
     //
     
     var count = 0;
-    var listSize = sids.length;
-    console.log("List size: ", listSize);
     var heading = 'sid, cope, invert, calib_m, calib_c, offset, delta, spike_th';
     storeInS3('ATITLE', heading);
-    sids.forEach(function (sid, index) {
-        iotdata.getThingShadow({
-            thingName: sid
-        }, function (err, data) {
-            if (err) {
-                context.fail(err);
-                console.log("Error in getting Shadow.", err);
-            } else {
-                var jsonPayload = JSON.parse(data.payload);
-                //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
-                devState = jsonPayload.state.reported;
-                var cl = devState.cope_level;
-                var il = devState.invert_level;
-                var cm = devState.calibration_m;
-                var cc = devState.calibration_c;
-                var oo = devState.offset_o;
-                var dl = devState.delta;
-                var st = devState.spike_threshold;
-		var line = sid + ',' + cl + ',' + il + ',' + cm + ',' + cc + ',' + oo + ',' + dl 
-			    + ',' + st + '\n';
-		console.log("Line: ", line);
-                storeInS3(sid, line);
-                //combinedStream.append(buffcope);
-                //combinedStream.append(buffcomma);
-                //combinedStream.append(buffnl);
-            }
-        }); // shadow fn.
-    }); //foreach sid
-} // sidRawToCsv
+
+    var s3dev = new aws.S3();
+    var params_dev =
+       { Bucket: bucket_name,
+         Key: iot_folder_name + '/' + dev_state_file
+       };
+    
+    var sids; // sids_j.stations;
+    s3dev.getObject(params_dev, function(err, data) {
+        var fileContents = data.Body.toString();
+        devs_b_state = JSON.parse(fileContents);
+        var dev_b_state_by_sids = devs_b_state.dev_state;
+        sids = Object.keys(dev_b_state_by_sids);
+        var listSize = sids.length;
+        console.log("List size: ", listSize);    
+        //console.log(sids);
+        sids.forEach(function (sid, index) {
+            iotdata.getThingShadow({
+                thingName: sid
+            }, function (err, data) {
+                if (err) {
+                    context.fail(err);
+                    console.log("Error in getting Shadow.", err);
+                } else {
+                    var jsonPayload = JSON.parse(data.payload);
+                    //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
+                    devState = jsonPayload.state.reported;
+                    var cl = devState.cope_level;
+                    var il = devState.invert_level;
+                    var cm = devState.calibration_m;
+                    var cc = devState.calibration_c;
+                    var oo = devState.offset_o;
+                    var dl = devState.delta;
+                    var st = devState.spike_threshold;
+            var line = sid + ',' + cl + ',' + il + ',' + cm + ',' + cc + ',' + oo + ',' + dl 
+                    + ',' + st + '\n';
+            console.log("Line: ", line);
+                    storeInS3(sid, line);
+                    //combinedStream.append(buffcope);
+                    //combinedStream.append(buffcomma);
+                    //combinedStream.append(buffnl);
+                }
+            }); // shadow fn.
+        }); //foreach sid
+    });
+    
+} // shadowsToCSV
 
 function storeInS3(sid, msg) {
   var bucket_name = 'pubc5wl';

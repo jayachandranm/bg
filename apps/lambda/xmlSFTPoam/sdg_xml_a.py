@@ -42,6 +42,12 @@ config_port = config['port']
 config_user = config['user']
 config_pass = config['pass']
 config_dir = config['remote_dir']
+config_bucket = config['s3_bucket']
+config_folder = config['s3_folder']
+config_file = config['s3_file']
+
+s3dev_state = boto3.resource('s3')
+
 
 #----------------------------------------------------------------------
 def create_series(data, stype):
@@ -97,6 +103,10 @@ def lambda_handler(event, context):
     ssh_dir = os.environ.get('SSH_DIR')
     ssh_port = int(os.environ.get('SSH_PORT', config_port))
     #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
+    
+    content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
+    file_content = content_object.get()["Body"].read().decode('utf-8')
+    dev_state_s3 = json.loads(file_content)
 
     try:
         trans = paramiko.Transport(ssh_host, ssh_port)
@@ -179,7 +189,8 @@ def lambda_handler(event, context):
         # TODO:
         if al > 2:
             al = 2
-        flag = al
+        #flag = al
+        flag = 0
         #
         md = "normal"
         try:
@@ -189,7 +200,8 @@ def lambda_handler(event, context):
                 #print(md)
                 # TODO:
                 if md == "maintenance":
-                    flag = 3
+                    #flag = 3
+                    flag = 1
             #else:
             #    print("There is no md here")
             #
@@ -198,7 +210,8 @@ def lambda_handler(event, context):
 
         # if no data for more than 30mts, set to maintenance
         if time_lag > 1800:
-            flag = 3
+            #flag = 3
+            flag = 1
 
         #print(flag)
         #
@@ -212,11 +225,15 @@ def lambda_handler(event, context):
         invert = jsonState["state"]["reported"]["invert_level"]
         offset_o = jsonState["state"]["reported"]["offset_o"]
         #print(loc)
-        get_sid_url = "http://13.228.68.232/coords.php?sid=" + sid
-        lat_lon_j = urllib2.urlopen(get_sid_url).read()
-        lat_lon = json.loads(lat_lon_j)
-        lat = lat_lon['lat']
-        lon = lat_lon['lon']
+        #get_sid_url = "http://13.228.68.232/coords.php?sid=" + sid
+        #lat_lon_j = urllib2.urlopen(get_sid_url).read()
+        #lat_lon = json.loads(lat_lon_j)
+        dev_state_sid = dev_state_s3["dev_state"][sid]
+        #print(dev_state_sid)
+        #lat = lat_lon['lat']
+        #lon = lat_lon['lon']
+        lat = dev_state_sid["latitude"]
+        lon = dev_state_sid["longitude"]
         #lat_str = float("{0:.7f}".format(lat))
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
@@ -225,14 +242,17 @@ def lambda_handler(event, context):
         if wa <= ( 0.08 + (offset_o / 100) ):
             wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
-        mrl_str = "{0:.2f}".format(mrl_val)
+        mrl_str = "{0:.3f}".format(mrl_val)
+        cope_str = "{0:.3f}".format(cope)
+        invert_str = "{0:.3f}".format(invert)
         op_level = invert + (offset_o / 100)
+        op_str = "{0:.3f}".format(op_level)
         #print(loc2)
         #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
         #               + "<x>" + "31810.18</x>" \
         #               + "<y>" + "41013.21" + "</y>" \
 
-        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"" + str(op_level) + "\""
+        desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
         appt1 = create_series({
                         "locationId": sid,
@@ -248,7 +268,7 @@ def lambda_handler(event, context):
 
         root.append(appt1)
 
-        wa_str = "{0:.2f}".format(wa)
+        wa_str = "{0:.3f}".format(wa)
         appt2 = create_series({
                         "locationId": sid,
                         "dt": dt1,

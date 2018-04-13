@@ -8,6 +8,18 @@ var BGMAP = (function (me, $, Drupal, undefined) {
     var playback;
     var basepath;
     //
+    Drupal.behaviors.bgmap2 = {
+        attach: function (context, settings) {
+            console.log('JS attach, initialization.');
+            // If trace array is set, happens inside trace block.
+            if (Drupal.settings.trace) {
+                //
+                //var playback = null;
+                init(context, settings);
+            } // if settings, trace.
+        } // attach
+    } // behaviors, bgmap
+    
     me.requestTraceData = function requestTraceData(startTime, endTime) {
         //
         resetTraceNControls();
@@ -67,7 +79,7 @@ var BGMAP = (function (me, $, Drupal, undefined) {
                                 //iconAnchor: [22, 20],
                                 //innerIconAnchor: [22, 20],
                                 //innerIconStyle: 'font-size:9px;padding-top:1px;',
-                                borderColor: custom_color, 
+                                borderColor: custom_color,
                                 textColor: custom_color
                             };
                             return {
@@ -154,8 +166,10 @@ var BGMAP = (function (me, $, Drupal, undefined) {
         var lat = 1.421, lng = 103.829;
         //center: [51.505, -0.09], zoom: 13
         map2.setView([lat, lng], 13);
-        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        //L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            //attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map2);
 
         // Create additional Control placeholders
@@ -206,19 +220,6 @@ var BGMAP = (function (me, $, Drupal, undefined) {
         me.requestTraceData(startTime, endTime);
     }
 
-    Drupal.behaviors.bgmap2 = {
-        attach: function (context, settings) {
-            console.log('JS attach, initialization.');
-            // If trace array is set, happens inside trace block.
-            if (Drupal.settings.trace) {
-                //
-                //var playback = null;
-                init(context, settings);
-            } // if settings, trace.
-        } // attach
-    } // behaviors, bgmap
-    
     return me;
 })
 (BGMAP || {}, jQuery, Drupal);
-

@@ -12,16 +12,21 @@
         function toggleImage(bednum) { 
           return function() {
             var occElem2mod = "occ-" + bednum.toString();
-            var img = document.getElementById(occElem2mod).src;
-            //console.log("Changing image->", bednum);
+            /*
+            var imgIds = $('#'+occElem2mod+" img").map(function() {
+                              return this.id;
+                        }).get();
+            */
+            var img = $('#'+occElem2mod).find("img").attr("src");
+            //console.log("Changing image->", img);
             if(img.indexOf('occupied.png')!=-1) {
-              document.getElementById(occElem2mod).src = 'sites/default/files/moving.png';
+              $('#'+occElem2mod+" img").attr('src', 'sites/default/files/moving.png');
             }
             else {
-              document.getElementById(occElem2mod).src = 'sites/default/files/occupied.png';
+              $('#'+occElem2mod+" img").attr('src', 'sites/default/files/occupied.png');
             }
             if( $('#'+occElem2mod).hasClass("moving")) {
-              setTimeout(toggleImage(bednum),1000);
+              setTimeout(toggleImage(bednum),2000);
             }  
           }; 
         } 
@@ -47,52 +52,49 @@
         //var title = Drupal.settings.bedmon.data.title;
         var basepath = Drupal.settings.basePath;
         var nid_list = Drupal.settings.bedmon2.nid_list;
-        //var jsonList = {};
-        //jsonList['nidlist'] = nid_list;
         var chart1;
         console.log('Node ID list from PHP=', nid_list);
         var title = 'Real Time values';
         // Place a div name correcly.
-        var requestData = (function() { 
-          console.log('bedmon, requestData');
-          var post_url = basepath + '?q=bedmon/vitals';
-          //var post_data = "&nidlist="+nid_list;
-          //var post_data = JSON.stringify(jsonList);//+nid_list;
-          //console.log('JSON POST data=', post_data);
-          $.ajax({
-              url: post_url,
-              type: 'POST',
-              dataType: 'json',
-              //data: post_data,
-              //data: { 'nidlist' : 22, 'example_token' : 55 }, 
-              //data: post,
-              data: { nidList : nid_list },
-              success: function(jsonData) {
-                console.log('data received from server: ', jsonData);
-                updateHtml(jsonData);
-              },
-              complete: function() {
-                 console.log('complete, request again.');
-                 setTimeout(requestData, 2000);
-              },
-              beforeSend: function() {
-                // TODO:
-                console.log('Before ajax request.');
-                /*
-                $(document).ready(function () {
-                  $(#status).attr("innerHTML","Loading....");
-                });
-                */
-              },
-              //error: function(xhr, status, error) {
-              error: function() {
-                console.log('Error in ajax reply.');
-                //alert('Error loading ');
-              }
-          }); // ajax
-        });
-        // invoke first time.
-        requestData();
+
+        // Make a request to server only if there are elements to display on screen.
+        if(nid_list != -1) {
+          var requestData = (function() { 
+            console.log('bedmon, requestData');
+            var post_url = basepath + '?q=bedmon/vitals';
+            $.ajax({
+                url: post_url,
+                type: 'POST',
+                dataType: 'json',
+                data: { nidList : nid_list },
+                success: function(jsonData) {
+                  console.log('data received from server: ', jsonData);
+                  updateHtml(jsonData);
+                },
+                complete: function() {
+                   console.log('complete, request again.');
+                   setTimeout(requestData, 2000);
+                },
+                beforeSend: function() {
+                  // TODO:
+                  console.log('Before ajax request.');
+                  /*
+                  $(document).ready(function () {
+                    $(#status).attr("innerHTML","Loading....");
+                  });
+                  */
+                },
+                //error: function(xhr, status, error) {
+                error: function() {
+                  console.log('Error in ajax reply.');
+                  //alert('Error loading ');
+                }
+            }); // ajax
+          });
+          // invoke first time.
+          requestData();
+        }
+
         //
         function updateHtml(data) {
           for (var i in data) {
@@ -105,6 +107,8 @@
             var pulseElem2mod = "pulse-" + UserId;
             //
             var uTime = eval(data[i].TimeP);
+            // Timeout in millis.
+            var TIMEOUT = 60000000;
             // Set default values.
             var respval = 0, pulseval = 0;
             var occuStatus = 0, movStatus = 0;
@@ -113,53 +117,58 @@
               pulseval = Math.round(data[i].Pulse);
               occuStatus = data[i].Occ;
               // TODO: test
-              occuStatus = 1;
+              //occuStatus = 1;
               movStatus = data[i].Mov; 
               // TODO: test
               //movStatus = 8;
             } 
             //
-            $('#'+timeElem2mod).html(timeConverter(uTime));
-            var tnow = new Date().getTime();
-            var timediff = tnow - uTime;
-/*
-            if (timediff > 300000) { 
-              occuStatus = 0;
-            }
-*/
+            var now = new Date();
+            var uTimeNow = now.getTime();
+            var timediff = uTimeNow - uTime;
+            var todayTime = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+            $('#'+timeElem2mod).html(todayTime);
+            //$('#'+timeElem2mod).html(timeConverter(uTime));
             //
-            if (eval(occuStatus) > 0) {
+            if (timediff > TIMEOUT) {
+              $('#'+movElem2mod).html("Offline");
+              //$('#'+movElem2mod).toggleClass("label label-default");
+              $('#'+movElem2mod).removeClass().addClass("label label-default");
+              $('#'+respElem2mod).html("--");
+              $('#'+pulseElem2mod).html("--");
+              //$('#'+occElem2mod+" img").attr('src', 'sites/default/files/unoccupied.png');
+              $('#'+occElem2mod).removeClass("moving");
+              $('#'+occElem2mod+ " img.bottom").src = 'sites/default/files/unoccupied.png';
+              $('#'+timeElem2mod).html(timeConverter(uTime));
+            } 
+            else if (eval(occuStatus) > 0) {
+              $('#'+occElem2mod+" img.bottom").attr('src', 'sites/default/files/occupied.png');
               if (eval(movStatus) < 6) {
                 $('#'+movElem2mod).html("Resting!");
-                //$('#'+movElem2mod).toggleClass("label label-info");
                 $('#'+movElem2mod).removeClass().addClass("label label-info");
-                $('#'+respElem2mod).html(respval);
-                $('#'+pulseElem2mod).html(pulseval);
-                //lastStatusMoving[eval(i)] = false;
+		if(respval < 0) {
+                  $('#'+respElem2mod).html("--");
+		} else {
+                  $('#'+respElem2mod).html(respval);
+		}
+		if(pulseval < 0) {
+                  $('#'+pulseElem2mod).html("--");
+		} else {
+                  $('#'+pulseElem2mod).html(pulseval);
+		}
                 $('#'+occElem2mod).removeClass("moving");
-                //document.getElementById(occElem2mod).src = 'sites/default/files/occupied.png';
-                $('#'+occElem2mod).attr('src', 'sites/default/files/occupied.png');
               }
               else if(eval(movStatus) > 5) {
+                $('#'+respElem2mod).html("--");
+                $('#'+pulseElem2mod).html("--");
                 if(eval(movStatus) > 7) {
                   $('#'+movElem2mod).html("Restless!");
-                  //$('#'+movElem2mod).toggleClass("label label-danger");
                   $('#'+movElem2mod).removeClass().addClass("label label-danger");
                 }
                 else {
                   $('#'+movElem2mod).html("Moving!");
-                  //$('#'+movElem2mod).toggleClass("label label-warning");
                   $('#'+movElem2mod).removeClass().addClass("label label-warning");
                 }
-                $('#'+respElem2mod).html("--");
-                $('#'+pulseElem2mod).html("--");
-/*
-                if(lastStatusMoving[eval(i)] == false) {
-                  lastStatusMoving[eval(i)] = true;
-                  //var movBed = toggleImage(i);
-                  //movBed();
-                }
-*/
                 if( ($('#'+occElem2mod).hasClass("moving")) == false) {
                   $('#'+occElem2mod).addClass("moving");
                   var movBed = toggleImage(UserId);
@@ -168,25 +177,20 @@
               } // movStatus
             } // occuStatus
             else { 
-              var todayTime = "0:0:0"; // now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
-              $('#'+timeElem2mod).html(todayTime);
+              //var now = new Date();
+              //var todayTime = tnow.getHours() + ":" + tnow.getMinutes() + ":" + tnow.getSeconds();
+              //$('#'+timeElem2mod).html(todayTime);
+              $('#'+timeElem2mod).html(timeConverter(uTime));
               $('#'+movElem2mod).html("Out of bed!");
-              //$('#'+movElem2mod).toggleClass("label label-primary");
               $('#'+movElem2mod).removeClass().addClass("label label-primary");
               $('#'+respElem2mod).html("--");
               $('#'+pulseElem2mod).html("--");
-              //lastStatusMoving[eval(i)] = false;
               $('#'+occElem2mod).removeClass("moving");
-              //document.getElementById(occElem2mod).src = 'images/unoccupied.png';
-              $('#'+occElem2mod).src = 'sites/default/files/unoccupied.png';
+              //$('#'+occElem2mod+ " img.bottom").src = 'sites/default/files/unoccupied.png';
+              $('#'+occElem2mod+" img").attr('src', 'sites/default/files/unoccupied.png');
+              //$('#'+occElem2mod+ " img").src = 'sites/default/files/unoccupied.png';
+              console.log(occElem2mod);
             } // if occupied
-/*
-            if (timediff > 300000) {
-              $('#'+movElem2mod).html("Check system.");
-              //$('#'+movElem2mod).toggleClass("label label-default");
-              $('#'+movElem2mod).removeClass().addClass("label label-default");
-            }
-*/
           } // for each bed.
         } // updateHtml.
       } // bedmon2.

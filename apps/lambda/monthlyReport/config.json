@@ -1,7 +1,0 @@
-{
-    "endpointAddress": "IoT-EP",
-    "table" : "pubc5wl-ddb",
-    "bucket" : "pubc5wl",
-    "folder" : "monthly_report",
-    "pause" : 250
-}

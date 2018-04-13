@@ -1,0 +1,8 @@
+{
+    "endpointAddress": "EP.iot.ap-southeast-1.amazonaws.com",
+    "bucket" : "pubc5wl",
+    "folder" : "sms_log",
+    "folder_iot" : "iot_data",
+    "dev_file" : "devs_B_state.json",
+    "pause" : 250
+}

@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Performs module install and uninstall tasks.
+ *
+ */
+
+
+/**
+ * Create table on install.
+ */
+
+
+/**
+ * Delete table on uninstall.
+ */
+
+
+/**
+ * Implements hook_install().
+ */
+function bgmap_install() {
+  variable_set(
+    'bgmap_custom_data', 
+    array(
+      'email' => 'test@test.com',
+      'telephone' => '+1 111 11111',
+      'address' => array(
+        'value' => '<p>Test</p>',
+        'format' => 'full_html',
+      )
+    )
+  );
+}
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function bgmap_uninstall() {
+  variable_del('bgmap_custom_data');
+}
