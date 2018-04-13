@@ -10,7 +10,7 @@ import json
 import decimal
 from boto3.dynamodb.conditions import Key, Attr
 
-import urllib2
+#import urllib2
 
 from datetime import datetime
 import time
@@ -18,18 +18,19 @@ import pytz
 
 from lxml import etree, objectify
 
-with open("station-ids.json") as json_file:
-    try:
-        json_data = json.load(json_file)
-    except:
-        print("Error loading JSON file.")
+#with open("station-ids.json") as json_file:
+#    try:
+#        json_data = json.load(json_file)
+#    except:
+#        print("Error loading JSON file.")
 
-stations = json_data['stations'] 
+#stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
 table = dynamodb.Table('pubc5wl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
+s3dev_state = boto3.resource('s3')
 
 with open("config.json") as config_json_file:
     try:
@@ -37,11 +38,14 @@ with open("config.json") as config_json_file:
     except:
         print("Error loading config JSON file.")
 
-hostname = config['host']
-port = config['port']
-myuser = config['user']
-mypass = config['pass']
-remote_dir = config['remote_dir']
+config_host = config['host']
+config_port = config['port']
+config_user = config['user']
+config_pass = config['pass']
+config_dir = config['remote_dir']
+config_bucket = config['s3_bucket']
+config_folder = config['s3_folder']
+config_file = config['s3_file']
 
 #----------------------------------------------------------------------
 def create_series(data):
@@ -71,30 +75,21 @@ def create_series(data):
 
 
 def lambda_handler(event, context):
-
-    try:
-        trans = paramiko.Transport(hostname, port)
-        #print(t)
-        trans.connect(username=myuser, password=mypass)
-        print("Connected")
-    except:
-        print("Connect Error.")
-    try:
-        sftp = paramiko.SFTPClient.from_transport(trans)
-        print(sftp)
-    except paramiko.SSHException:
-        print("Connection Error")
-
-    try:
-        sftp.chdir(remote_dir)
-        print("Changed remote to: " + remote_dir)
-    except:
-        print("chdir failure") 
-
-    tm = time.strftime('%Y-%m-%d_%H-%M-%S')
-    dest = tm + ".xml"
-    file=sftp.file(dest, "w", -1)
-    #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
+    #
+    ssh_host = os.environ.get('SSH_HOST', config_host)
+    ssh_username = os.environ.get('SSH_USERNAME', config_user)
+    ssh_password = os.environ.get('SSH_PASSWORD', config_pass)
+    ssh_dir = os.environ.get('SSH_DIR', config_dir)
+    ssh_port = int(os.environ.get('SSH_PORT', config_port))
+    #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
+    
+    content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
+    file_content = content_object.get()["Body"].read().decode('utf-8')
+    dev_state_s3 = json.loads(file_content)
+    dev_state_by_sids = dev_state_s3["dev_state"]
+    stations = dev_state_by_sids.keys()
+    stations.sort()
+    print(stations)
  
     #xml = '''<?xml version="1.0" ?>
     xml = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -179,11 +174,9 @@ def lambda_handler(event, context):
         invert = jsonState["state"]["reported"]["invert_level"]
         offset_o = jsonState["state"]["reported"]["offset_o"]
         #print(loc)
-        get_sid_url = "http://13.228.68.232/coords.php?sid=" + sid
-        lat_lon_j = urllib2.urlopen(get_sid_url).read()
-        lat_lon = json.loads(lat_lon_j)
-        lat = lat_lon['lat']
-        lon = lat_lon['lon']
+        dev_state_sid = dev_state_s3["dev_state"][sid]
+        lat = dev_state_sid["latitude"]
+        lon = dev_state_sid["longitude"]
         #lat_str = float("{0:.7f}".format(lat))
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
@@ -192,14 +185,13 @@ def lambda_handler(event, context):
         if wa <= ( 0.08 + (offset_o / 100) ):
             wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
-        mrl_str = "{0:.2f}".format(mrl_val)
+        mrl_str = "{0:.3f}".format(mrl_val)
+        cope_str = "{0:.3f}".format(cope)
+        invert_str = "{0:.3f}".format(invert)
         op_level = invert + (offset_o / 100)
-        #print(loc2)
-        #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
-        #               + "<x>" + "31810.18</x>" \
-        #               + "<y>" + "41013.21" + "</y>" \
+        op_str = "{0:.3f}".format(op_level)
 
-        desc = "cope_level=\"" + str(cope) + "\" invert_level=\"" + str(invert) + "\" operation_level=\"" + str(op_level) + "\""
+        desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
         appt = create_series({
                         "locationId": sid,
@@ -225,8 +217,31 @@ def lambda_handler(event, context):
     print(obj_xml)
 
     try:
-        file.write(obj_xml)  
-        file.flush()
+        trans = paramiko.Transport(ssh_host, ssh_port)
+        trans.connect(username=ssh_username, password=ssh_password)
+        print("Connected")
+    except:
+        print("Connect Error.")
+    try:
+        sftp = paramiko.SFTPClient.from_transport(trans)
+        print(sftp)
+    except paramiko.SSHException:
+        print("Connection Error")
+
+    try:
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
+    except:
+        print("chdir failure") 
+
+    tm = time.strftime('%Y-%m-%d_%H-%M-%S')
+    dest = tm + ".xml"
+    xmlfile = sftp.file(dest, "w", -1)
+    #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
+
+    try:
+        xmlfile.write(obj_xml)  
+        xmlfile.flush()
     except:
         print("File write error.")
     #    sftp.put(source, dest)
