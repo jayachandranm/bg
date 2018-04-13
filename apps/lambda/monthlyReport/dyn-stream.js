@@ -15,7 +15,7 @@ function DynStream(tablename, sid, devState, start_t, end_t, options) {
   if (!(this instanceof DynStream)) {
     return new DynStream(tablename, sid, devState, start_t, end_t, options);
   }
-  console.log(tablename, sid, devState.location, start_t, end_t);
+  //console.log(tablename, sid, devState.location, start_t, end_t);
   this._tablename = tablename;
   this.connecting = false;
   this.ended = false;

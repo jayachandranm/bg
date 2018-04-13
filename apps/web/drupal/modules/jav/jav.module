@@ -48,6 +48,14 @@ function jav_block_info()
         'info' => t('JAV Lift Events'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
+    $blocks['sensor_status'] = array(
+        'info' => t('JAV Sensor Status'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
+    $blocks['reports'] = array(
+        'info' => t('JAV Reports'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
     return $blocks;
 }
 
@@ -89,6 +97,22 @@ function jav_init()
     }
 
     drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
+    drupal_add_js(drupal_get_path('module', 'jav') . '/jav_reports.js');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js', 'external');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.flash.min.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js', 'external');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js', 'external');
+    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js', 'external');
+    drupal_add_js('https://code.jquery.com/ui/1.12.1/jquery-ui.js', 'external');
+    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.0/moment.js', 'external');
+    drupal_add_js(drupal_get_path('module', 'jav') . '/bootstrap-datetimepicker.js');
+    drupal_add_css(drupal_get_path('module', 'jav') . '/bootstrap-datetimepicker.css');
+    drupal_add_js(drupal_get_path('module', 'jav') . '/jquery.dataTables.yadcf.js');
+    drupal_add_css(drupal_get_path('module', 'jav') .'/jquery.dataTables.yadcf.css');
+    //drupal_add_css(drupal_get_path('module', 'jav') .'/your-css.css');
+    //drupal_add_css(drupal_get_path('theme', 'hdbjav') .'/your-css.css');
 }
 
 /**
@@ -252,23 +276,14 @@ function _jav_page()
  */
 function jav_node_insert($node)
 {
+    // Action for node creation same as node update.
+    //jav_node_update($node);
+    //if ($node->type == 'stations' && !isset($node->nid)) {
     if ($node->type == 'lifts') {
-        $nid = $node->nid;
-        $sid = $node->field_lift_id['und'][0]['value'];
-        $vnum = -1;
-        $vgroup = 'test';
         $flag = true;
-        module_load_include("config.inc", "jav");
-        // TODO: Improve the config option.
-        $jav_db = getExtDBConfig();
-        module_load_include("api.inc", "jav");
-        // TODO: temp
-        //_update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
+        _lift_details_to_db($node, $flag);
     }
-    /*
     // Notice that we are ignoring any revision information using $node->nid
-  }
-  */
 }
 
 /**
@@ -281,22 +296,53 @@ function jav_node_insert($node)
  */
 function jav_node_update($node)
 {
-    //if ($node->type == 'stations' && !isset($node->nid)) {
     if ($node->type == 'lifts') {
-        //dpm($node);
-        $nid = $node->nid;
-        $sid = $node->field_lift_id['und'][0]['value'];
-        $vnum = -1;
-        $vgroup = 'test';
         $flag = false;
-        module_load_include("config.inc", "jav");
-        $jav_db = getExtDBConfig();
-        module_load_include("api.inc", "jav");
-        // TODO: temp
-        //_update_ext_db($jav_db, $nid, $sid, $vnum, $vgroup, $flag);
+        _lift_details_to_db($node, $flag);
+    }
+    if ($node->type == 'lift_companies') {
+	 $flag = false;
+        _update_db_referencing_lifts($node, $flag);
     }
 }
 
+
+function _lift_details_to_db($node, $flag)
+{
+	//$ref = $node->get($field_lift_supplier)->referencedEntities();
+	//$view = node_view($node);
+        $lift_nid = $node->nid;
+        $lift_id = $node->field_lift_id['und'][0]['value'];
+	$tid_supplier = $node->field_lift_supplier['und'][0]['target_id'];
+	$node_supplier = node_load($tid_supplier);
+	$supplier_nid = $node_supplier->nid;
+	$sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+	dpm($sms_list);
+        //$flag = false;
+        module_load_include("config.inc", "jav");
+        $jav_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+        _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+}
+
+function _update_db_referencing_lifts($node_supplier, $flag)
+{
+	$supplier_nid = $node_supplier->nid;
+	$sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+	// Get all lifts referencing to this node entity.
+        module_load_include("config.inc", "jav");
+        $jav_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+	$results = _get_ext_db_liftlist($jav_db, $supplier_nid);
+	$liftlist = array();
+	foreach($results as $row) {
+	    $lift_id = $row->lift_id;
+	    $lift_nid = intval($row->lift_nid);
+	    $supplier_nid = intval($row->supplier_nid);
+	    $liftlist = $lift_id;
+            _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+	}
+}
 
 /**
  * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3
@@ -346,6 +392,9 @@ function jav_block_view($delta = '')
             //$vnum = -1;
             //dpm($field_dev);
         } // if node-type.
+        else {
+            $sid = "Unknown";
+        }
     } // if node.
     else {
         $sid = "Unknown";
@@ -353,7 +402,9 @@ function jav_block_view($delta = '')
     }
 
     // Always pass as an array of values, for generic handling at JS side.
-    $sid_list[] = $sid;
+    if($sid) {
+        $sid_list[] = $sid;
+    }
     //$sid = (string)$sid_tmp;
 
     switch ($delta) {
@@ -508,7 +559,7 @@ function jav_block_view($delta = '')
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     array('data' => t('Date Time')),
                     //array('data' => t('Address'), 'colspan' => 3),
-                    array('data' => t('Lift SNUM')),
+                    array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
                     array('data' => t('Remarks')),
@@ -539,7 +590,165 @@ function jav_block_view($delta = '')
                 //dpm($items);
 
 
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
+
+            } // if user_access
+            break;
+        case 'sensor_status':
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav.js',),
+            );
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t('Sensor Status'),
+                    'content' => array
+                    (
+                        'eventlist_block' => array
+                        (
+                            '#prefix' => "<div id='sensor_status'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Sensor status....."),
+                        ),
+                    ),
+                );
+               
+                $header = array(
+                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+                    //array('data' => t('Address'), 'colspan' => 3),
+                    array('data' => t('Sensor Name')),
+                    array('data' => t('Reported Time')),
+                    array('data' => t('Status')),
+                    array('data' => t('Remarks')),
+                );
+
+                $reqtype = 'ss';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = time() * 1000;
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
+                $items = array();
+                foreach ($result as $row) {
+                    $date = new DateTime();
+                    $date->setTimestamp(intval($row->ts)/1000);
+                    $dtime = $date->format('j-M-y g:i a');
+                    //print_r($dtime, $row->snum);
+                    //$items[] = array($dtime, $row->name, $row->status, $row->details);
+                    if($row->status != 'ok') {
+                        $items[] = array($row->name, $dtime, $row->status, $row->details);
+                    }
+                }
+                //dpm($items);
+
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sensor-status-table')));
+
+            } // if user_access
+            break;
+        case 'reports':
+            $block['content']['#attached']['js'] = array(
+                array(
+                    'type' => 'file',
+                    'data' => $mpath . '/jav_reports.js',),
+            );
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t(''),
+                    'content' => array
+                    (
+                        'eventlist_block' => array
+                        (
+                            '#prefix' => "<div id='reports'>",
+                            '#suffux' => "</div>",
+                            '#markup' => t("Reports....."),
+                        ),
+                    ),
+                );
+
+                $reqtype = 'rpt';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = time() * 1000;
+                // Get all nids of type lifts.
+                $node_type = "lifts";
+                $nids = array();
+                $zonelist = array();
+/*
+                $result_all = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
+                while ($obj = db_fetch_object ($result)) {
+                    $sid_list = $obj->nid;
+                }
+*/ 
+                //$field = field_info_field('field_blk_zone');
+                //dpm($field);
+                //$allowed_values = list_allowed_values($field);
+                //dpm($allowed_values);
+                $nids = db_query("SELECT nid FROM {node} WHERE type = :type", array(':type' => $node_type))->fetchCol();
+                foreach($nids as $nid) {
+                    $node = node_load($nid);
+                    //dpm($node);
+                    $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
+                    $sid = $field_dev[0]['safe_value'];
+                    $sid_list[] = $sid;
+                    
+                    //$field_dev2 = field_get_items('node', $node, 'field_blk_zone', 'en');
+                    //$uid = $field_dev2['target_id'];
+                    //dpm($uids);
+                    //$test = $node->get('tags')->referencedEntities();
+                    $node_wrapper = entity_metadata_wrapper('node', $node);
+                    $zone = $node_wrapper->field_blk_zone->value()->name;
+                    $zonelist[$sid] = $zone;
+                }
+                
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
+               
+                $header = array(
+                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
+                    //array('data' => t('Address'), 'colspan' => 3),
+                    array('data' => t('Zone')),
+                    array('data' => t('Lift ID')),
+                    array('data' => t('Reported Date')),
+                    array('data' => t('Time')),
+                    array('data' => t('Status')),
+                    array('data' => t('Remarks')),
+                );
+
+                $items = array();
+                foreach ($result as $row) {
+                    $date = new DateTime();
+                    $date->setTimestamp(intval($row->ts)/1000);
+                    //$dtime = $date->format('j-M-y g:i a');
+                    //$dt = $date->format('j-M-y');
+                    $dt = $date->format('d-m-Y');
+                    $tt = $date->format('g:i a');
+                    //print_r($dtime, $row->snum);
+                    $zone = $zonelist[$row->snum];
+                    $items[] = array($zone, $row->snum, $dt, $tt, $row->etype, $row->remarks);
+                }
+                //dpm($items);
+
+
+                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'reports-table')));
 
             } // if user_access
             break;
@@ -568,7 +777,6 @@ function _jav_set_list($lift_list = NULL) {
 */
 function jav_preprocess_views_view(&$vars)
 {
-    // TODO: Check for authorization.
     $mpath = drupal_get_path('module', 'jav');
     //dpm($vars['view']);
     if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
@@ -599,3 +807,15 @@ function jav_preprocess_views_view(&$vars)
         drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
     }
 }
+
+/*
+function jav_views_pre_render(&$view) {
+    //dpm($view->field['field_event_ack']);
+    if ($view->name == 'alerts' && isset($view->field['field_event_ack'])) {
+        //dpm($view);
+        $attributes = array('onclick' => "alert('Hello')");
+        //print_r($attributes);
+        $view->field['field_event_ack']->options['alter']['link_attributes'] = $attributes;
+    }
+}
+*/

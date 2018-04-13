@@ -7,12 +7,12 @@ var moment = require('moment');
 var archiver = require('archiver');
 var DynStream = require('./dyn-stream');
 var CSVTransform = require('./transform-stream');
-var sids_json = require('./station-B-ids.json');
+//var sids_json = require('./station-B-ids.json');
 var config = require('./config.json');
 
 var iotdata = new aws.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 
-var sids = sids_json.stations;
+var sids; //sids_json.stations;
 var devs_b_state;
 
 function sidRawToCsv(context) {
@@ -21,6 +21,7 @@ function sidRawToCsv(context) {
   var table_name = config.table;
   var bucket_name = config.bucket;
   var folder_name = config.folder;
+  var dev_state_file = config.dev_file;
   //
   var iot_folder_name = config.folder_iot;
 
@@ -37,7 +38,6 @@ function sidRawToCsv(context) {
   //self._start_t = start_t;
   var file_dt_tag = lastMonthStart.format("YYYYMM");
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
-  console.log("Number of sids..", sids.length);
   //
   var archive = archiver('zip');
   archive.on('error', function(err) {
@@ -64,18 +64,24 @@ function sidRawToCsv(context) {
   var s3dev = new aws.S3();
   var params_dev = 
      { Bucket: bucket_name,
-       Key: iot_folder_name + '/devs_B_state.json'
+       Key: iot_folder_name + '/' + dev_state_file
      };
 
   s3dev.getObject(params_dev, function(err, data) {
     var fileContents = data.Body.toString();
     devs_b_state = JSON.parse(fileContents);
-    //console.log(devs_b_state);
-    getMultiFileStream();
+    var dev_b_state_by_sids = devs_b_state.dev_state;
+    sids = Object.keys(dev_b_state_by_sids);
+    //console.log(sids);
+    //
+    getMultiFileStream(sids);
   });
+
 
   var count = 0;
   function getMultiFileStream(callback) {
+    // sids defined as global, so that the variable is available for,
+    // repeated call  of this function.
     if(count < sids.length) {
       var sid = sids[count];
       count++;

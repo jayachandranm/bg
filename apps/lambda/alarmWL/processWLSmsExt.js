@@ -2,7 +2,7 @@
 // Load the AWS SDK
 var AWS = require("aws-sdk");
 var http = require('http');
-var sync_request = require('sync-request');
+//var sync_request = require('sync-request');
 var https = require('https');
 var utils = require('./wlAlertUtils');
 var config = require('./config.json');
@@ -71,12 +71,6 @@ function processWL(msg, context) {
 
             // May have to use history by accessing Shadow.
             if (alertLevel) {
-
-                var res = sync_request('GET', 'http://13.228.68.232/stationname.php?stationid=' + sid);
-                var locName = res.body.toString('utf-8').replace('\t','');
-                //var locName = res.getBody();
-                console.log(locName);
-                devState.location = locName;
 
                 var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
 
@@ -159,8 +153,10 @@ function sendMsg(sid, msg, subsList) {
 function storeInS3(sid, smsMsg, subsCsvList) {
   var bucket_name = 'pubc5wl';
   var folder_name = 'sms_log';
-  var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
-  var s3_key = folder_name + '/' + sid + '-' + ts + '-sms.log';
+  //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss")
+  var smsDate = dateFormat(new Date(), "mmddyyyy");
+  var smsTime= dateFormat(new Date(), "HHMMss");
+  var s3_key = folder_name + '/d' + smsDate + '/' + sid + '-' + smsTime + '_sms.log';
   
   var dt = moment(new Date()).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); 
   var sms_report = sid + '\t' + dt + '\t' + subsCsvList 
