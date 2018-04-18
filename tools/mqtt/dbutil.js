@@ -1,5 +1,7 @@
 var mysql = require('mysql');
-var config = require('./config');
+//var config = require('./config');
+var config = require('./config.json');
+
 
 //module.exports.updateDB = updateDB;
 module.exports.add2dbAlerts = add2dbAlerts;
@@ -15,8 +17,7 @@ var pool = mysql.createPool({
 
 
 function add2dbAlerts(clientID, arrVals) {
-    //console.log("add2dbGPS:");
-    for (i = 0; i < arrGpsVals.length; i++) {
+    for (i = 0; i < arrVals.length; i++) {
         var testVals = arrVals[i];
         //
 
@@ -47,3 +48,4 @@ function add2dbAlerts(clientID, arrVals) {
     }
 }
 
+function add2dbErrors(clientID, arrVals) {}

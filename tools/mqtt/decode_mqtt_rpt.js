@@ -1,30 +1,6 @@
 var Parser = require('binary-parser').Parser;
 
-module.exports.decodeMessage = decodeMessage;
-
-function decodeRptMessage(mqttData) {
-    var dcMsg = rptMessage.parse(mqttData);
-    //console.log(dcMsg);
-    return dcMsg;
-  }
-
-  var rptMessage = new Parser()
-    //Parser.start()
-    .endianess('little')
-    .uint16('ts')
-    .nest('fiber', {
-        type: fiberFlags
-    })
-    .nest('nrli', {
-        type: nrliFlags
-    })
-    .nest('lssb1', {
-        type: lssb1Flags
-    })
-    .nest('lssb2', {
-        type: lssb2Flags
-    })
-    .uint16('sw_version')
+module.exports.decodeRptMessage = decodeRptMessage;
 
 var fiberFlags = new Parser()
     .bit1('no_update')
@@ -57,4 +33,29 @@ var lssb2Flags = new Parser()
     .bit1('sensor_error_temperature')
     .bit1('sensor_error_rh')
     .bit1('sensor_error_motion')
+
+var rptMessage = new Parser()
+    //Parser.start()
+    .endianess('little')
+    .uint16('ts')
+    .nest('fiber', {
+        type: fiberFlags
+    })
+    .nest('nrli', {
+        type: nrliFlags
+    })
+    .nest('lssb1', {
+        type: lssb1Flags
+    })
+    .nest('lssb2', {
+        type: lssb2Flags
+    })
+    .uint16('sw_version')
+
+
+function decodeRptMessage(mqttData) {
+    var dcMsg = rptMessage.parse(mqttData);
+    //console.log(dcMsg);
+    return dcMsg;
+  }
 
