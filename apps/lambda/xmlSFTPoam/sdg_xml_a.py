@@ -10,7 +10,7 @@ import json
 import decimal
 from boto3.dynamodb.conditions import Key, Attr
 
-import urllib2
+#import urllib2
 
 from datetime import datetime
 import time
@@ -18,18 +18,19 @@ import pytz
 
 from lxml import etree, objectify
 
-with open("station-ids.json") as json_file:
-    try:
-        json_data = json.load(json_file)
-    except:
-        print("Error loading JSON file.")
+#with open("station-ids.json") as json_file:
+#    try:
+#        json_data = json.load(json_file)
+#    except:
+#        print("Error loading JSON file.")
 
-stations = json_data['stations'] 
+#stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
 table = dynamodb.Table('pubc5wl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
+s3dev_state = boto3.resource('s3')
 
 with open("config.json") as config_json_file:
     try:
@@ -45,9 +46,6 @@ config_dir = config['remote_dir']
 config_bucket = config['s3_bucket']
 config_folder = config['s3_folder']
 config_file = config['s3_file']
-
-s3dev_state = boto3.resource('s3')
-
 
 #----------------------------------------------------------------------
 def create_series(data, stype):
@@ -107,30 +105,10 @@ def lambda_handler(event, context):
     content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
     file_content = content_object.get()["Body"].read().decode('utf-8')
     dev_state_s3 = json.loads(file_content)
-
-    try:
-        trans = paramiko.Transport(ssh_host, ssh_port)
-        #print(t)
-        trans.connect(username=ssh_username, password=ssh_password)
-        print("Connected")
-    except:
-        print("SFTP connect Error.")
-    try:
-        sftp = paramiko.SFTPClient.from_transport(trans)
-        print("SFTP client created.")
-    except paramiko.SSHException:
-        print("SFTP client creation error.")
-
-    try:
-        sftp.chdir(ssh_dir)
-        print("Changed remote to: " + ssh_dir)
-    except:
-        print("chdir failure.") 
-
-    tm = time.strftime('%Y-%m-%d_%H-%M-%S')
-    dest = tm + ".xml"
-    file=sftp.file(dest, "w", -1)
-    #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
+    dev_state_by_sids = dev_state_s3["dev_state"]
+    stations = dev_state_by_sids.keys()
+    stations.sort()
+    print(stations)
  
     xml = '''<?xml version="1.0" encoding="UTF-8"?>
     <TimeSeries>
@@ -225,13 +203,8 @@ def lambda_handler(event, context):
         invert = jsonState["state"]["reported"]["invert_level"]
         offset_o = jsonState["state"]["reported"]["offset_o"]
         #print(loc)
-        #get_sid_url = "http://13.228.68.232/coords.php?sid=" + sid
-        #lat_lon_j = urllib2.urlopen(get_sid_url).read()
-        #lat_lon = json.loads(lat_lon_j)
         dev_state_sid = dev_state_s3["dev_state"][sid]
         #print(dev_state_sid)
-        #lat = lat_lon['lat']
-        #lon = lat_lon['lon']
         lat = dev_state_sid["latitude"]
         lon = dev_state_sid["longitude"]
         #lat_str = float("{0:.7f}".format(lat))
@@ -247,10 +220,6 @@ def lambda_handler(event, context):
         invert_str = "{0:.3f}".format(invert)
         op_level = invert + (offset_o / 100)
         op_str = "{0:.3f}".format(op_level)
-        #print(loc2)
-        #      file.write("   "+"<?xml version=\"1.0\" ?>"+'\n'+"<TimeSeries>"'\n')
-        #               + "<x>" + "31810.18</x>" \
-        #               + "<y>" + "41013.21" + "</y>" \
 
         desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
@@ -294,8 +263,32 @@ def lambda_handler(event, context):
     print(obj_xml)
 
     try:
-        file.write(obj_xml)  
-        file.flush()
+        trans = paramiko.Transport(ssh_host, ssh_port)
+        #print(t)
+        trans.connect(username=ssh_username, password=ssh_password)
+        print("Connected")
+    except:
+        print("SFTP connect Error.")
+    try:
+        sftp = paramiko.SFTPClient.from_transport(trans)
+        print("SFTP client created.")
+    except paramiko.SSHException:
+        print("SFTP client creation error.")
+
+    try:
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
+    except:
+        print("chdir failure.") 
+
+    tm = time.strftime('%Y-%m-%d_%H-%M-%S')
+    dest = tm + ".xml"
+    xmlfile = sftp.file(dest, "w", -1)
+    #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
+
+    try:
+        xmlfile.write(obj_xml)  
+        xmlfile.flush()
     except:
         print("File write error.")
     #    sftp.put(source, dest)
