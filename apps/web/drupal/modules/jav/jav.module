@@ -683,7 +683,7 @@ function jav_block_view($delta = '')
                 // Get all nids of type lifts.
                 $node_type = "lifts";
                 $nids = array();
-                $zonelist = array();
+                $grouplist = array();
 /*
                 $result_all = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
                 while ($obj = db_fetch_object ($result)) {
@@ -701,14 +701,29 @@ function jav_block_view($delta = '')
                     $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
                     $sid = $field_dev[0]['safe_value'];
                     $sid_list[] = $sid;
-                    
+
+		    //dpm($nid, $sid);
+		    //$og_id = current($node->og_groups);
+		    $og_groups = og_get_entity_groups('node', $node);
+		    foreach ($og_groups as $entity_type => $og_memberships) {
+			foreach ($og_memberships as $membership_id => $entity_id) {
+			    if ($entity_type == 'node') {
+			        $group_node = node_load($entity_id);
+	                        //dpm($group_node->title);
+		                $grouplist[$sid] = $group_node->title;
+			    }
+			}
+	            }
+		    //dpm($grouplist);
                     //$field_dev2 = field_get_items('node', $node, 'field_blk_zone', 'en');
                     //$uid = $field_dev2['target_id'];
                     //dpm($uids);
                     //$test = $node->get('tags')->referencedEntities();
+		    /*
                     $node_wrapper = entity_metadata_wrapper('node', $node);
                     $zone = $node_wrapper->field_blk_zone->value()->name;
-                    $zonelist[$sid] = $zone;
+		    $zonelist[$sid] = $zone;
+		     */
                 }
                 
                 $filter->sidList = $sid_list;
@@ -725,7 +740,7 @@ function jav_block_view($delta = '')
                 $header = array(
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     //array('data' => t('Address'), 'colspan' => 3),
-                    array('data' => t('Zone')),
+                    array('data' => t('Town Council')),
                     array('data' => t('Lift ID')),
                     array('data' => t('Reported Date')),
                     array('data' => t('Time')),
@@ -742,8 +757,8 @@ function jav_block_view($delta = '')
                     $dt = $date->format('d-m-Y');
                     $tt = $date->format('g:i a');
                     //print_r($dtime, $row->snum);
-                    $zone = $zonelist[$row->snum];
-                    $items[] = array($zone, $row->snum, $dt, $tt, $row->etype, $row->remarks);
+                    $og_group = $grouplist[$row->snum];
+                    $items[] = array($og_group, $row->snum, $dt, $tt, $row->etype, $row->remarks);
                 }
                 //dpm($items);
 
