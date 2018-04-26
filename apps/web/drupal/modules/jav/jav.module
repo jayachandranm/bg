@@ -74,43 +74,80 @@ function jav_permission()
 function jav_init()
 {
     // Any init code goes here. eg. drupal_add_js.
-    if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
-        // The library is installed. 
+
+    if (($lib_avail = libraries_detect('moment')) && !empty($lib_avail['installed'])) {
+        // The library is installed.
         //dpm($lib_avail);
     } else {
         // Something went wrong. :(
-        print_r("Error: Library datatables is not installed</br>");
+        print_r("Error: Library moment is not installed</br>");
         // This contains a short status code of what went wrong, such as 'not found'.
         $error = $lib_avail['error'];
         // This contains a detailed (localized) error message.
         $error_message = $lib_avail['error message'];
         print_r($error_message);
     }
-
-// Try to load the library and check if that worked.
-    if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
+    // Try to load the library and check if that worked.
+    if (($lib_load = libraries_load('moment')) && !empty($lib_load['loaded'])) {
         //dpm($lib_load);
         // Do something with the library here.
+        //print_r("Library datatables loaded.");
+    } else {
+        print_r("Error: Library moment is not loaded.");
+    }
+
+    if (($lib_avail = libraries_detect('bootstrap-datetimepicker')) && !empty($lib_avail['installed'])) {
+        //dpm($lib_avail);
+    } else {
+        print_r("Error: Library bootstrap-datetimepicker is not installed</br>");
+        $error = $lib_avail['error'];
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
+    // Try to load the library and check if that worked.
+    if (($lib_load = libraries_load('bootstrap-datetimepicker')) && !empty($lib_load['loaded'])) {
+        //print_r("Library bootstrap-datetimepicker loaded.");
+    } else {
+        print_r("Error: Library bootstrap-datetimepicker is not loaded.");
+    }
+
+
+    if (($library = libraries_detect('pdfmake')) && !empty($library['installed'])) {
+        //print_r("pdfmake loaded");
+    }
+    else {
+        $error = $library['error'];
+        $error_message = $library['error message'];
+        print_r("pdfmake not installed.");
+    }
+    //
+    if (($lib_load = libraries_load('pdfmake')) && !empty($lib_load['loaded'])) {
+        //print_r("Library pdfmake loaded.");
+    } else {
+        print_r("Error: Library pdfmake is not loaded.");
+    }
+
+
+    if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
+        // The library is installed. 
+        //dpm($lib_avail);
+    } else {
+        // Something went wrong. :(
+        print_r("Error: Library datatables is not installed</br>");
+        $error = $lib_avail['error'];
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
+
+    // Try to load the library and check if that worked.
+    if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
         //print_r("Library datatables loaded.");
     } else {
         print_r("Error: Library datatables is not loaded.");
     }
 
-    drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
-    drupal_add_js(drupal_get_path('module', 'jav') . '/jav_reports.js');
-    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js', 'external');
-    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.flash.min.js', 'external');
-    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js', 'external');
-    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js', 'external');
-    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js', 'external');
-    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js', 'external');
-    drupal_add_js('https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js', 'external');
-    drupal_add_js('https://code.jquery.com/ui/1.12.1/jquery-ui.js', 'external');
-    drupal_add_js('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.0/moment.js', 'external');
-    drupal_add_js(drupal_get_path('module', 'jav') . '/bootstrap-datetimepicker.js');
-    drupal_add_css(drupal_get_path('module', 'jav') . '/bootstrap-datetimepicker.css');
-    drupal_add_js(drupal_get_path('module', 'jav') . '/jquery.dataTables.yadcf.js');
-    drupal_add_css(drupal_get_path('module', 'jav') .'/jquery.dataTables.yadcf.css');
+    // TODO: Attach the JS to Dashboard view.
+    drupal_add_js(drupal_get_path('module', 'jav') .'/jav.js');
     //drupal_add_css(drupal_get_path('module', 'jav') .'/your-css.css');
     //drupal_add_css(drupal_get_path('theme', 'hdbjav') .'/your-css.css');
 }
@@ -134,10 +171,30 @@ function jav_libraries_info()
             'files' => array(
                 'js' => array(
                     'moment.min.js',
+                    //'moment.js',
                 ),
             ),
         );
     }
+
+
+    if (($library_path = libraries_get_path('bootstrap-datetimepicker'))) {
+        $libraries['bootstrap-datetimepicker'] = array(
+            'name' => 'Bootstrap datetime picker',
+            'vendor url' => 'https://eonasdan.github.io/bootstrap-datetimepicker/',
+            'download url' => 'https://eonasdan.github.io/bootstrap-datetimepicker/',
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'bootstrap-datetimepicker.js',
+                ),
+                'css' => array(
+                    'bootstrap-datetimepicker.css' => array(),
+                ),
+            ),
+        );
+    }
+
     if (($library_path = libraries_get_path('daterangepicker'))) {
         //print_r("Daterange lib path OK.");
 
@@ -196,6 +253,24 @@ function jav_libraries_info()
             ),
         );
     }
+
+    if (($library_path = libraries_get_path('pdfmake'))) {
+        $libraries['pdfmake'] = array(
+            'name' => 'pdfmake',
+            'vendor url' => 'https://github.com/bpampuch/pdfmake',
+            'download url' => 'https://github.com/bpampuch/pdfmake',
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'jszip.min.js',
+                    'pdfmake.min.js',
+                    'vfs_fonts.js',
+                ),
+            ),
+        );
+    }
+
+
     if (($library_path = libraries_get_path('datatables'))) {
         $libraries['datatables'] = array(
             'name' => 'Datatables',
@@ -206,10 +281,15 @@ function jav_libraries_info()
                 'js' => array(
                     'media/js/jquery.dataTables.js',
                     'media/js/dataTables.bootstrap.js',
+                    'buttons_file_export/buttons.html5.min.js',
+                    'buttons_file_export/buttons.print.min.js',
+                    'buttons_file_export/dataTables.buttons.min.js',
+                    'yadcf/jquery.dataTables.yadcf.js',
                 ),
                 'css' => array(
                     //'jquery.dataTables.css' => array(),
                     'media/css/dataTables.bootstrap.css' => array(),
+                    'yadcf/jquery.dataTables.yadcf.css' => array(),
                 ),
             ),
         );
@@ -530,7 +610,8 @@ function jav_block_view($delta = '')
                 //dpm($items);
 
 
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+                $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+		dpm($block);
 
             } // if user_access
             break;
@@ -590,7 +671,7 @@ function jav_block_view($delta = '')
                 //dpm($items);
 
 
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
+                $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
 
             } // if user_access
             break;
@@ -651,29 +732,29 @@ function jav_block_view($delta = '')
                 }
                 //dpm($items);
 
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sensor-status-table')));
+                $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sensor-status-table')));
 
             } // if user_access
             break;
         case 'reports':
-            $block['content']['#attached']['js'] = array(
-                array(
-                    'type' => 'file',
-                    'data' => $mpath . '/jav_reports.js',),
-            );
             if (user_access('access content')) {
                 $block = array
                 (
                     'subject' => t(''),
                     'content' => array
                     (
-                        'eventlist_block' => array
+                        'reports_block' => array
                         (
                             '#prefix' => "<div id='reports'>",
                             '#suffux' => "</div>",
                             '#markup' => t("Reports....."),
                         ),
                     ),
+                );
+                $block['content']['#attached']['js'] = array(
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav_reports.js',),
                 );
 
                 $reqtype = 'rpt';
@@ -702,28 +783,28 @@ function jav_block_view($delta = '')
                     $sid = $field_dev[0]['safe_value'];
                     $sid_list[] = $sid;
 
-		    //dpm($nid, $sid);
-		    //$og_id = current($node->og_groups);
-		    $og_groups = og_get_entity_groups('node', $node);
-		    foreach ($og_groups as $entity_type => $og_memberships) {
-			foreach ($og_memberships as $membership_id => $entity_id) {
-			    if ($entity_type == 'node') {
-			        $group_node = node_load($entity_id);
-	                        //dpm($group_node->title);
-		                $grouplist[$sid] = $group_node->title;
-			    }
-			}
-	            }
-		    //dpm($grouplist);
+                    //dpm($nid, $sid);
+                    //$og_id = current($node->og_groups);
+                    $og_groups = og_get_entity_groups('node', $node);
+                    foreach ($og_groups as $entity_type => $og_memberships) {
+                        foreach ($og_memberships as $membership_id => $entity_id) {
+                            if ($entity_type == 'node') {
+                                $group_node = node_load($entity_id);
+                                //dpm($group_node->title);
+                                $grouplist[$sid] = $group_node->title;
+                            }
+                        }
+    	            }
+	        	    //dpm($grouplist);
                     //$field_dev2 = field_get_items('node', $node, 'field_blk_zone', 'en');
                     //$uid = $field_dev2['target_id'];
                     //dpm($uids);
                     //$test = $node->get('tags')->referencedEntities();
-		    /*
+		            /*
                     $node_wrapper = entity_metadata_wrapper('node', $node);
                     $zone = $node_wrapper->field_blk_zone->value()->name;
-		    $zonelist[$sid] = $zone;
-		     */
+		            $zonelist[$sid] = $zone;
+		            */
                 }
                 
                 $filter->sidList = $sid_list;
@@ -762,9 +843,8 @@ function jav_block_view($delta = '')
                 }
                 //dpm($items);
 
-
-                $block['content'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'reports-table')));
-
+                //$block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'reports-table')));
+                $block['content']['reports_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'reports-table')));
             } // if user_access
             break;
         case 'aob':
