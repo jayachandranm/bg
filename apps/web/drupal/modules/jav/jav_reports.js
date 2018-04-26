@@ -39,7 +39,8 @@ $.fn.dataTable.ext.search.push(
     { 
         column_number : 1,
         filter_container_id: 'external_filter_container_1',
-        filter_type: "auto_complete",
+        //filter_type: 'auto_complete',
+        filter_type: 'text',
         text_data_delimiter: ","
     },
     {
@@ -55,10 +56,13 @@ $.fn.dataTable.ext.search.push(
         column_number : 4,
         filter_container_id: 'external_filter_container_3'
     },
+/*
     {
         column_number : 5,
         filter_container_id: 'external_filter_container_4'
-    }],
+    }
+*/
+    ],
     //{ externally_triggered: true} 
     );
 });
