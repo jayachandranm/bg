@@ -67,13 +67,13 @@ DynStream.prototype._read = function read() {
       self.push(desc);
       desc = "";
       self.push(desc);
-      var desc = { dt: "Critical level ", wa: '', mrl: cl + " mRL", md: '' }
+      var desc = { dt: "Critical level ", wa: cl, mrl: "mRL", md: '' }
       self.push(desc);
-      var desc = { dt: "Cope/Soffit level ", wa: '', mrl: cl + " mRL", md: '' }
+      var desc = { dt: "Cope/Soffit level ", wa: cl, mrl: "mRL", md: '' }
       self.push(desc);
-      var desc = { dt: "Sensor level ", wa: '', mrl: op_lvl + " mRL", md: '' }
+      var desc = { dt: "Sensor level ", wa: op_lvl, mrl:  "mRL", md: '' }
       self.push(desc);
-      var desc = { dt: "Invert level ", wa: '', mrl: inv_lvl + " mRL", md: '' }
+      var desc = { dt: "Invert level ", wa: inv_lvl, mrl:  "mRL", md: '' }
       self.push(desc);
       desc = "";
       self.push(desc);
