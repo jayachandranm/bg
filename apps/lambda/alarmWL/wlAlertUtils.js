@@ -2,6 +2,8 @@
 var AWS = require("aws-sdk");
 //var http = require('http');
 var moment = require('moment');
+var bs = require('binarysearch');
+var math = require('mathjs')
 
 //module.exports.getAlertlevelRise = getAlertlevelRise;
 
@@ -15,12 +17,38 @@ module.exports = {
 
 function getAlertlevelRise(currWL, lastWL, config) {
     var alertLevel = 0;
+    var riseThresholds = config.riseThrs;
+    //
+    var thrBins = bs.rangeValue(riseThresholds, lastWL, currWL);
+    var thrIdxRange = bs.range(riseThresholds, lastWL, currWL);
+    // thrBins === undefined ||
+    if (thrBins.length == 0) {
+        // Neither value is within the range of interest. alertLevel remains 0.
+        console.log("No Thr bins, both values outside threshold ranges, no alerts.");
+    }
+    if (thrBins.length == 1) {
+        // Either both values are split across a threshold.
+        // OR at least one of the values is exactly at the threshold.
+        if(lastWL == thrBins[0]) {
+            console.log("Single Thr bin, caused by last value on Thr, no alerts.");
+        } 
+        else {
+            alertLevel = thrBins[0];
+            console.log("Both values within same threshold range, no alerts.");
+        }
+    }
+    if (thrBins.length > 1) {
+        // A large jump, at least one complete threshold level. Mark this as alert and handle separately.
+        alertLevel = thrBins[thrBins.length - 1];
+        console.log("Large jump, at least one complete threshold range, set alert.");
+    }
 /*
     if ((currWL >= config.riseThr_cr) && (lastWL < config.riseThr_cr)) {
         // critical.
         alertLevel = 200;
     }
     else */
+    /*
     if ((currWL >= config.riseThr_d) && (lastWL < config.riseThr_d)) {
         alertLevel = 100;
     }
@@ -33,18 +61,51 @@ function getAlertlevelRise(currWL, lastWL, config) {
     else if ((currWL >= config.riseThr_a) && (lastWL < config.riseThr_a)) {
         alertLevel = 50;
     }
+    */
 
     return alertLevel;
-
 }
 
 function getAlertlevelFall(currWL, lastWL, delta, config) {
     var alertLevel = 0;
+    var fallThresholds = config.fallThrs;
+    //
     var Thr_a = config.fallThr_a - delta;
     var Thr_b = config.fallThr_b - delta;
     var Thr_c = config.fallThr_c - delta;
     var Thr_d = config.fallThr_d - delta;
     var Thr_cr = config.fallThr_cr - delta;
+    //
+    var fallThresholds2 = fallThresholds.map( function(value) { 
+        return value - delta; 
+    } );
+    // Here currWL is the lower range than lastWL.
+    var thrBins = bs.rangeValue(riseThresholds2, currWL, lastWL);
+    var thrIdxRange = bs.range(riseThresholds2, currWL, lastWL);
+    //
+    if (thrBins.length == 0) {
+        // Neither value is within the range of interest. alertLevel remains 0.
+        console.log("No Thr bins, both values outside threshold ranges, no alerts.");
+    }
+    if (thrBins.length == 1) {
+        // Either both values are split across a threshold.
+        // OR at least one of the values is exactly at the threshold.
+        if(lastWL == thrBins[0]) {
+            console.log("Single Thr bin, caused by last value on Thr, no alerts.");
+        } 
+        else {
+            alertLevel = thrBins[0];
+            console.log("Both values within same threshold range, no alerts.");
+        }
+    }
+    if (thrBins.length > 1) {
+        // A large jump, at least one complete threshold level. Mark this as alert and handle separately.
+        // For fall select the lower range value for threshold.
+        alertLevel = thrBins[0];
+        console.log("Large jump, at least one complete threshold range, set alert.");
+    }
+
+    /*
     if ((currWL < Thr_a) && (lastWL >= Thr_a)) {
         // Special value, to indicate change to normal level.
         alertLevel = 50;
@@ -58,13 +119,13 @@ function getAlertlevelFall(currWL, lastWL, delta, config) {
     else if ((currWL < Thr_d) && (lastWL >= Thr_d)) {
         alertLevel = 100;
     }
+    */
 /*
     else if ((currWL < Thr_cr) && (lastWL >= Thr_cr)) {
         alertLevel = 200;
     }
 */
     return alertLevel;
-
 }
 
 function getShadowState(iotdata, config) {
@@ -77,10 +138,6 @@ function getShadowState(iotdata, config) {
             //context.fail(err);
             // TODO:
             console.log("Error in getting Shadow.", err);
-            //console.log("Request:");
-            //console.log(this.request.httpRequest);
-            //console.log("Response:");
-            //console.log(this.httpResponse);
             return null;
         } else {
             var jsonPayload = JSON.parse(data.payload);
