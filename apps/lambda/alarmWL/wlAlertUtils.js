@@ -9,6 +9,7 @@ module.exports = {
     getAlertlevelRise,
     getAlertlevelFall,
     getShadowState,
+    setShadowState,
     composeSMS
 };
 
@@ -90,13 +91,12 @@ function getShadowState(iotdata, config) {
     });
 }
 
-/*
 function setShadowState(iotdata, config) {
-    var newStatus = "5 battery rd";
+    var newStatus = config.mode;
     var update = {
         "state": {
             "desired": {
-                "location": newStatus
+                "mode": newStatus
             }
         }
     };
@@ -114,7 +114,6 @@ function setShadowState(iotdata, config) {
         }
     });
 }
-*/
 
 //
 function composeSMS(msg, alertLevel, wlRise, devState) {
@@ -126,7 +125,12 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
     //options.timeZoneName = 'short';
     // date.toLocaleString();
     // moment().local() may not work as the AWS server may not be in SG timezone.
-    var dt = moment(msg.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); // moment (Date);
+    console.log("TS-2: ", msg.ts);
+    // moment (Date); 
+    //var dt = moment(msg.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); 
+    var timeNow = new Date();
+    console.log(timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds());
+    var dt = moment(timeNow).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); 
     //dt.format("YYYY-MM-DD hh:mm:ss");
     var alertLevelTxt = alertLevel.toString() + "%";
     if(alertLevel === 200) {
