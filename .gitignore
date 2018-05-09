@@ -103,3 +103,5 @@ typings/
 #AOB
 *.lock
 
+# PHP Config files
+*.config.inc
