@@ -59,3 +59,7 @@
     //options.timeZoneName = 'short';
     // date.toLocaleString();
     // moment().local() may not work as the AWS server may not be in SG timezone.
+
+        // moment (Date); 
+    //var dt = moment(msg.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss"); 
+    //dt.format("YYYY-MM-DD hh:mm:ss");

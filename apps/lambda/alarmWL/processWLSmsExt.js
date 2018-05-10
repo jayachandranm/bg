@@ -1,12 +1,11 @@
 //console.log('Loading function');
 // Load the AWS SDK
 var AWS = require("aws-sdk");
-var http = require('http');
-//var sync_request = require('sync-request');
+//var http = require('http');
 var https = require('https');
+//var sync_request = require('sync-request');
 var utils = require('./wlAlertUtils');
 var config = require('./config.json');
-//var mqttmsg = require('./mqtt.json');
 var dateFormat = require('dateformat');
 var moment = require('moment');
 
@@ -26,7 +25,7 @@ module.exports.processWL = processWL;
 
 // Set up the code to call when the Lambda function is invoked
 //exports.handler = (event, context, callback) => {
-function processWL(stream, context) {
+function processWL(stream, context, callback) {
     // Load the message passed into the Lambda function into a JSON object
     //var eventText = JSON.stringify(msg, null, 2);
     var record_0 = stream.Records[0].dynamodb;
@@ -36,7 +35,6 @@ function processWL(stream, context) {
  
     var msg_0 = record_0.NewImage;
     var msg = parse({"M": msg_0});
-    console.log("New msg:", msg);
     //console.log("Received DDB record-0 (NewImage):", JSON.stringify(msg_0, null, 2));
     var currWL = msg_0.wl.N;
     var lastWL = currWL;
@@ -46,19 +44,33 @@ function processWL(stream, context) {
     var ts_unix = msg_0.ts.N;
     var ts_r = msg_0.ts_r.S;
 
+    if(!sid.includes("TST")) {
+        console.log("Not TEST device, ignore.")
+        return;
+    }
+    //
+    console.log("New msg:", msg);
+
     // If md is defined, do nothing, just return.
     //if (msg.hasOwnProperty(md) ) { // && msg.md !== null) {
     if (typeof(msg.md) !== 'undefined') { // && msg.md !== null) {
         console.log("Flag md set, either maintenance or spike. Recieved Record: ", eventText);
+        callback(null, "Maintenance, Exit.");
         return;
     }
 
-    var riseMinThr = config.riseThrs[0];
-    var fallMinThr = config.riseThrs[0];
+    var riseLevels = process.env.RISE_LVLS === undefined ? config.riseLvls : process.env.RISE_LVLS;
+    var fallLevels = process.env.FALL_LVLS === undefined ? config.fallLvls : process.env.FALL_LVLS;
+    var crLvl = process.env.CR_LVL === undefined ? config.riseLvl_cr : process.env.CR_LVL;
+    var spikeRange = process.env.SPIKE_RANGE === undefined ? config.spikeRange : process.env.SPIKE_RANGE;
+
+    var riseMinLvl = riseLevels[0];
+    var fallMinLvl = fallLevels[0];
+
     // Find the lowest threshold of concern. To optimize on processing.
     // https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started-lambda-non-proxy-integration.html
     //let name = event.name === undefined ? 'you' : event.name;
-    var lowestThr = riseMinThr < fallMinThr ? riseMinThr : fallMinThr;
+    var lowestLvl = riseMinLvl < fallMinLvl ? riseMinLvl : fallMinLvl;
 
     var alertLevel = 0;
     var devState;
@@ -83,117 +95,112 @@ function processWL(stream, context) {
         }
         else {
             record_1 = data.Items[1];
-            console.log("Current wl=", currWL, "; TS_R=", ts_r);
+            lastWL = record_1.wl;
             console.log("Prev record: ", JSON.stringify(record_1, null, 2));
             if (typeof(record_1.md) !== 'undefined') {
                 console.log("Flag md (maintenance or spike) set in prev msg. Skip.");
+                callback(null, "Prev message is Spike or Maintenance. Exit.");
                 return;
             }
-            lastWL = record_1.wl;
             //
-            if( (currWL < lowestThr) && (lastWL < lowestThr) ) {
+            else if( (currWL < lowestLvl) && (lastWL < lowestLvl) ) {
                 // If both current and last values are below lowest thresholds, no further processing required.
                 console.log("Current and Prev values below Threshold, nothing to process.");
+                callback(null, "Both values out of active range. Exit.")
                 return;
             }
-
-            iotdata.getThingShadow({
-                thingName: sid
-            }, function (err, data) {
-                if (err) {
-                    context.fail(err);
-                    console.log("Error in getting Shadow.", err);
-                } else {
-                    var jsonPayload = JSON.parse(data.payload);
-                    //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
-                    devState = jsonPayload.state.reported;
-                    // TODO: delta will be handled on device side.
-                    //var delta = devState.delta;
-                    var delta = 0;
-
-                    var wlRise = true;
-                    if (currWL > lastWL) {
-                        wlRise = true;
-                        alertLevel = utils.getAlertlevelRise(currWL, lastWL, config);
-                        console.log("Level Rising ->", alertLevel);
+            // Handle possible device failure to detect spike.
+            else if ((currWL >= spikeRange[1]) && (lastWL < spikeRange[0])) {
+                // Set dev to maintenance mode.
+                console.log("Level increased by large margin. Set the device to maintenance mode.");
+                var config_mnt = {
+                    mode: "maintenance",
+                    thingName: msg.sid
+                };
+                utils.setShadowState(iotdata, config_mnt, function (err, data) {
+                    if (err) {
+                        //console.log("Error in setting Shadow.");
+                        context.fail(err);
+                    } else {
+                        console.log("Setting Shadow succeeded.");
                     }
-        
-                    if (currWL < lastWL) {
-                        wlRise = false;
-                        alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, config);
-                        console.log("Level Falling ->", alertLevel);
-                    }
-        
-                    // May have to use history by accessing Shadow.
-                    if (alertLevel) {
-                        // Handle possible spike from below 50% to above 50%.
-                        // If rise is not step by step, consider it spike.
-                        // Only for Rise, and wl_1 < 50%. Other conditions are already taken care.
-                        // TODO: Generalize.
-                        if ((currWL >= 75) && (lastWL < 50)) {
-                            // Set dev to maintenance mode.
-                            console.log("Level increased from below 50% to directly above 75%. Set the device to maintenance mode.");
-                            var config_mnt = {
-                                mode: "maintenance",
-                                thingName: msg.sid
-                            };
-                            utils.setShadowState(iotdata, config_mnt);
-                            // Return without sending SMS.
-                            // TODO: Make sure that function returns only after completing above operation.
-                            //return;
+                    callback(null, "Spike, device set to maintenance.");
+                    return;
+                });
+            }
+            else {
+                iotdata.getThingShadow({
+                    thingName: sid
+                }, function (err, data) {
+                    if (err) {
+                        context.fail(err);
+                        console.log("Error in getting Shadow.", err);
+                    } else {
+                        var jsonPayload = JSON.parse(data.payload);
+                        //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
+                        devState = jsonPayload.state.reported;
+                        // var delta = devState.delta
+                        // delta is handled at device side. Within delta range, wl sticks to previous value when wa changes.
+                        var delta = 0;
+                        //
+                        var wlRise = true;
+                        if (currWL > lastWL) {
+                            wlRise = true;
+                            alertLevel = utils.getAlertlevelRise(currWL, lastWL, riseLevels);
+                            console.log("Level Rising ->", alertLevel);
+                        } 
+                        else if (currWL < lastWL) {
+                            wlRise = false;
+                            alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
+                            console.log("Level Falling ->", alertLevel);
                         }
                         else {
+                            // If currWL==lastWL, no action.
+                            console.log("No Level change.");
+                        }
+                        // May have to use history by accessing Shadow.
+                        if (alertLevel) {
                             var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
+                            //
+                            var mainTopic = sid;
+                            sendMsgByTopic(sid, mainTopic, messageText);
+                            // Send message to level specific subscriptions.
+                            // (Process in parallel).
+                            var subTopic = sid + "-" + alertLevel.toString()
+                            sendMsgByTopic(sid, subTopic, messageText);
+                        } 
+                    }
+                }); // getThingShadow
+            } // else
         
-                            var subscriberList = new Array();
-                            var params_sns = {
-                                TopicArn: config.snsArn + ":" + sid
-                                //NextToken: 'STRING_VALUE'
-                            };
-                            //console.log("SNS params: ", params_sns);
-                            sns.listSubscriptionsByTopic(params_sns, function (err, data) {
-                                if (err)
-                                    console.log(err, err.stack); // an error occurred
-                                else {
-                                    //console.log("Num subscritpions: ", data.Subscriptions.length);
-                                    for (var i = 0; i < data.Subscriptions.length; i++) {
-                                        subscriberList.push(data.Subscriptions[i].Endpoint)
-                                    }
-                                    // Use the subscriber list to send SMS through external vendor.
-                                    sendMsg(sid, messageText, subscriberList);
-                                    //
-                                    // Send message to level specific subscriptions.
-                                    var subscriberList2 = new Array();
-                                    var subTopic = sid + "-" + alertLevel.toString()
-                                    console.log("Subtopic: " + subTopic);
-                                    var params_sns2 = {
-                                        TopicArn: config.snsArn + ":" + subTopic
-                                        //NextToken: 'STRING_VALUE'
-                                    };
-                                    //console.log("SNS params: ", params_sns);
-                                    sns.listSubscriptionsByTopic(params_sns2, function (err, data) {
-                                        if (err)
-                                            console.log(err, err.stack); // an error occurred
-                                        else {
-                                            //console.log("Num subscritpions: ", data.Subscriptions.length);
-                                            for (var i = 0; i < data.Subscriptions.length; i++) {
-                                                subscriberList2.push(data.Subscriptions[i].Endpoint)
-                                            }
-                                            // Use the subscriber list to send SMS through external vendor.
-                                            sendMsg(sid, messageText, subscriberList2);
-                                        }
-                                    });
-                                }
-                            }); // listSubscriptionsByTopic
-                        } // else to spike.
-                    } // if alertLevel        
-                }
-            }); // getThingShadow
-        
-        }
-    });
-} // else (get shadow success)
+        } // dyn qyery, success
+    }); // dyn qyery
+} 
 
+
+function sendMsgByTopic(sid, topicName, messageText) {
+    //
+    console.log("Topic: " + topicName);
+    var subscriberList = new Array();
+    var params_sns = {
+        TopicArn: config.snsArn + ":" + topicName
+        //NextToken: 'STRING_VALUE'
+    };
+    sns.listSubscriptionsByTopic(params_sns, function (err, data) {
+        if (err)
+            console.log(err, err.stack); // an error occurred
+        else {
+            //console.log("Num subscritpions: ", data.Subscriptions.length);
+            for (var i = 0; i < data.Subscriptions.length; i++) {
+                subscriberList.push(data.Subscriptions[i].Endpoint)
+            }
+            // Use the subscriber list to send SMS through external vendor.
+            //console.log("sendMsg...");
+            sendMsg(sid, messageText, subscriberList);
+            //
+        }
+    }); // listSubscriptionsByTopic
+}
 
 function sendMsg(sid, msgTxt, subsList) {
     var user = encodeURI(config.smsUser);
