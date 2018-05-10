@@ -1,18 +1,12 @@
 {
-    "endpointAddress": "iotArn",
-    "snsArn": "snsArn",
-    "smsUser": "myuser",
-    "smsPass": "mypass",
+    "endpointAddress": "EP",
+    "snsArn": "snsARN",
+    "smsUser": "user",
+    "smsPass": "pass",
     "smsFrom": "business",
-    "riseThr_a": 50,
-    "riseThr_b": 75,
-    "riseThr_c": 90,
-    "riseThr_d": 100,
-    "riseThr_cr": 110,
-    "fallThr_a": 50,
-    "fallThr_b": 75,
-    "fallThr_c": 90,
-    "fallThr_d": 100,
-    "fallThr_cr": 110
+    "riseLvls": [1, 2, 3, 3, 4],
+    "fallLvls": [1, 2, 3, 4, 5],
+    "riseLvl_cr": 110,
+    "spikeRange": [5, 7]
 }
 
