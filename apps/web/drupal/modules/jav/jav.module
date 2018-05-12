@@ -71,6 +71,9 @@ function jav_permission()
     );
 }
 
+/**
+ * Initilize libraries.
+ */
 function jav_init()
 {
     // Any init code goes here. eg. drupal_add_js.
@@ -424,11 +427,6 @@ function _update_db_referencing_lifts($node_supplier, $flag)
 	}
 }
 
-/**
- * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3
- *
- * Implements hook_theme().
- */
 
 /**
  * Implements hook_block_view().
@@ -868,7 +866,7 @@ function _jav_set_list($lift_list = NULL) {
 
 
 /*
-* https://www.drupal.org/node/1993228
+* Get node details for items listed under the view.
 */
 function jav_preprocess_views_view(&$vars)
 {

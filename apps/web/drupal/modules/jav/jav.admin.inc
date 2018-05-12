@@ -1,4 +1,9 @@
 <?php
+/**
+ * @file
+ * Implements admin hooks.
+ */
+
 
 /**
  * Page callback: Module admin settings page.

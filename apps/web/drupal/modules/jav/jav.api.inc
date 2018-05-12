@@ -1,7 +1,14 @@
 <?php
+/**
+ * @file
+ * Implements external DB access.
+ */
+
 
 //date_default_timezone_set('UTC');
-
+/**
+ * Retrieve data from external DB.
+ */
 function _getdata_exdb($jav_db, $reqtype, $filter)
 {
     // From admin page.
@@ -80,7 +87,9 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     return $result;
 }
 
-
+/**
+ * Update external DB table for relevant node updates.
+ */
 function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag)
 {
     Database::addConnectionInfo('JAV', 'default', $db);
@@ -114,6 +123,9 @@ function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $fla
     db_set_active();
 }
 
+/**
+ * Retrieve the contact list for the maintenance company.
+ */
 function _get_ext_db_liftlist($jav_db, $supplier_nid)
 {
     Database::addConnectionInfo('JAV', 'default', $jav_db);
