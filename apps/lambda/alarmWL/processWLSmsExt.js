@@ -36,13 +36,13 @@ function processWL(stream, context, callback) {
     var msg_0 = record_0.NewImage;
     var msg = parse({"M": msg_0});
     //console.log("Received DDB record-0 (NewImage):", JSON.stringify(msg_0, null, 2));
-    var currWL = msg_0.wl.N;
+    var currWL = msg.wl;
     var lastWL = currWL;
     //var lastWL = msg.hs.wl_1;
-    var sid = msg_0.sid.S;
+    var sid = msg.sid;
     //var thingName = sid; 
-    var ts_unix = msg_0.ts.N;
-    var ts_r = msg_0.ts_r.S;
+    var ts_unix = msg.ts;
+    var ts_r = msg.ts_r;
 
     if(!sid.includes("TST")) {
         console.log("Not TEST device, ignore.")
@@ -145,14 +145,16 @@ function processWL(stream, context, callback) {
                         //
                         var wlRise = true;
                         if (currWL > lastWL) {
+                            console.log("Level Rising..");
                             wlRise = true;
                             alertLevel = utils.getAlertlevelRise(currWL, lastWL, riseLevels);
-                            console.log("Level Rising ->", alertLevel);
+                            console.log("Rise Level ->", alertLevel);
                         } 
                         else if (currWL < lastWL) {
+                            console.log("Level Falling..");
                             wlRise = false;
                             alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
-                            console.log("Level Falling ->", alertLevel);
+                            console.log("Fall Level ->", alertLevel);
                         }
                         else {
                             // If currWL==lastWL, no action.
@@ -215,7 +217,7 @@ function sendMsg(sid, msgTxt, subsList) {
 
     // TODO: Prepare the CSV while parsing SNS response.
     var subsCsvList = '';
-    for (i = 0; i < subsList.length; i++) {
+    for (var i = 0; i < subsList.length; i++) {
         subsCsvList = subsCsvList + "," + subsList[i];
     }
 

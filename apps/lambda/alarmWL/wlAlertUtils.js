@@ -65,6 +65,7 @@ function getAlertLevel(lvlBins, lastWL, isRise) {
         // Either both values are split across a threshold.
         // OR at least one of the values is exactly at the threshold.
         if(lastWL == lvlBins[0]) {
+            // Whether Rise or Fall, in this case the bs detected value is lastWL.
             console.log("Single Lvl bin, but last value exactly on Thr, no alerts.");
         } 
         else {
@@ -148,7 +149,7 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
     
     var wlmrl = devState.invert_level + lvlmtr;
     var cope_m = copeLevel - devState.invert_level
-    wlRiseTxt = "FALL";
+    var wlRiseTxt = "FALL";
     if(wlRise) {
         wlRiseTxt = "RISE";
     }
