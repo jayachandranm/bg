@@ -18,6 +18,8 @@ var alt1Message = new Parser()
             case 6: retVal = "co"; break;
             case 7: retVal = "fire"; break;
             case 8: retVal = "light_malfunction"; break;
+            case 9: retVal = "ventilation_malfunction"; break;
+            case 10: retVal = "co_low_level"; break; // eg. smoking
             case 0xEF: retVal = "uncat"; break;
         }
         return retVal;
@@ -43,7 +45,7 @@ var alt1Message = new Parser()
 .nest('sensor', {
     type: new Parser()
     .bit1('fiber')
-    .bit1('nlri')
+    .bit1('nlri')  // Only IR_H
     .bit1('lssb')
 })
 
