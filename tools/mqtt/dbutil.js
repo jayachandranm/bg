@@ -23,10 +23,10 @@ function transformRptMsg(rptMsg) {
     var dcMsg = {}
     dcMsg['ts'] = rptMsg['ts'];
     dcMsg['sw_version'] = rptMsg['sw_version'];
-    dcMsg['rpts'] = [];
-    dcMsg['rpts']['fiber'] = [];
-    dcMsg['rpts']['lssb'] = [];
-    dcMsg['rpts']['nrli'] = [];
+    dcMsg['rpts'] = {};
+    dcMsg['rpts']['fiber'] = {};
+    dcMsg['rpts']['lssb'] = {};
+    dcMsg['rpts']['nrli'] = {};
     //
     var rptSensorGroup = rptMsg['fiber'];
     var dcMsgSensorGroup = dcMsg['rpts']['fiber'];
@@ -36,7 +36,7 @@ function transformRptMsg(rptMsg) {
         element = rptSensorGroup[key];
         if((key != 'reserved') && (element === 1) ) {
             splitVals = key.split('_');
-            dcMsgSensorGroup[splitVals[1]] = splitVals[2];
+            dcMsgSensorGroup[splitVals[1]][] = splitVals[2];
         }
     });
     //
@@ -50,7 +50,7 @@ function transformRptMsg(rptMsg) {
         if((key != 'reserved') && (element === 1) ) {
             splitVals = key.split('_');
             // eg. lssb_human_update
-            dcMsgSensorGroup[splitVals[1]] = splitVals[2];
+            dcMsgSensorGroup[splitVals[1]] = [splitVals[2]];
         }
     });
     rptSensorGroup = rptMsg['lssb2'];
