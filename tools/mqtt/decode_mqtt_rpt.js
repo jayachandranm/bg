@@ -3,6 +3,7 @@ var Parser = require('binary-parser').Parser;
 module.exports.decodeRptMessage = decodeRptMessage;
 
 var fiberFlags = new Parser()
+    .endianess('big')
     .bit1('fiber_no_update') 
     .bit1('fiber_error_1')  // Sagnac laser low power
     .bit1('fiber_error_2')  // Sagnac laser over power
@@ -11,11 +12,13 @@ var fiberFlags = new Parser()
     .bit3('reserved')
 
 var nrliFlags = new Parser()
+    .endianess('big')
     .bit1('nrli_no_update')  // Only IR_H
     .bit1('nrli_error') // Only IR_H error
     .bit6('reserved')
 
 var lssb1Flags = new Parser()
+    .endianess('big')
     .bit1('lssb_no_update')
     .bit1('lssb_human_no_update')
     .bit1('lssb_light_no_update')
@@ -26,6 +29,7 @@ var lssb1Flags = new Parser()
     .bit1('sensor_error_irl')
 
 var lssb2Flags = new Parser()
+    .endianess('big')
     .bit1('lssb_light_error')
     .bit1('lssb_spl_error')
     .bit1('lssb_co_error')
@@ -37,8 +41,8 @@ var lssb2Flags = new Parser()
 
 var rptMessage = new Parser()
     //Parser.start()
-    .endianess('little')
-    .uint16('ts')
+    .endianess('big')
+    .uint32('ts')
     .nest('fiber', {
         type: fiberFlags
     })
@@ -56,7 +60,7 @@ var rptMessage = new Parser()
 
 function decodeRptMessage(mqttData) {
     var dcMsg = rptMessage.parse(mqttData);
-    //console.log(dcMsg);
+    console.log(dcMsg);
     return dcMsg;
   }
 

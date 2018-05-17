@@ -2,26 +2,32 @@ var Parser = require('binary-parser').Parser;
 
 module.exports.decodeAlt2Message = decodeAlt2Message;
 
-var alt1Message = new Parser()
+var alt2Message = new Parser()
 //Parser.start()
-.endianess('little')
-.uint16('ts')
+.endianess('big')
+.uint32('ts')
 .uint8('type', {
     formatter: function(val) {
         var retVal = "uncat";
         switch(val) {
-            case 1: retVal = "fiber_no_update"; break;
-            case 2: retVal = "nrli_no_update"; break; // Only IR_H
-            case 3: retVal = "lssb_human_no_update"; break;
-            case 4: retVal = "lssb_light_no_update"; break;
-            case 5: retVal = "lssb_spl_no_update"; break;
-            case 6: retVal = "lssb_co_no_update"; break;
+            case 1: retVal = "fiber_no_update"; 
+            break;
+            case 2: retVal = "nrli_no_update"; 
+            break; // Only IR_H
+            case 3: retVal = "lssb_human_no_update"; 
+            break;
+            case 4: retVal = "lssb_light_no_update"; 
+            break;
+            case 5: retVal = "lssb_spl_no_update"; 
+            break;
+            case 6: retVal = "lssb_co_no_update"; 
+            break;
             case 7: retVal = "lssb_nh3_no_update"; break;
             case 8: retVal = "lssb_misc_no_update"; break;
             case 10: retVal = "fiber_error_1"; break; // Sagnac low power.
             case 11: retVal = "fiber_error_2"; break; // Sagnac over power.
             case 12: retVal = "fiber_error_3"; break;  // MZ low power.
-            case 12: retVal = "fiber_error_4"; break;  // MZ over power.
+            case 13: retVal = "fiber_error_4"; break;  // MZ over power.
             case 20: retVal = "nrli_error"; break;   // Only IR_H
             case 30: retVal = "lssb_irl_error"; break;
             case 31: retVal = "lssb_light_error"; break;

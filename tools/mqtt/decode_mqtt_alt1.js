@@ -4,8 +4,8 @@ module.exports.decodeAlt1Message = decodeAlt1Message;
 
 var alt1Message = new Parser()
 //Parser.start()
-.endianess('little')
-.uint16('ts')
+.endianess('big')
+.uint32('ts')
 .uint8('type', {
     formatter: function(val) {
         var retVal = "uncat";
@@ -25,6 +25,13 @@ var alt1Message = new Parser()
         return retVal;
       }    
 })
+.uint8('set_reset')
+.nest('sensor', {
+    type: new Parser()
+    .bit1('fiber')
+    .bit1('nlri')  // Only IR_H
+    .bit1('lssb')
+})
 /*
 .choice('alert', {
     tag: 'type',
@@ -41,13 +48,6 @@ var alt1Message = new Parser()
     }
 })
 */
-.uint8('set_reset')
-.nest('sensor', {
-    type: new Parser()
-    .bit1('fiber')
-    .bit1('nlri')  // Only IR_H
-    .bit1('lssb')
-})
 
 
 function decodeAlt1Message(mqttData) {

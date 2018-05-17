@@ -47,7 +47,7 @@ function updateTime(dcMsg) {
     var currTime = Date.now() / 1000 | 0;
     console.log('Update DC Time, Server time: ', currTime);
     var dataToDev = c.uint8('0x3D')
-    .uint16(currTime)
+    .uint16be(currTime)
     .result();
 
     //console.log(dataToDev);
