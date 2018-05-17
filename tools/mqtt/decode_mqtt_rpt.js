@@ -4,29 +4,29 @@ module.exports.decodeRptMessage = decodeRptMessage;
 
 var fiberFlags = new Parser()
     .endianess('big')
-    .bit1('fiber_no_update') 
-    .bit1('fiber_error_1')  // Sagnac laser low power
-    .bit1('fiber_error_2')  // Sagnac laser over power
-    .bit1('fiber_error_3')  // MZ laser low power
-    .bit1('fiber_error_4')  // MZ laser over power
+    .bit1('fiber_fiber_noupdate') 
+    .bit1('fiber_fiber_error1')  // Sagnac laser low power
+    .bit1('fiber_fiber_error2')  // Sagnac laser over power
+    .bit1('fiber_fiber_error3')  // MZ laser low power
+    .bit1('fiber_fiber_error4')  // MZ laser over power
     .bit3('reserved')
 
 var nrliFlags = new Parser()
     .endianess('big')
-    .bit1('nrli_no_update')  // Only IR_H
-    .bit1('nrli_error') // Only IR_H error
+    .bit1('nrli_nrli_noupdate')  // Only IR_H
+    .bit1('nrli_nrli_error') // Only IR_H error
     .bit6('reserved')
 
 var lssb1Flags = new Parser()
     .endianess('big')
-    .bit1('lssb_no_update')
-    .bit1('lssb_human_no_update')
-    .bit1('lssb_light_no_update')
-    .bit1('lssb_spl_no_update')
-    .bit1('lssb_co_no_update')
-    .bit1('lssb_nh3_no_update')
-    .bit1('lssb_misc_no_update')
-    .bit1('sensor_error_irl')
+    .bit1('lssb_all_noupdate')
+    .bit1('lssb_human_noupdate')
+    .bit1('lssb_light_noupdate')
+    .bit1('lssb_spl_noupdate')
+    .bit1('lssb_co_noupdate')
+    .bit1('lssb_nh3_noupdate')
+    .bit1('lssb_misc_noupdate')
+    .bit1('lssb_irl_error')
 
 var lssb2Flags = new Parser()
     .endianess('big')
@@ -46,7 +46,7 @@ var rptMessage = new Parser()
     .nest('fiber', {
         type: fiberFlags
     })
-    .nest('nrli', {
+    .nest('nrli', { // IR_H
         type: nrliFlags
     })
     .nest('lssb1', {

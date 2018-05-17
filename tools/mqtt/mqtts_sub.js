@@ -62,20 +62,21 @@ client.on('message', function (topic, message) {
   }
   var liftId = topicFields[0];
   var javTopic = topicFields[1];
-  var clientId = message.clientId;
+  //var clientId = message.clientId;
   switch(javTopic) {
 	  case 'rpt':
 	  var base64str = new Buffer(message).toString('hex');
 	  console.log('DATA(base64) ' +  ': ' + base64str);
-	  var dcMsg = decode_rpt.decodeRptMessage(message);
-	  dbutil.add2dbAlerts(clientId, dcMsg);
+	  var rptMsg = decode_rpt.decodeRptMessage(message);
+	  var dcMsg = dbutil.transformRptMsg(rptMsg);
+	  dbutil.add2dbErrors(liftId, dcMsg);
 	  //var dcMsg = decode_alt1.decodeAlt1Message(message);
 	  var replyMsg = assemble.rptReply(dcMsg);
 	  client.publish('res', replyMsg);
 	  break;
 	  case 'alt1':
 	  var dcMsg = decode_alt1.decodeAlt1Message(message);
-	  dbutil.add2dbAlerts(clientId, dcMsg);
+	  dbutil.add2dbAlerts(liftId, dcMsg);
 	  var replyMsg = assemble.alt1Reply(dcMsg);
 	  client.publish('res', replyMsg);
 	  var event = "";
@@ -84,8 +85,9 @@ client.on('message', function (topic, message) {
 	  }
 	  break;
 	  case 'alt2':
-	  var dcMsg = decode_alt2.decodeAlt2Message(message);
-	  dbutil.add2dbErrors(clientId, dcMsg);
+	  var altMsg = decode_alt2.decodeAlt2Message(message);
+	  var dcMsg = dbutil.transformAlt2Msg(altMsg);
+	  dbutil.add2dbErrors(liftId, dcMsg);
 	  var replyMsg = assemble.alt2Reply(dcMsg);
 	  client.publish('res', replyMsg);	  
 	  break;

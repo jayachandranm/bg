@@ -10,25 +10,25 @@ var alt2Message = new Parser()
     formatter: function(val) {
         var retVal = "uncat";
         switch(val) {
-            case 1: retVal = "fiber_no_update"; 
+            case 1: retVal = "fiber_fiber_noupdate"; 
             break;
-            case 2: retVal = "nrli_no_update"; 
+            case 2: retVal = "nrli_nrli_noupdate"; 
             break; // Only IR_H
-            case 3: retVal = "lssb_human_no_update"; 
+            case 3: retVal = "lssb_human_noupdate"; 
             break;
-            case 4: retVal = "lssb_light_no_update"; 
+            case 4: retVal = "lssb_light_noupdate"; 
             break;
-            case 5: retVal = "lssb_spl_no_update"; 
+            case 5: retVal = "lssb_spl_noupdate"; 
             break;
-            case 6: retVal = "lssb_co_no_update"; 
+            case 6: retVal = "lssb_co_noupdate"; 
             break;
-            case 7: retVal = "lssb_nh3_no_update"; break;
-            case 8: retVal = "lssb_misc_no_update"; break;
-            case 10: retVal = "fiber_error_1"; break; // Sagnac low power.
-            case 11: retVal = "fiber_error_2"; break; // Sagnac over power.
-            case 12: retVal = "fiber_error_3"; break;  // MZ low power.
-            case 13: retVal = "fiber_error_4"; break;  // MZ over power.
-            case 20: retVal = "nrli_error"; break;   // Only IR_H
+            case 7: retVal = "lssb_nh3_noupdate"; break;
+            case 8: retVal = "lssb_misc_noupdate"; break;
+            case 10: retVal = "fiber_fiber_error1"; break; // Sagnac low power.
+            case 11: retVal = "fiber_fiber_error2"; break; // Sagnac over power.
+            case 12: retVal = "fiber_fiber_error3"; break;  // MZ low power.
+            case 13: retVal = "fiber_fiber_error4"; break;  // MZ over power.
+            case 20: retVal = "nrli_nrli_error"; break;   // Only IR_H
             case 30: retVal = "lssb_irl_error"; break;
             case 31: retVal = "lssb_light_error"; break;
             case 32: retVal = "lssb_spl_error"; break;
