@@ -10,12 +10,13 @@ module.exports.transformRptMsg = transformRptMsg;
 module.exports.transformAlt2Msg = transformAlt2Msg;
 module.exports.transformAlt1Msg = transformAlt1Msg;
 
+
 var pool = mysql.createPool({
     connectionLimit: 10,
-    host: config.mysql.host,
-    user: config.mysql.user,
-    password: config.mysql.pass,
-    database: config.mysql.db
+    host: 'localhost',
+    user: 'jav',
+    password: 'hdb%jav$1',
+    database: 'jav_data'
 });
 
 function transformRptMsg(rptMsg) {
@@ -36,7 +37,10 @@ function transformRptMsg(rptMsg) {
         element = rptSensorGroup[key];
         if((key != 'reserved') && (element === 1) ) {
             splitVals = key.split('_');
-            dcMsgSensorGroup[splitVals[1]][] = splitVals[2];
+            if(!dcMsgSensorGroup[splitVals[1]]) {
+                dcMsgSensorGroup[splitVals[1]] = [];
+            }
+            dcMsgSensorGroup[splitVals[1]].push(splitVals[2]);
         }
     });
     //
@@ -50,7 +54,10 @@ function transformRptMsg(rptMsg) {
         if((key != 'reserved') && (element === 1) ) {
             splitVals = key.split('_');
             // eg. lssb_human_update
-            dcMsgSensorGroup[splitVals[1]] = [splitVals[2]];
+            if(!dcMsgSensorGroup[splitVals[1]]) {
+                dcMsgSensorGroup[splitVals[1]] = [];
+            }
+            dcMsgSensorGroup[splitVals[1]].push(splitVals[2]);
         }
     });
     rptSensorGroup = rptMsg['lssb2'];
@@ -61,7 +68,10 @@ function transformRptMsg(rptMsg) {
         element = rptSensorGroup[key];
         if((key != 'reserved') && (element === 1) ) {
             splitVals = key.split('_');
-            dcMsgSensorGroup[splitVals[1]] = splitVals[2];
+            if(!dcMsgSensorGroup[splitVals[1]]) {
+                dcMsgSensorGroup[splitVals[1]] = [];
+            }
+            dcMsgSensorGroup[splitVals[1]].push(splitVals[2]);
         }
     });
     rptSensorGroup = rptMsg['nrli'];
@@ -72,10 +82,14 @@ function transformRptMsg(rptMsg) {
         element = rptSensorGroup[key];
         if((key != 'reserved') && (element === 1) ) {
             splitVals = key.split('_');
-            dcMsgSensorGroup[splitVals[0]] = splitVals[1];
+            if(!dcMsgSensorGroup[splitVals[1]]) {
+                dcMsgSensorGroup[splitVals[1]] = [];
+            }
+            dcMsgSensorGroup[splitVals[1]].push(splitVals[2]);
         }
     });
-    console.log(dcMsg);
+    //console.log(dcMsg);
+    console.log(JSON.stringify(dcMsg, null, 4));
     return dcMsg;
 }
 
@@ -102,36 +116,44 @@ function transformAlt1Msg(alt1Msg) {
     //
 }
 
-function add2dbAlerts(clientID, arrVals) {
-    for (i = 0; i < arrVals.length; i++) {
-        var testVals = arrVals[i];
-        //
-
-        var dt = testVals.date_time;
-        var yr = '20' + dt.year;
-        // NOTE: Month starts from 0.
-        var utime = new Date(yr, dt.month - 1, dt.day, dt.hour, dt.minute, dt.second).getTime();
+function add2dbAlerts(liftId, dcMsg) {
+        console.log("user: ", config.mysql.user)
+        var uTime = dcMsg['ts'] * 1000;
+        var liftEvent = dcMsg['type'];
+        var srcSensorGroup = dcMsg['sensor'];
+        var sGroup = "";
+        var isSet = dcMsg['set_reset'];
+        var msgType = 'event';
+        Object.keys(srcSensorGroup).forEach(function(key,index) {
+          var elementVal = srcSensorGroup[key];
+          if(elementVal === 1) {
+            sGroup = sGroup + ',' + key;
+          }
+        });
         //
         var dateNow = new Date();
         var currTimeMillis = Date.now();
         var offset = dateNow.getTimezoneOffset();
         //console.log(offset);
-        var adjTime = utime + (8 * 60 * 60 * 1000);
+        var adjTime = uTime + (8 * 60 * 60 * 1000);
         var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
-        console.log("GPS time :", utime, "=>", datetime_db);
+        console.log("Event time :", uTime, "=>", datetime_db);
 
         pool.getConnection(function (err, connection) {
             // Use the connection
-            connection.query('INSERT INTO alarms SET ?',
-                {sid: clientID, timestamp: utime, datetime: datetime_db, longitude: LocLong, latitude: LocLat},
+            if(err) {
+              console.log("DB connection error: ", err);
+            }
+            else {
+            connection.query('INSERT INTO lift_events SET ?',
+                {lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, is_set: isSet, value: liftEvent},
                 function (err, result) {
                     connection.release();
                     if (err) throw err;
-
                     console.log(result.insertId);
                 });
+            }
         });
-    }
 }
 
 function add2dbErrors(clientID, arrVals) {}
