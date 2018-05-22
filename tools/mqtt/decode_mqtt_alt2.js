@@ -73,6 +73,7 @@ var alt2Message = new Parser()
 function decodeAlt2Message(mqttData) {
     var dcMsg = alt2Message.parse(mqttData);
     //console.log(dcMsg);
+    console.log(JSON.stringify(dcMsg, null, 4));
     return dcMsg;
   }
 

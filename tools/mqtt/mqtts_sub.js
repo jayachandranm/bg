@@ -12,9 +12,12 @@ var alert_utils = require('./send_alert');
 var deviceRoot="demo/device/"
 var mqtthost = 'localhost';
 
-var KEY = fs.readFileSync('/home/comfort/dev/worksheet/mqtt/client.key');
-var CERT = fs.readFileSync('/home/comfort/dev/worksheet/mqtt/client.crt');
-var CAfile = [fs.readFileSync('/home/comfort/dev/worksheet/mqtt/ca.crt')];
+var cert_folder = '/home/ubuntu/cert';
+
+var KEY = fs.readFileSync(cert_folder + '/client.key');
+var CERT = fs.readFileSync(cert_folder + '/client.crt');
+var CAfile = fs.readFileSync(cert_folder + '/ca.crt');
+//var CAfile = [fs.readFileSync('/ca.crt')];
 /*
 var KEY = '/etc/keys/client.key';
 var CERT = '/etc/keys/client.crt';
@@ -27,7 +30,7 @@ var options = {
 	protocol: 'mqtts',
 	protocolId: 'MQIsdp',
 	username: 'admin',
-	password: 'test',
+	password: 'pass',
 	ca: CAfile,
 	key: KEY,
 	cert: CERT,
@@ -75,16 +78,22 @@ client.on('message', function (topic, message) {
 	  client.publish('res', replyMsg);
 	  break;
 	  case 'alt1':
+	  var base64str = new Buffer(message).toString('hex');
+	  console.log('DATA(base64) ' +  ': ' + base64str);
 	  var dcMsg = decode_alt1.decodeAlt1Message(message);
 	  dbutil.add2dbAlerts(liftId, dcMsg);
 	  var replyMsg = assemble.alt1Reply(dcMsg);
 	  client.publish('res', replyMsg);
-	  var event = "";
-	  if(event) {
-		  alert_utils.sendSMS("123456", dcMsg);
+	  var liftEvent = dcMsg['type'];
+	  if(liftEvent && dcMsg['set_reset']) {
+              console.log("Send Alert: ");
+	      //alert_utils.sendSMS("123456", dcMsg);
+              //alert_utils.sendAlert(liftId, dcMsg);
 	  }
 	  break;
 	  case 'alt2':
+	  var base64str = new Buffer(message).toString('hex');
+	  console.log('DATA(base64) ' +  ': ' + base64str);
 	  var altMsg = decode_alt2.decodeAlt2Message(message);
 	  var dcMsg = dbutil.transformAlt2Msg(altMsg);
 	  dbutil.add2dbErrors(liftId, dcMsg);

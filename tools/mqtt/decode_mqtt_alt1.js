@@ -28,9 +28,10 @@ var alt1Message = new Parser()
 .uint8('set_reset')
 .nest('sensor', {
     type: new Parser()
-    .bit1('fiber')
-    .bit1('nlri')  // Only IR_H
+    .bit5('reserved')
     .bit1('lssb')
+    .bit1('nlri')  // Only IR_H
+    .bit1('fiber')
 })
 /*
 .choice('alert', {
@@ -53,6 +54,7 @@ var alt1Message = new Parser()
 function decodeAlt1Message(mqttData) {
     var dcMsg = alt1Message.parse(mqttData);
     //console.log(dcMsg);
+    console.log(JSON.stringify(dcMsg, null, 4));
     return dcMsg;
   }
 
