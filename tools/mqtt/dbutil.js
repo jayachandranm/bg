@@ -124,39 +124,41 @@ function transformAlt1Msg(alt1Msg) {
 }
 
 function add2dbAlerts(liftId, dcMsg) {
-    console.log("user: ", config.mysql.user)
-    var uTime = dcMsg['ts'] * 1000;
-    var liftEvent = dcMsg['type'];
-    var srcSensorGroup = dcMsg['sensor'];
-    var sGroup = "";
-    var isSet = dcMsg['set_reset'];
-    var msgType = 'event';
-    Object.keys(srcSensorGroup).forEach(function (key, index) {
-        var elementVal = srcSensorGroup[key];
-        if (elementVal === 1) {
-            sGroup = sGroup + ',' + key;
-        }
-    });
-    //
-    var dateNow = new Date();
-    var currTimeMillis = Date.now();
-    var offset = dateNow.getTimezoneOffset();
-    //console.log(offset);
-    var adjTime = uTime + (8 * 60 * 60 * 1000);
-    var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
-    console.log("Event time :", uTime, "=>", datetime_db);
-
     pool.getConnection(function (err, connection) {
         // Use the connection
         if (err) {
             console.log("DB connection error: ", err);
         }
         else {
+            console.log("user: ", config.mysql.user)
+            var uTime = dcMsg['ts'] * 1000;
+            var liftEvent = dcMsg['type'];
+            var srcSensorGroup = dcMsg['sensor'];
+            var sGroup = "";
+            var isSet = dcMsg['set_reset'];
+            var msgType = 'event';
+            Object.keys(srcSensorGroup).forEach(function (key, index) {
+                var elementVal = srcSensorGroup[key];
+                if (elementVal === 1) {
+                    sGroup = sGroup + ',' + key;
+                }
+            });
+            //
+            var dateNow = new Date();
+            var currTimeMillis = Date.now();
+            var offset = dateNow.getTimezoneOffset();
+            //console.log(offset);
+            var adjTime = uTime + (8 * 60 * 60 * 1000);
+            var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
+            console.log("Event time :", uTime, "=>", datetime_db);
+
             connection.query('INSERT INTO lift_events SET ?',
                 { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, is_set: isSet, value: liftEvent },
                 function (err, result) {
                     connection.release();
-                    if (err) throw err;
+                    if (err) {
+                        throw err;
+                    }
                     console.log(result.insertId);
                 });
         }
@@ -198,7 +200,7 @@ function add2dbErrors(liftId, dcMsg) {
                             function (err, result) {
                                 // TODO: Release connection only after multiple insert is completed.
                                 //connection.release();
-                                if (err) 
+                                if (err)
                                     throw err;
                                 console.log(result.insertId);
                             });
