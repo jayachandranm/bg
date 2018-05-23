@@ -1,14 +1,5 @@
 <?php
-/**
- * @file
- * Implements service methods.
- */
 
-/**
- * Get page.
- * @param tst
- *   Optional param.
- */
 function _get_json()
 {
     $geojson = array();
@@ -24,6 +15,7 @@ function _get_json()
  * @return
  *   JSON data.
  */
+
 function _get_geojson($rqtype)
 {
     //function jav_get_geojson($filter, $reqtype, $starttime, $endtime) {
