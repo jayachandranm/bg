@@ -1,14 +1,7 @@
 <?php
-/**
- * @file
- * Implements external DB access.
- */
-
 
 //date_default_timezone_set('UTC');
-/**
- * Retrieve data from external DB.
- */
+
 function _getdata_exdb($jav_db, $reqtype, $filter)
 {
     // From admin page.
@@ -37,8 +30,8 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     $query = array();
     if ($reqtype == 'rt') {
         $query_inner = db_select('lift_events', 'a')
-            ->fields('a', array('snum', 'ts', 'etype', 'remarks'))
-            ->condition('snum', $sid_list, 'IN')
+            ->fields('a', array('lift_id', 'ts', 'value', 'is_set'))
+            ->condition('lift_id', $sid_list, 'IN')
             ->orderBy('ts', 'DESC');
         //$query->addExpression('MAX(id)');
         // TODO: Can be conditional, different for block and page.
@@ -47,14 +40,14 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
         $query_inner->range(0, 100);
         //
         $query = db_select($query_inner, 'b')
-            ->fields('b', array('snum', 'ts', 'etype', 'remarks'))
-            ->groupBy('snum');
+            ->fields('b', array('lift_id', 'ts', 'value', 'is_set'))
+            ->groupBy('lift_id');
 
     }
     if ($reqtype == 'trc') {
         $query = db_select('lift_events', 'a')
-            ->fields('a', array('snum', 'ts', 'etype', 'remarks'))
-            ->condition('snum', $sid_list, 'IN')
+            ->fields('a', array('lift_id', 'ts', 'value', 'is_set'))
+            ->condition('lift_id', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
             ->condition('ts', array($start_time, $end_time), 'BETWEEN')
@@ -63,8 +56,8 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     }
     if ($reqtype == 'rpt') {
         $query = db_select('lift_events', 'a')
-            ->fields('a', array('snum', 'ts', 'etype', 'remarks'))
-            ->condition('snum', $sid_list, 'IN')
+            ->fields('a', array('lift_id', 'ts', 'value', 'is_set'))
+            ->condition('lift_id', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
             ->condition('ts', array($start_time, $end_time), 'BETWEEN')
@@ -73,7 +66,7 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     }
     if ($reqtype == 'ss') {
         $query = db_select('sensor_status', 'a')
-            ->fields('a', array('lift_id', 'ts', 'name', 'status', 'details'))
+            ->fields('a', array('lift_id', 'ts', 'sensor', 'value'))
             ->condition('lift_id', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
@@ -87,9 +80,7 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     return $result;
 }
 
-/**
- * Update external DB table for relevant node updates.
- */
+
 function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag)
 {
     Database::addConnectionInfo('JAV', 'default', $db);
@@ -123,9 +114,6 @@ function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $fla
     db_set_active();
 }
 
-/**
- * Retrieve the contact list for the maintenance company.
- */
 function _get_ext_db_liftlist($jav_db, $supplier_nid)
 {
     Database::addConnectionInfo('JAV', 'default', $jav_db);

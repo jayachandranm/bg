@@ -71,9 +71,6 @@ function jav_permission()
     );
 }
 
-/**
- * Initilize libraries.
- */
 function jav_init()
 {
     // Any init code goes here. eg. drupal_add_js.
@@ -427,6 +424,11 @@ function _update_db_referencing_lifts($node_supplier, $flag)
 	}
 }
 
+/**
+ * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3
+ *
+ * Implements hook_theme().
+ */
 
 /**
  * Implements hook_block_view().
@@ -580,7 +582,7 @@ function jav_block_view($delta = '')
                     array('data' => t('Lift SNUM')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
-                    array('data' => t('Remarks')),
+                    array('data' => t('Set / Reset')),
                 );
 
                 $reqtype = 'rt';
@@ -603,7 +605,7 @@ function jav_block_view($delta = '')
                     $date->setTimestamp(intval($row->ts)/1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->snum, '510 Bt Batok St 22', $row->etype, $row->remarks);
+                    $items[] = array($dtime, $row->lift_id, '510 Bt Batok St 22', $row->value, $row->is_set);
                 }
                 //dpm($items);
 
@@ -641,7 +643,7 @@ function jav_block_view($delta = '')
                     array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
-                    array('data' => t('Remarks')),
+                    array('data' => t('Set / Reset')),
                 );
 
                 $reqtype = 'trc';
@@ -664,7 +666,7 @@ function jav_block_view($delta = '')
                     $date->setTimestamp(intval($row->ts)/1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->snum, '510 Bt Batok St 22', $row->etype, $row->remarks);
+                    $items[] = array($dtime, $row->lift_id, '510 Bt Batok St 22', $row->value, $row->is_set);
                 }
                 //dpm($items);
 
@@ -725,7 +727,7 @@ function jav_block_view($delta = '')
                     //print_r($dtime, $row->snum);
                     //$items[] = array($dtime, $row->name, $row->status, $row->details);
                     if($row->status != 'ok') {
-                        $items[] = array($row->name, $dtime, $row->status, $row->details);
+                        $items[] = array($row->name, $dtime, $row->value, $row->sensor);
                     }
                 }
                 //dpm($items);
@@ -824,7 +826,7 @@ function jav_block_view($delta = '')
                     array('data' => t('Reported Date')),
                     array('data' => t('Time')),
                     array('data' => t('Status')),
-                    array('data' => t('Remarks')),
+                    array('data' => t('Set / Reset')),
                 );
 
                 $items = array();
@@ -836,8 +838,8 @@ function jav_block_view($delta = '')
                     $dt = $date->format('d-m-Y');
                     $tt = $date->format('g:i a');
                     //print_r($dtime, $row->snum);
-                    $og_group = $grouplist[$row->snum];
-                    $items[] = array($og_group, $row->snum, $dt, $tt, $row->etype, $row->remarks);
+                    $og_group = $grouplist[$row->lift_id];
+                    $items[] = array($og_group, $row->lift_id, $dt, $tt, $row->value, $row->is_set);
                 }
                 //dpm($items);
 
@@ -866,7 +868,7 @@ function _jav_set_list($lift_list = NULL) {
 
 
 /*
-* Get node details for items listed under the view.
+* https://www.drupal.org/node/1993228
 */
 function jav_preprocess_views_view(&$vars)
 {
