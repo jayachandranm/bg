@@ -34,13 +34,15 @@ $.fn.dataTable.ext.search.push(
         });
         yadcf.init(myTable, [
     { column_number : 0,
-      filter_container_id: 'external_filter_container_0'
+       filter_reset_button_text: false, 
+       filter_container_id: 'external_filter_container_0'
     },
     { 
         column_number : 1,
         filter_container_id: 'external_filter_container_1',
         //filter_type: 'auto_complete',
         filter_type: 'text',
+        filter_reset_button_text: false, 
         text_data_delimiter: ","
     },
     {
@@ -50,10 +52,12 @@ $.fn.dataTable.ext.search.push(
         datepicker_type: 'bootstrap-datetimepicker',
         //date_format: 'YYYY-MM-DD',
         date_format: 'DD-MM-YYYY',
+        filter_reset_button_text: false, 
         filter_plugin_options: datepickerDefaults
     },
     {
         column_number : 4,
+        filter_reset_button_text: false, 
         filter_container_id: 'external_filter_container_3'
     },
 /*
