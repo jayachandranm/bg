@@ -37,7 +37,8 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
         // TODO: Can be conditional, different for block and page.
         //$query->range(0, $max_num);
         // TODO: Use timestamp condition instead?
-        $query_inner->range(0, 100);
+        //$query_inner->range(0, 100);
+        $query_inner->range(0, 1);
         //
         $query = db_select($query_inner, 'b')
             ->fields('b', array('lift_id', 'ts', 'value', 'is_set'))
@@ -80,6 +81,59 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     return $result;
 }
 
+function _get_sensorerr($jav_db, $lift_id)
+{
+    // all sensor errors = sensor errors at last report 
+    //        + any extra errors reported from then till now in alt2 events.
+    Database::addConnectionInfo('JAV', 'default', $jav_db);
+    db_set_active('JAV');
+    $sid_list[] = $lift_id;
+    $msg_type = 'err_rpt';
+    //
+    $query = array();
+    // get last rpt entry.
+    $query = db_select('sensor_status', 'a')
+            ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
+            ->condition('lift_id', $sid_list, 'IN')
+            ->condition('msg_type', $msg_type)
+            ->orderBy('ts', 'DESC');
+    $query->range(0, 1);
+    //
+    $result = $query->execute();
+    //
+    $s_err = "healthy";
+    $s_name_err = 'all';
+    $ts_rpt = -1;
+    // Will go through the loop 0 times or once.
+    foreach ($result as $row) 
+    {
+        $s_err = $row->value;
+	$s_name_err = $row->sensor;
+        $ts_rpt = $row->ts;
+    }
+    if ( ($s_name_err == 'all') && ($s_err == 'healthy') ) {
+        // Only one healthy entry exists for last report.
+        // TODO: Trick, just skip this entry from the error list.
+        $ts_rpt = $ts_rpt + 1;
+    } else {
+        $query = array();
+        // get all errors from last rpt till now, including the rpt errors.
+    	// (rpt + alt1)ts_rpt-now
+        $end_time = time() * 1000;
+        $query = db_select('sensor_status', 'a')
+            ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
+            ->condition('lift_id', $sid_list, 'IN')
+            //->condition('msg_type', $msg_type)
+            ->condition('ts', array($ts_rpt, $end_time), 'BETWEEN')
+            ->orderBy('ts', 'DESC');
+        //$query->range(0, 1);
+        //
+        $result = $query->execute();
+    }
+    //
+    db_set_active();
+    return $result;
+}
 
 function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag)
 {

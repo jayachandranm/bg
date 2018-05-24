@@ -54,11 +54,12 @@ function jav_block_view($delta = '')
     //print_r($dev_list);
     $sid_list = array();
     if($dev_list) {
-        foreach($dev_list as $key => $value) {
-        //foreach($dev_list as $dev) {
+        //foreach($dev_list as $key => $value) {
+        foreach($dev_list as $dev) {
             //dpm($dev);
             //print_r($dev["sid"]);
-            $sid_list[] = $key;
+            //$sid_list[] = $key;
+	    $sid_list[] = $dev["sid"];
         }
     }
     $block = array();
@@ -185,18 +186,19 @@ function jav_block_view($delta = '')
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     array('data' => t('Date Time')),
                     //array('data' => t('Address'), 'colspan' => 3),
-                    array('data' => t('Lift SNUM')),
+                    array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
-                    array('data' => t('Set / Reset')),
+                    array('data' => t('Event')),
                 );
 
                 $reqtype = 'rt';
                 $filter = new stdClass(); // (object) [];
                 $filter->start = -1;
                 $filter->end = -1;
+		        //dpm($sid_list);
                 $filter->sidList = $sid_list;
-                //$filter->sidList = ['112233C'];
+                //$filter->sidList = ['99'];
                 //
                 module_load_include("config.inc", "jav");
                 $jav_db = getExtDBConfig();
@@ -205,20 +207,55 @@ function jav_block_view($delta = '')
                 //dpm($result);
                 date_default_timezone_set('Asia/Singapore');
                 //
+		/*
                 $items = array();
                 foreach ($result as $row) {
                     $date = new DateTime();
                     $date->setTimestamp(intval($row->ts)/1000);
                     $dtime = $date->format('j-M-y g:i a');
+		    $loc = $dev_list[$row->lift_id]['loc'];
                     //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->lift_id, '510 Bt Batok St 22', $row->value, $row->is_set);
-                }
+                    $items[] = array($dtime, $row->lift_id, $loc, $row->value, $row->is_set);
+		}
+		 */
                 //dpm($items);
 
+                $items = array();
+                // Only one result expected. If no entry, set default as None.
+                $lift_event = 'None';
+                $rpt_time = 'NA';
+                foreach ($result as $row) {
+                    //dpm($result);
+                    $is_set = $row->is_set;
+                    if($is_set == 1) {
+                        $lift_event = $row->value;
+                        $event_type = "Lift Event";
+                        $date = new DateTime();
+                        $date->setTimestamp(intval($row->ts)/1000);
+                        $rpt_time = $date->format('j-M-y g:i a');
+                        $loc = $dev_list[$row->lift_id]['loc'];
+                        $items[] = array($rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
+                    }
+                }
+                //dpm($items);
+                foreach ($sid_list as $lift_id) {
+                    $result = _get_sensorerr($jav_db, $lift_id);
+                    foreach ($result as $row) {
+                        //dpm($result);
+                        $err_code = $row->value;
+                        $sensor = $row->sensor;
+                        $err = $sensor . ' / ' . $err_code;
+                        $event_type = "Sensor Error";
+                        $date = new DateTime();
+                        $date->setTimestamp(intval($row->ts)/1000);
+                        $err_time = $date->format('j-M-y g:i a');
+                        $loc = $dev_list[$row->lift_id]['loc'];
+                        $items[] = array($err_time, $row->lift_id, $loc, $event_type, $err);
+                    }
+        		}
 
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
-		dpm($block);
-
+		        //dpm($block);
             } // if user_access
             break;
         case 'eventlist_single':
@@ -272,13 +309,12 @@ function jav_block_view($delta = '')
                     $date->setTimestamp(intval($row->ts)/1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->lift_id, '510 Bt Batok St 22', $row->value, $row->is_set);
+                    dpm($dev_list[$row->lift_id]);
+                    $loc = $dev_list[$row->lift_id]["loc"];
+                    $items[] = array($dtime, $row->lift_id, $loc, $row->value, $row->is_set);
                 }
                 //dpm($items);
-
-
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
-
             } // if user_access
             break;
         case 'sensor_status':

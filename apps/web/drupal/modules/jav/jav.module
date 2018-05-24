@@ -351,7 +351,7 @@ function jav_views_api()
 {
     return array(
         'api' => 3,
-        'path' => drupal_get_path('module', 'jav') . '/includes/views',
+        //'path' => drupal_get_path('module', 'jav') . '/includes/views',
     );
 }
 
@@ -463,13 +463,14 @@ function jav_preprocess_views_view(&$vars)
             //print_r($cell->node_title);
             //dpm($cell);
             $nid = $cell->nid;
-            $vnum = -1;
             $sid_content = $cell->field_field_lift_id[0];
             $sid = $sid_content['raw']['value'];
+            $loc_content = $cell->field_field_location_address[0];
+            $loc = $loc_content['raw']['value'];
             $lift_details = array(
                 'sid' => $sid,
                 'nid' => $nid,
-                'vnum' => $vnum,
+                'loc' => $loc,
             );
             $selected_lifts[$sid] = $lift_details;
             //$active_sids[] = $sid_content['raw']['value'];
@@ -484,6 +485,62 @@ function jav_preprocess_views_view(&$vars)
     }
 }
 
+/**
+ *
+ * Substituting custom field content in views hooks 
+ * eg. for disaplying data from ext db.
+ */
+function jav_views_pre_render(&$view) {
+    // This is messy and hard to understand for site builders 
+	// and future developers.
+	//dpm($view->field);
+	foreach($view->result as &$item) {
+            //dpm()
+	    $lift_id = $item->field_field_lift_id[0]['rendered']['#markup'];
+	    $sid_list = array();
+	    $sid_list[] = $lift_id;
+	    $rpt_time = $item->field_field_event_time[0]['rendered']['#markup'];
+	    /*
+	    if($rpt_time == "Now") {
+		    $item = null;
+	    }
+	     */
+                $reqtype = 'rt';
+                $filter = new stdClass(); // (object) [];
+                $filter->start = -1;
+                $filter->end = -1;
+                $filter->sidList[] = $sid_list;
+                //$filter->sidList = ['112233C'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                date_default_timezone_set('Asia/Singapore');
+                //
+                $items = array();
+		// Only one result expected. If no entry, set default as None.
+		$lift_event = 'None';
+		$rpt_time = 'NA';
+		foreach ($result as $row) {
+	            //dpm($result);
+		    $is_set = $row->is_set;
+		    if($is_set == 1) {
+			    $lift_event = $row->value;
+                            $date = new DateTime();
+                            $date->setTimestamp(intval($row->ts)/1000);
+                            $rpt_time = $date->format('j-M-y g:i a');
+	             }
+                }
+                //dpm($items);
+
+            $item->field_field_event_type[0]['rendered']['#markup'] = t($lift_event);
+            $item->field_field_event_time[0]['rendered']['#markup'] = t($rpt_time);
+	    // Multiple errors expected for same list.
+            //$item->field_field_sensor_status[0]['rendered']['#markup'] = t($rpt_time);
+	}
+    //$view->result[0]->custom_field_999 = t('Foo');
+  }
 /*
 function jav_views_pre_render(&$view) {
     //dpm($view->field['field_event_ack']);
