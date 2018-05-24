@@ -24,10 +24,19 @@ function transformRptMsg(rptMsg) {
     var dcMsg = {}
     dcMsg['ts'] = rptMsg['ts'];
     dcMsg['sw_version'] = rptMsg['sw_version'];
+    dcMsg['msg_type'] = 'err_rpt';
     dcMsg['rpts'] = {};
     dcMsg['rpts']['fiber'] = {};
     dcMsg['rpts']['lssb'] = {};
     dcMsg['rpts']['nrli'] = {};
+    // Set a flag in the message if no errors were reported.
+    var all_healthy = true;
+    //
+    // By default set all sensors to healthy. Used for reseting any sensors 
+    //   that are currently in error state.
+    var fiber_subs = ['fiber'];
+    var lssb_subs = ['irl', 'misc', 'nh3', 'co', 'spl', 'light', 'human', 'motion', 'rh', 'temperature', 'distance'];
+    var nrli_subs = ['nrli']
     //
     var rptSensorGroup = rptMsg['fiber'];
     var dcMsgSensorGroup = dcMsg['rpts']['fiber'];
@@ -37,6 +46,7 @@ function transformRptMsg(rptMsg) {
         // eg. fiber_fiber_noupdate, fiber_fiber_error4
         element = rptSensorGroup[key];
         if ((key != 'reserved') && (element === 1)) {
+            all_healthy = false;
             splitVals = key.split('_');
             if (!dcMsgSensorGroup[splitVals[1]]) {
                 dcMsgSensorGroup[splitVals[1]] = [];
@@ -54,6 +64,7 @@ function transformRptMsg(rptMsg) {
         // eg. lssb_human_noupdate
         element = rptSensorGroup[key];
         if ((key != 'reserved') && (element === 1)) {
+            all_healthy = false;
             splitVals = key.split('_');
             // eg. lssb_human_update
             if (!dcMsgSensorGroup[splitVals[1]]) {
@@ -69,6 +80,7 @@ function transformRptMsg(rptMsg) {
         // index: the ordinal position of the key within the object 
         element = rptSensorGroup[key];
         if ((key != 'reserved') && (element === 1)) {
+            all_healthy = false;
             splitVals = key.split('_');
             if (!dcMsgSensorGroup[splitVals[1]]) {
                 dcMsgSensorGroup[splitVals[1]] = [];
@@ -83,6 +95,7 @@ function transformRptMsg(rptMsg) {
         // index: the ordinal position of the key within the object 
         element = rptSensorGroup[key];
         if ((key != 'reserved') && (element === 1)) {
+            all_healthy = false;
             splitVals = key.split('_');
             if (!dcMsgSensorGroup[splitVals[1]]) {
                 dcMsgSensorGroup[splitVals[1]] = [];
@@ -91,6 +104,11 @@ function transformRptMsg(rptMsg) {
         }
     });
     //console.log(dcMsg);
+    if (all_healthy) {
+        dcMsg['no_errors'] = true;
+    } else {
+        dcMsg['no_errors'] = false;
+    }
     console.log(JSON.stringify(dcMsg, null, 4));
     return dcMsg;
 }
@@ -100,6 +118,7 @@ function transformAlt2Msg(alt2Msg) {
     var dcMsg = {}
     dcMsg['ts'] = alt2Msg['ts'];
     //dcMsg['sw_version'] = rptMsg['sw_version'];
+    dcMsg['msg_type'] = 'err_event';
     dcMsg['rpts'] = [];
     dcMsg['rpts']['fiber'] = {};
     dcMsg['rpts']['lssb'] = {};
@@ -108,7 +127,7 @@ function transformAlt2Msg(alt2Msg) {
     var errType = alt2Msg['type'];
     var dcMsgRpts = dcMsg['rpts'];
     // eg. lssb_nh3_noupdate
-    splitVals = errType.split('_');
+    var splitVals = errType.split('_');
     //var group = errType[splitVals[0]];
     //dcMsgRpts[splitVals[0]][splitVals[1]] = splitVals[2];
     if (!dcMsgRpts[splitVals[0]][splitVals[1]]) {
@@ -136,7 +155,7 @@ function add2dbAlerts(liftId, dcMsg) {
             var srcSensorGroup = dcMsg['sensor'];
             var sGroup = "";
             var isSet = dcMsg['set_reset'];
-            var msgType = 'event';
+            var msgType = 'lift_event';
             Object.keys(srcSensorGroup).forEach(function (key, index) {
                 var elementVal = srcSensorGroup[key];
                 if (elementVal === 1) {
@@ -172,6 +191,10 @@ function add2dbErrors(liftId, dcMsg) {
             console.log("DB connection error: ", err);
         }
         else {
+            // err_event, err_rpt
+            var msgType = dcMsg['msg_type'];
+            var allHealthy = dcMsg['no_errors'];
+            //
             var uTime = dcMsg['ts'] * 1000;
             //
             var dateNow = new Date();
@@ -181,32 +204,48 @@ function add2dbErrors(liftId, dcMsg) {
             var adjTime = uTime + (8 * 60 * 60 * 1000);
             var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
             console.log("Event time :", uTime, "=>", datetime_db);
-            // For each sensor_group,
-            Object.keys(dcMsg['rpts']).forEach(function (key, index) {
-                sGroup = key;
-                element = dcMsg['rpts'][key];
-                // For each sensor,
-                Object.keys(element).forEach(function (key2, index) {
-                    sensor = key2;
-                    error_list = element[key2];
-                    error_list.forEach((sensor_error, index) => {
-                        msgType = 'error';
-                        if (sensor_error === 'noupdate') {
-                            msgType = 'timeout';
-                        }
-                        console.log(msgType, sGroup, sensor, sensor_error);
-                        connection.query('INSERT INTO sensor_status SET ?',
-                            { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error },
-                            function (err, result) {
-                                // TODO: Release connection only after multiple insert is completed.
-                                //connection.release();
-                                if (err)
-                                    throw err;
-                                console.log(result.insertId);
-                            });
+            if (allHealthy) {
+                var sGroupAll = 'all';
+                var sensorAll = 'all';
+                var healthy = 'healthy';
+                connection.query('INSERT INTO sensor_status SET ?',
+                    { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroupAll, sensor: sensorAll, value: healthy },
+                    function (err, result) {
+                        // TODO: Release connection only after multiple insert is completed.
+                        //connection.release();
+                        if (err)
+                            throw err;
+                        console.log(result.insertId);
+                    });
+            } else {
+                // For each sensor_group,
+                Object.keys(dcMsg['rpts']).forEach(function (key, index) {
+                    var sGroup = key;
+                    var element = dcMsg['rpts'][key];
+                    // For each sensor,
+                    Object.keys(element).forEach(function (key2, index) {
+                        var sensor = key2;
+                        var error_list = element[key2];
+                        error_list.forEach((sensor_error, index) => {
+                            /*
+                            if (sensor_error === 'noupdate') {
+                                msgType = 'timeout';
+                            }
+                            */
+                            console.log(msgType, sGroup, sensor, sensor_error);
+                            connection.query('INSERT INTO sensor_status SET ?',
+                                { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error },
+                                function (err, result) {
+                                    // TODO: Release connection only after multiple insert is completed.
+                                    //connection.release();
+                                    if (err)
+                                        throw err;
+                                    console.log(result.insertId);
+                                });
+                        });
                     });
                 });
-            });
+            }
         }
     });
 }
