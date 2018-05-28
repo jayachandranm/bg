@@ -112,13 +112,13 @@ function _get_sensorerr($jav_db, $lift_id)
         $ts_rpt = $row->ts;
     }
     if ( ($s_name_err == 'all') && ($s_err == 'healthy') ) {
-        // Only one healthy entry exists for last report.
-        // TODO: Trick, just skip this entry from the error list.
-        $ts_rpt = $ts_rpt + 1;
+	// Only one healthy entry exists for last report.
+	// TODO: Trick, just skip this entry from the error list.
+	$ts_rpt = $ts_rpt + 1;
     } else {
         $query = array();
         // get all errors from last rpt till now, including the rpt errors.
-    	// (rpt + alt1)ts_rpt-now
+	// (rpt + alt1)ts_rpt-now
         $end_time = time() * 1000;
         $query = db_select('sensor_status', 'a')
             ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))

@@ -213,6 +213,7 @@ function jav_libraries_info()
             ),
         );
     }
+    /*
     if (($library_path = libraries_get_path('leaflet'))) {
         $libraries['leaflet'] = array(
             //'title' => 'Vertical Tabs',
@@ -228,7 +229,7 @@ function jav_libraries_info()
             'pattern' => '/Highcharts v(\d+\.+\d+)/',
             'lines' => 2,
           ),
-          */
+          */ /*
             'version callback' => 'jav_short_circuit_version',
             'files' => array(
                 'js' => array(
@@ -249,6 +250,7 @@ function jav_libraries_info()
             ),
         );
     }
+     */
 
     if (($library_path = libraries_get_path('pdfmake'))) {
         $libraries['pdfmake'] = array(
@@ -404,7 +406,7 @@ function _lift_details_to_db($node, $flag)
 	$node_supplier = node_load($tid_supplier);
 	$supplier_nid = $node_supplier->nid;
 	$sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
-	dpm($sms_list);
+	//dpm($sms_list);
         //$flag = false;
         module_load_include("config.inc", "jav");
         $jav_db = getExtDBConfig();
@@ -465,8 +467,11 @@ function jav_preprocess_views_view(&$vars)
             $nid = $cell->nid;
             $sid_content = $cell->field_field_lift_id[0];
             $sid = $sid_content['raw']['value'];
-            $loc_content = $cell->field_field_location_address[0];
-            $loc = $loc_content['raw']['value'];
+	    //dpm($cell);
+            //$loc_content = $cell->field_field_lift_address[0];
+            //$loc = $loc_content['raw']['thoroughfare'];
+	    // To be used for the dashboard event listing block.
+	    $loc = $cell->field_data_field_lift_address_field_lift_address_thoroughfar;
             $lift_details = array(
                 'sid' => $sid,
                 'nid' => $nid,
@@ -541,6 +546,54 @@ function jav_views_pre_render(&$view) {
 	}
     //$view->result[0]->custom_field_999 = t('Foo');
   }
+
+/*
+function jav_preprocess_page(&$vars) {
+  $vars['show_title'] = TRUE; // so that showtitle is true by default
+  if (isset($vars['node'])) {
+    if ($vars['node']->type == 'lift_companies') { // set to false when the content type is event
+      $vars['show_title'] = FALSE;
+    }
+  }
+}
+*/
+
+/**
+ * Implements hook_preprocess_node
+ */
+/*    
+function jav_preprocess_node(&$variables){
+  if ($variables['node']->type == 'lift_companies') {
+    $variables['title'] = FALSE;
+  }
+}
+     */
+function jav_form_alter(&$form, &$from_state, $form_id) {
+    //print_r($form);
+    if($form_id == 'lift_companies_node_form') {
+        //drupal_set_title(t('Add Lift Company'));
+	$form['title']['#title'] = t('Company Name');
+    }
+    //dpm($form);
+}
+
+/*
+function jav_form_alter($form_id, &$form) {
+    $node = isset($form['#node']) ? $form['#node'] : NULL;
+
+    $form['venue'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Venue'),
+        '#default_value' => $node->venue
+    );
+    if (($form_id == "event_node_form") && isset($form['title']['#title'])) {
+        // Change title to Name
+        $form['title']['#title'] = t('Name');
+        $form['body']['#body'] = t('Description');
+    }
+}
+ */
+
 /*
 function jav_views_pre_render(&$view) {
     //dpm($view->field['field_event_ack']);

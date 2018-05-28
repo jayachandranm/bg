@@ -196,7 +196,7 @@ function jav_block_view($delta = '')
                 $filter = new stdClass(); // (object) [];
                 $filter->start = -1;
                 $filter->end = -1;
-		        //dpm($sid_list);
+		//dpm($sid_list);
                 $filter->sidList = $sid_list;
                 //$filter->sidList = ['99'];
                 //
@@ -221,41 +221,42 @@ function jav_block_view($delta = '')
                 //dpm($items);
 
                 $items = array();
-                // Only one result expected. If no entry, set default as None.
-                $lift_event = 'None';
-                $rpt_time = 'NA';
-                foreach ($result as $row) {
-                    //dpm($result);
-                    $is_set = $row->is_set;
-                    if($is_set == 1) {
-                        $lift_event = $row->value;
-                        $event_type = "Lift Event";
-                        $date = new DateTime();
-                        $date->setTimestamp(intval($row->ts)/1000);
-                        $rpt_time = $date->format('j-M-y g:i a');
-                        $loc = $dev_list[$row->lift_id]['loc'];
-                        $items[] = array($rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
-                    }
+		// Only one result expected. If no entry, set default as None.
+		$lift_event = 'None';
+		$rpt_time = 'NA';
+		foreach ($result as $row) {
+	            //dpm($result);
+		    $is_set = $row->is_set;
+		    if($is_set == 1) {
+			    $lift_event = $row->value;
+			    $event_type = "Lift Event";
+                            $date = new DateTime();
+                            $date->setTimestamp(intval($row->ts)/1000);
+                            $rpt_time = $date->format('j-M-y g:i a');
+		            $loc = $dev_list[$row->lift_id]['loc'];
+			    $items[] = array($rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
+	             }
                 }
                 //dpm($items);
-                foreach ($sid_list as $lift_id) {
-                    $result = _get_sensorerr($jav_db, $lift_id);
-                    foreach ($result as $row) {
-                        //dpm($result);
-                        $err_code = $row->value;
-                        $sensor = $row->sensor;
-                        $err = $sensor . ' / ' . $err_code;
-                        $event_type = "Sensor Error";
-                        $date = new DateTime();
-                        $date->setTimestamp(intval($row->ts)/1000);
-                        $err_time = $date->format('j-M-y g:i a');
-                        $loc = $dev_list[$row->lift_id]['loc'];
-                        $items[] = array($err_time, $row->lift_id, $loc, $event_type, $err);
-                    }
-        		}
+		foreach ($sid_list as $lift_id) {
+		    $result = _get_sensorerr($jav_db, $lift_id);
+		    foreach ($result as $row) {
+	            //dpm($result);
+			    $err_code = $row->value;
+			    $sensor = $row->sensor;
+			    $err = $sensor . ' / ' . $err_code;
+			    $event_type = "Sensor Error";
+                            $date = new DateTime();
+                            $date->setTimestamp(intval($row->ts)/1000);
+                            $err_time = $date->format('j-M-y g:i a');
+		            $loc = $dev_list[$row->lift_id]['loc'];
+			    $items[] = array($err_time, $row->lift_id, $loc, $event_type, $err);
+	             }
+		}
 
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
-		        //dpm($block);
+		//dpm($block);
+
             } // if user_access
             break;
         case 'eventlist_single':
@@ -309,12 +310,14 @@ function jav_block_view($delta = '')
                     $date->setTimestamp(intval($row->ts)/1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
-                    dpm($dev_list[$row->lift_id]);
-                    $loc = $dev_list[$row->lift_id]["loc"];
+		    //dpm($dev_list[$row->lift_id]);
+		    $loc = $dev_list[$row->lift_id]["loc"];
                     $items[] = array($dtime, $row->lift_id, $loc, $row->value, $row->is_set);
                 }
                 //dpm($items);
+
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
+
             } // if user_access
             break;
         case 'sensor_status':
@@ -341,7 +344,7 @@ function jav_block_view($delta = '')
                 $header = array(
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     //array('data' => t('Address'), 'colspan' => 3),
-                    array('data' => t('Sensor Name')),
+                    //array('data' => t('Sensor Name')),
                     array('data' => t('Reported Time')),
                     array('data' => t('Status')),
                     array('data' => t('Remarks')),
@@ -368,9 +371,7 @@ function jav_block_view($delta = '')
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
                     //$items[] = array($dtime, $row->name, $row->status, $row->details);
-                    if($row->status != 'ok') {
-                        $items[] = array($row->name, $dtime, $row->value, $row->sensor);
-                    }
+                    $items[] = array($dtime, $row->value, $row->sensor);
                 }
                 //dpm($items);
 
