@@ -234,7 +234,8 @@ function jav_block_view($delta = '')
                         //dpm($result);
                         $err_code = $row->value;
                         $sensor = $row->sensor;
-                        $err = $sensor . ' / ' . $err_code;
+                        $err_msg = _errcode_to_message($sensor, $err_code);
+                        $err = $sensor . ' / ' . $err_msg;
                         $event_type = "Sensor Error";
                         $date = new DateTime();
                         $date->setTimestamp(intval($row->ts) / 1000);
@@ -456,5 +457,24 @@ function jav_block_view($delta = '')
     } // switch
     //libraries_info('moment');
     return $block;
+}
+
+function _errcode_to_message($sensor, $err_code) {
+    $err_msg = "error";
+    switch ($err_code) {
+        case "error1":
+            $err_msg = "sagnac low power.";
+            break;
+        case "error2":
+            $err_msg = "sagnac over power.";
+            break;
+        case "error3":
+            $err_msg = "mz low power.";
+            break;
+        case "error4":
+            $err_msg = "mz over power.";
+            break;
+    }
+    return $err_msg;
 }
 
