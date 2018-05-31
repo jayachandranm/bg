@@ -105,12 +105,12 @@ function _get_sensorerr($jav_db, $lift_id)
     $s_name_err = 'all';
     $ts_rpt = -1;
     // Just looking at last entry, either no entries or one row.
-/*    foreach ($result as $row) {
-        $s_err = $row->value;
-        $s_name_err = $row->sensor;
-        $ts_rpt = $row->ts;
-    }*/
-    if($row = $result->fetchObject()) {
+    /*    foreach ($result as $row) {
+            $s_err = $row->value;
+            $s_name_err = $row->sensor;
+            $ts_rpt = $row->ts;
+        }*/
+    if ($row = $result->fetchObject()) {
         $s_err = $row->value;
         $s_name_err = $row->sensor;
         $ts_rpt = $row->ts;

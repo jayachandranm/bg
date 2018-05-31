@@ -4,7 +4,7 @@
             console.log('JS attach for RT, initialization.');
             // TODO: Where is the most appropriate place for this code?
             // Depends on Drupal behaviors.
-            $(document).ready(function() {
+            $(document).ready(function () {
                 $('#tbl-dashboard-view').DataTable({
                     "lengthChange": false
                 });
