@@ -93,10 +93,10 @@ function _get_sensorerr($jav_db, $lift_id)
     $query = array();
     // get last rpt entry.
     $query = db_select('sensor_status', 'a')
-            ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
-            ->condition('lift_id', $sid_list, 'IN')
-            ->condition('msg_type', $msg_type)
-            ->orderBy('ts', 'DESC');
+        ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
+        ->condition('lift_id', $sid_list, 'IN')
+        ->condition('msg_type', $msg_type)
+        ->orderBy('ts', 'DESC');
     $query->range(0, 1);
     //
     $result = $query->execute();
@@ -104,33 +104,40 @@ function _get_sensorerr($jav_db, $lift_id)
     $s_err = "healthy";
     $s_name_err = 'all';
     $ts_rpt = -1;
-    // Will go through the loop 0 times or once.
-    foreach ($result as $row) 
-    {
+    // Just looking at last entry, either no entries or one row.
+/*    foreach ($result as $row) {
         $s_err = $row->value;
-	$s_name_err = $row->sensor;
+        $s_name_err = $row->sensor;
+        $ts_rpt = $row->ts;
+    }*/
+    if($row = $result->fetchObject()) {
+        $s_err = $row->value;
+        $s_name_err = $row->sensor;
         $ts_rpt = $row->ts;
     }
-    if ( ($s_name_err == 'all') && ($s_err == 'healthy') ) {
-	// Only one healthy entry exists for last report.
-	// TODO: Trick, just skip this entry from the error list.
-	$ts_rpt = $ts_rpt + 1;
-    } else {
-        $query = array();
-        // get all errors from last rpt till now, including the rpt errors.
-	// (rpt + alt1)ts_rpt-now
-        $end_time = time() * 1000;
-        $query = db_select('sensor_status', 'a')
-            ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
-            ->condition('lift_id', $sid_list, 'IN')
-            //->condition('msg_type', $msg_type)
-            ->condition('ts', array($ts_rpt, $end_time), 'BETWEEN')
-            ->orderBy('ts', 'DESC');
-        //$query->range(0, 1);
-        //
-        $result = $query->execute();
+    // If last rpt was all healthy, query everything after the rpt time.
+    // If last rpt had errors, include the rpt time in query, so that rpt errors
+    //      will be included in the final result.
+    if (($s_name_err == 'all') && ($s_err == 'healthy')) {
+        // Only one healthy entry exists for last report.
+        // TODO: Trick, just skip this entry from the error list.
+        // The default case is considered healthy at $ts_rpt = -1, sets $ts_rpt to 0.
+        $ts_rpt = $ts_rpt + 1;
     }
+    $query = array();
+    // get all errors from last rpt till now, including the rpt errors.
+    // (rpt + alt1)ts_rpt-now
+    $end_time = time() * 1000;
+    $query = db_select('sensor_status', 'a')
+        ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
+        ->condition('lift_id', $sid_list, 'IN')
+        //->condition('msg_type', $msg_type)
+        ->condition('ts', array($ts_rpt, $end_time), 'BETWEEN')
+        ->orderBy('ts', 'DESC');
+    //$query->range(0, 1);
     //
+    $result = $query->execute();
+    // $result will be empty if all sensors are considered healthy.
     db_set_active();
     return $result;
 }
@@ -175,9 +182,9 @@ function _get_ext_db_liftlist($jav_db, $supplier_nid)
 
     $query = array();
     $query = db_select('contact_list', 'a')
-            ->fields('a', array('lift_id', 'lift_nid', 'supplier_nid', 'sms_list'))
-            //->condition('supplier_nid', $supplier_nid, 'IN');
-            ->condition('supplier_nid', $supplier_nid);
+        ->fields('a', array('lift_id', 'lift_nid', 'supplier_nid', 'sms_list'))
+        //->condition('supplier_nid', $supplier_nid, 'IN');
+        ->condition('supplier_nid', $supplier_nid);
 
     $result = $query->execute();
     db_set_active();
