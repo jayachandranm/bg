@@ -51,15 +51,12 @@ function jav_block_view($delta = '')
     //$dev_list = drupal_static('jav');
     //dpm($this);
     //dpm($dev_list);
-    //print_r($dev_list);
     $sid_list = array();
-    if($dev_list) {
+    if ($dev_list) {
         //foreach($dev_list as $key => $value) {
-        foreach($dev_list as $dev) {
-            //dpm($dev);
-            //print_r($dev["sid"]);
+        foreach ($dev_list as $dev) {
             //$sid_list[] = $key;
-	    $sid_list[] = $dev["sid"];
+            $sid_list[] = $dev["sid"];
         }
     }
     $block = array();
@@ -76,8 +73,6 @@ function jav_block_view($delta = '')
             // Always read these fields in English.
             $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
             $sid = $field_dev[0]['safe_value'];
-            //$vnum = -1;
-            //dpm($field_dev);
         } // if node-type.
         else {
             $sid = "Unknown";
@@ -85,11 +80,10 @@ function jav_block_view($delta = '')
     } // if node.
     else {
         $sid = "Unknown";
-        //$vnum = -1;
     }
 
     // Always pass as an array of values, for generic handling at JS side.
-    if($sid) {
+    if ($sid) {
         $sid_list[] = $sid;
     }
     //$sid = (string)$sid_tmp;
@@ -104,8 +98,7 @@ function jav_block_view($delta = '')
         case 'rtsingle':
             // Pass any node related parameters here, which can then be used by the JS during Ajax.
             // Here will be an array that contains the filter values.
-            // if(isset($sid)) {
-            // vnum/sid list.
+            // if(isset($sid)) {}
             $block['subject'] = t('Location...');
             if (user_access('access content')) {
                 $block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
@@ -133,13 +126,12 @@ function jav_block_view($delta = '')
                 )
             );
             break;
+            //
         case 'rtmulti':
             // Only appears in a view.
             // TODO: What if this block is enabled for a node?
             // TODO: nidList already set in the view preprocess.
-            //drupal_add_js(array('rt' => array('vtype' => 'car')), 'setting');
             if (user_access('access content')) {
-                //$block['content']['#markup'] = "<div id='show_report'>Map will display here.....</div>";
                 $block = array
                 (
                     'subject' => t('JAV Locations...'),
@@ -161,7 +153,19 @@ function jav_block_view($delta = '')
                     'data' => $mpath . '/jav_rt.js',),
             );
             break;
+            //
         case 'eventlist_all':
+            //$dev_list = _jav_set_list();
+            //$dev_list = drupal_static('jav');
+            $dev_list = $_SESSION['jav']['#selected_lifts'];
+            $sid_list = array();
+            if ($dev_list) {
+                //foreach($dev_list as $key => $value) {
+                foreach ($dev_list as $dev) {
+                    //$sid_list[] = $key;
+                    $sid_list[] = $dev["sid"];
+                }
+            }
             $block['content']['#attached']['js'] = array(
                 array(
                     'type' => 'file',
@@ -181,11 +185,9 @@ function jav_block_view($delta = '')
                         ),
                     ),
                 );
-               
+
                 $header = array(
-                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     array('data' => t('Date Time')),
-                    //array('data' => t('Address'), 'colspan' => 3),
                     array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
@@ -194,9 +196,11 @@ function jav_block_view($delta = '')
 
                 $reqtype = 'rt';
                 $filter = new stdClass(); // (object) [];
+                // Get most recent values.
                 $filter->start = -1;
                 $filter->end = -1;
-		//dpm($sid_list);
+                //dpm($sid_list);
+                $sid_list = ['99'];
                 $filter->sidList = $sid_list;
                 //$filter->sidList = ['99'];
                 //
@@ -207,58 +211,42 @@ function jav_block_view($delta = '')
                 //dpm($result);
                 date_default_timezone_set('Asia/Singapore');
                 //
-		/*
                 $items = array();
+                // Only one result expected. If no entry, set default as None.
+                $lift_event = 'None';
+                $rpt_time = 'NA';
                 foreach ($result as $row) {
-                    $date = new DateTime();
-                    $date->setTimestamp(intval($row->ts)/1000);
-                    $dtime = $date->format('j-M-y g:i a');
-		    $loc = $dev_list[$row->lift_id]['loc'];
-                    //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->lift_id, $loc, $row->value, $row->is_set);
-		}
-		 */
-                //dpm($items);
-
-                $items = array();
-		// Only one result expected. If no entry, set default as None.
-		$lift_event = 'None';
-		$rpt_time = 'NA';
-		foreach ($result as $row) {
-	            //dpm($result);
-		    $is_set = $row->is_set;
-		    if($is_set == 1) {
-			    $lift_event = $row->value;
-			    $event_type = "Lift Event";
-                            $date = new DateTime();
-                            $date->setTimestamp(intval($row->ts)/1000);
-                            $rpt_time = $date->format('j-M-y g:i a');
-		            $loc = $dev_list[$row->lift_id]['loc'];
-			    $items[] = array($rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
-	             }
+                    //dpm($result);
+                    $is_set = $row->is_set;
+                    if ($is_set == 1) {
+                        $lift_event = $row->value;
+                        $event_type = "Lift Event";
+                        $date = new DateTime();
+                        $date->setTimestamp(intval($row->ts) / 1000);
+                        $rpt_time = $date->format('j-M-y g:i a');
+                        $loc = $dev_list[$row->lift_id]['loc'];
+                        $items[] = array($rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
+                    }
                 }
-                //dpm($items);
-		foreach ($sid_list as $lift_id) {
-		    $result = _get_sensorerr($jav_db, $lift_id);
-		    foreach ($result as $row) {
-	            //dpm($result);
-			    $err_code = $row->value;
-			    $sensor = $row->sensor;
-			    $err = $sensor . ' / ' . $err_code;
-			    $event_type = "Sensor Error";
-                            $date = new DateTime();
-                            $date->setTimestamp(intval($row->ts)/1000);
-                            $err_time = $date->format('j-M-y g:i a');
-		            $loc = $dev_list[$row->lift_id]['loc'];
-			    $items[] = array($err_time, $row->lift_id, $loc, $event_type, $err);
-	             }
-		}
-
+                foreach ($sid_list as $lift_id) {
+                    $result = _get_sensorerr($jav_db, $lift_id);
+                    foreach ($result as $row) {
+                        //dpm($result);
+                        $err_code = $row->value;
+                        $sensor = $row->sensor;
+                        $err = $sensor . ' / ' . $err_code;
+                        $event_type = "Sensor Error";
+                        $date = new DateTime();
+                        $date->setTimestamp(intval($row->ts) / 1000);
+                        $err_time = $date->format('j-M-y g:i a');
+                        $loc = $dev_list[$row->lift_id]['loc'];
+                        $items[] = array($err_time, $row->lift_id, $loc, $event_type, $err);
+                    }
+                }
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
-		//dpm($block);
-
             } // if user_access
             break;
+            //
         case 'eventlist_single':
             $block['content']['#attached']['js'] = array(
                 array(
@@ -279,11 +267,9 @@ function jav_block_view($delta = '')
                         ),
                     ),
                 );
-               
+
                 $header = array(
-                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     array('data' => t('Date Time')),
-                    //array('data' => t('Address'), 'colspan' => 3),
                     array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
@@ -307,19 +293,18 @@ function jav_block_view($delta = '')
                 $items = array();
                 foreach ($result as $row) {
                     $date = new DateTime();
-                    $date->setTimestamp(intval($row->ts)/1000);
+                    $date->setTimestamp(intval($row->ts) / 1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
-		    //dpm($dev_list[$row->lift_id]);
-		    $loc = $dev_list[$row->lift_id]["loc"];
+                    //dpm($dev_list[$row->lift_id]);
+                    $loc = $dev_list[$row->lift_id]["loc"];
                     $items[] = array($dtime, $row->lift_id, $loc, $row->value, $row->is_set);
                 }
                 //dpm($items);
-
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
-
             } // if user_access
             break;
+            //
         case 'sensor_status':
             $block['content']['#attached']['js'] = array(
                 array(
@@ -340,7 +325,7 @@ function jav_block_view($delta = '')
                         ),
                     ),
                 );
-               
+
                 $header = array(
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     //array('data' => t('Address'), 'colspan' => 3),
@@ -367,7 +352,7 @@ function jav_block_view($delta = '')
                 $items = array();
                 foreach ($result as $row) {
                     $date = new DateTime();
-                    $date->setTimestamp(intval($row->ts)/1000);
+                    $date->setTimestamp(intval($row->ts) / 1000);
                     $dtime = $date->format('j-M-y g:i a');
                     //print_r($dtime, $row->snum);
                     //$items[] = array($dtime, $row->name, $row->status, $row->details);
@@ -379,6 +364,7 @@ function jav_block_view($delta = '')
 
             } // if user_access
             break;
+            //
         case 'reports':
             if (user_access('access content')) {
                 $block = array
@@ -408,18 +394,8 @@ function jav_block_view($delta = '')
                 $node_type = "lifts";
                 $nids = array();
                 $grouplist = array();
-/*
-                $result_all = db_query("SELECT nid FROM node WHERE type = '%s' ", $node_type);
-                while ($obj = db_fetch_object ($result)) {
-                    $sid_list = $obj->nid;
-                }
-*/ 
-                //$field = field_info_field('field_blk_zone');
-                //dpm($field);
-                //$allowed_values = list_allowed_values($field);
-                //dpm($allowed_values);
                 $nids = db_query("SELECT nid FROM {node} WHERE type = :type", array(':type' => $node_type))->fetchCol();
-                foreach($nids as $nid) {
+                foreach ($nids as $nid) {
                     $node = node_load($nid);
                     //dpm($node);
                     $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
@@ -437,19 +413,8 @@ function jav_block_view($delta = '')
                                 $grouplist[$sid] = $group_node->title;
                             }
                         }
-    	            }
-	        	    //dpm($grouplist);
-                    //$field_dev2 = field_get_items('node', $node, 'field_blk_zone', 'en');
-                    //$uid = $field_dev2['target_id'];
-                    //dpm($uids);
-                    //$test = $node->get('tags')->referencedEntities();
-		            /*
-                    $node_wrapper = entity_metadata_wrapper('node', $node);
-                    $zone = $node_wrapper->field_blk_zone->value()->name;
-		            $zonelist[$sid] = $zone;
-		            */
+                    }
                 }
-                
                 $filter->sidList = $sid_list;
                 //$filter->sidList = ['112233C'];
                 //
@@ -460,10 +425,7 @@ function jav_block_view($delta = '')
                 //dpm($result);
                 date_default_timezone_set('Asia/Singapore');
                 //
-               
                 $header = array(
-                    //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
-                    //array('data' => t('Address'), 'colspan' => 3),
                     array('data' => t('Town Council')),
                     array('data' => t('Lift ID')),
                     array('data' => t('Reported Date')),
@@ -475,21 +437,17 @@ function jav_block_view($delta = '')
                 $items = array();
                 foreach ($result as $row) {
                     $date = new DateTime();
-                    $date->setTimestamp(intval($row->ts)/1000);
+                    $date->setTimestamp(intval($row->ts) / 1000);
                     //$dtime = $date->format('j-M-y g:i a');
-                    //$dt = $date->format('j-M-y');
                     $dt = $date->format('d-m-Y');
                     $tt = $date->format('g:i a');
-                    //print_r($dtime, $row->snum);
                     $og_group = $grouplist[$row->lift_id];
                     $items[] = array($og_group, $row->lift_id, $dt, $tt, $row->value, $row->is_set);
                 }
-                //dpm($items);
-
-                //$block['content']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'reports-table')));
                 $block['content']['reports_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'reports-table')));
             } // if user_access
             break;
+            //
         case 'aob':
             if (user_access('access content')) {
                 print_r("Unexpected switch");
