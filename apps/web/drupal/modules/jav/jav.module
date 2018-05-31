@@ -26,14 +26,14 @@ function jav_help($path, $arg)
 /**
  * Implement the blocks in a separate file.
  *  hook_hook_info()
- * 
+ *
  */
 function jav_hook_info()
 {
-  $hooks['block_info']['group'] = 'block';
-  $hooks['block_view']['group'] = 'block';
+    $hooks['block_info']['group'] = 'block';
+    $hooks['block_view']['group'] = 'block';
 
-  return $hooks;
+    return $hooks;
 }
 
 
@@ -110,8 +110,7 @@ function jav_init()
 
     if (($library = libraries_detect('pdfmake')) && !empty($library['installed'])) {
         //print_r("pdfmake loaded");
-    }
-    else {
+    } else {
         $error = $library['error'];
         $error_message = $library['error message'];
         print_r("pdfmake not installed.");
@@ -143,7 +142,7 @@ function jav_init()
     }
 
     // TODO: Attach the JS to Dashboard view.
-    drupal_add_js(drupal_get_path('module', 'jav') .'/jav.js');
+    drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
     //drupal_add_css(drupal_get_path('module', 'jav') .'/your-css.css');
     //drupal_add_css(drupal_get_path('theme', 'hdbjav') .'/your-css.css');
 }
@@ -390,7 +389,7 @@ function jav_node_update($node)
         _lift_details_to_db($node, $flag);
     }
     if ($node->type == 'lift_companies') {
-	 $flag = false;
+        $flag = false;
         _update_db_referencing_lifts($node, $flag);
     }
 }
@@ -398,39 +397,39 @@ function jav_node_update($node)
 
 function _lift_details_to_db($node, $flag)
 {
-	//$ref = $node->get($field_lift_supplier)->referencedEntities();
-	//$view = node_view($node);
-        $lift_nid = $node->nid;
-        $lift_id = $node->field_lift_id['und'][0]['value'];
-	$tid_supplier = $node->field_lift_supplier['und'][0]['target_id'];
-	$node_supplier = node_load($tid_supplier);
-	$supplier_nid = $node_supplier->nid;
-	$sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
-	//dpm($sms_list);
-        //$flag = false;
-        module_load_include("config.inc", "jav");
-        $jav_db = getExtDBConfig();
-        module_load_include("api.inc", "jav");
-        _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+    //$ref = $node->get($field_lift_supplier)->referencedEntities();
+    //$view = node_view($node);
+    $lift_nid = $node->nid;
+    $lift_id = $node->field_lift_id['und'][0]['value'];
+    $tid_supplier = $node->field_lift_supplier['und'][0]['target_id'];
+    $node_supplier = node_load($tid_supplier);
+    $supplier_nid = $node_supplier->nid;
+    $sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+    //dpm($sms_list);
+    //$flag = false;
+    module_load_include("config.inc", "jav");
+    $jav_db = getExtDBConfig();
+    module_load_include("api.inc", "jav");
+    _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
 }
 
 function _update_db_referencing_lifts($node_supplier, $flag)
 {
-	$supplier_nid = $node_supplier->nid;
-	$sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
-	// Get all lifts referencing to this node entity.
-        module_load_include("config.inc", "jav");
-        $jav_db = getExtDBConfig();
-        module_load_include("api.inc", "jav");
-	$results = _get_ext_db_liftlist($jav_db, $supplier_nid);
-	$liftlist = array();
-	foreach($results as $row) {
-	    $lift_id = $row->lift_id;
-	    $lift_nid = intval($row->lift_nid);
-	    $supplier_nid = intval($row->supplier_nid);
-	    $liftlist = $lift_id;
-            _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
-	}
+    $supplier_nid = $node_supplier->nid;
+    $sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+    // Get all lifts referencing to this node entity.
+    module_load_include("config.inc", "jav");
+    $jav_db = getExtDBConfig();
+    module_load_include("api.inc", "jav");
+    $results = _get_ext_db_liftlist($jav_db, $supplier_nid);
+    $liftlist = array();
+    foreach ($results as $row) {
+        $lift_id = $row->lift_id;
+        $lift_nid = intval($row->lift_nid);
+        $supplier_nid = intval($row->supplier_nid);
+        $liftlist = $lift_id;
+        _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+    }
 }
 
 /**
@@ -440,13 +439,13 @@ function _update_db_referencing_lifts($node_supplier, $flag)
  */
 
 
-
-function _jav_set_list($lift_list = NULL) {
-  static $stored_lift_list = NULL;
-  if ($lift_list) {
-    $stored_lift_list = $lift_list;
-  }
-  return $stored_lift_list;
+function _jav_set_list($lift_list = NULL)
+{
+    static $stored_lift_list = NULL;
+    if ($lift_list) {
+        $stored_lift_list = $lift_list;
+    }
+    return $stored_lift_list;
 }
 
 
@@ -467,11 +466,11 @@ function jav_preprocess_views_view(&$vars)
             $nid = $cell->nid;
             $sid_content = $cell->field_field_lift_id[0];
             $sid = $sid_content['raw']['value'];
-	    //dpm($cell);
+            //dpm($cell);
             //$loc_content = $cell->field_field_lift_address[0];
             //$loc = $loc_content['raw']['thoroughfare'];
-	    // To be used for the dashboard event listing block.
-	    $loc = $cell->field_data_field_lift_address_field_lift_address_thoroughfar;
+            // To be used for the dashboard event listing block.
+            $loc = $cell->field_data_field_lift_address_field_lift_address_thoroughfar;
             $lift_details = array(
                 'sid' => $sid,
                 'nid' => $nid,
@@ -486,66 +485,12 @@ function jav_preprocess_views_view(&$vars)
         _jav_set_list($selected_lifts);
         //$lift_list = &drupal_static('jav');
         //$lift_list = $selected_lifts;
+        $_SESSION['jav'] = array();
+        $_SESSION['jav']['#selected_lifts'] = $selected_lifts;
         drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
     }
 }
 
-/**
- *
- * Substituting custom field content in views hooks 
- * eg. for disaplying data from ext db.
- */
-function jav_views_pre_render(&$view) {
-    // This is messy and hard to understand for site builders 
-	// and future developers.
-	//dpm($view->field);
-	foreach($view->result as &$item) {
-            //dpm()
-	    $lift_id = $item->field_field_lift_id[0]['rendered']['#markup'];
-	    $sid_list = array();
-	    $sid_list[] = $lift_id;
-	    $rpt_time = $item->field_field_event_time[0]['rendered']['#markup'];
-	    /*
-	    if($rpt_time == "Now") {
-		    $item = null;
-	    }
-	     */
-                $reqtype = 'rt';
-                $filter = new stdClass(); // (object) [];
-                $filter->start = -1;
-                $filter->end = -1;
-                $filter->sidList[] = $sid_list;
-                //$filter->sidList = ['112233C'];
-                //
-                module_load_include("config.inc", "jav");
-                $jav_db = getExtDBConfig();
-                module_load_include("api.inc", "jav");
-                $result = _getdata_exdb($jav_db, $reqtype, $filter);
-                date_default_timezone_set('Asia/Singapore');
-                //
-                $items = array();
-		// Only one result expected. If no entry, set default as None.
-		$lift_event = 'None';
-		$rpt_time = 'NA';
-		foreach ($result as $row) {
-	            //dpm($result);
-		    $is_set = $row->is_set;
-		    if($is_set == 1) {
-			    $lift_event = $row->value;
-                            $date = new DateTime();
-                            $date->setTimestamp(intval($row->ts)/1000);
-                            $rpt_time = $date->format('j-M-y g:i a');
-	             }
-                }
-                //dpm($items);
-
-            $item->field_field_event_type[0]['rendered']['#markup'] = t($lift_event);
-            $item->field_field_event_time[0]['rendered']['#markup'] = t($rpt_time);
-	    // Multiple errors expected for same list.
-            //$item->field_field_sensor_status[0]['rendered']['#markup'] = t($rpt_time);
-	}
-    //$view->result[0]->custom_field_999 = t('Foo');
-  }
 
 /*
 function jav_preprocess_page(&$vars) {
@@ -568,11 +513,12 @@ function jav_preprocess_node(&$variables){
   }
 }
      */
-function jav_form_alter(&$form, &$from_state, $form_id) {
+function jav_form_alter(&$form, &$from_state, $form_id)
+{
     //print_r($form);
-    if($form_id == 'lift_companies_node_form') {
+    if ($form_id == 'lift_companies_node_form') {
         //drupal_set_title(t('Add Lift Company'));
-	$form['title']['#title'] = t('Company Name');
+        $form['title']['#title'] = t('Company Name');
     }
     //dpm($form);
 }

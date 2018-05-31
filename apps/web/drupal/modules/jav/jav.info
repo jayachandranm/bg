@@ -4,3 +4,6 @@ core = 7.x
 dependencies[] = libraries
 ; NEW LINE
 configure = admin/config/content/jav
+
+; Views Handlers
+files[] = includes/views_handler_event_field.inc
