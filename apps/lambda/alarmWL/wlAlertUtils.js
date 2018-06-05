@@ -4,6 +4,10 @@ var moment = require('moment');
 var bs = require('binarysearch');
 //var math = require('mathjs')
 
+AWS.config.update({region: 'ap-southeast-1'});
+dynDoc = new AWS.DynamoDB.DocumentClient();
+
+
 module.exports = {
     getAlertlevelRise,
     getAlertlevelFall,
@@ -11,22 +15,6 @@ module.exports = {
     setShadowState,
     composeSMS
 };
-
-/*
-var getClosestValues = function(a, x) {
-    var lo = -1, hi = a.length;
-    while (hi - lo > 1) {
-        var mid = Math.round((lo + hi)/2);
-        if (a[mid] <= x) {
-            lo = mid;
-        } else {
-            hi = mid;
-        }
-    }
-    if (a[lo] == x) hi = lo;
-    return [a[lo], a[hi]];
-}
-*/
 
 function getAlertlevelRise(currWL, lastWL, riseLevels) {
     var alertLevel = 0;
@@ -40,7 +28,10 @@ function getAlertlevelRise(currWL, lastWL, riseLevels) {
 }
 
 function getAlertlevelFall(currWL, lastWL, delta, fallLevels) {
+    var alertObj = {};
     var alertLevel = 0;
+    var isDeltaRegion = false;
+    var correctedWL = currWL;
 
     // Subtract delta from each fall level.
     var fallLevels2 = fallLevels.map( function(value) { 
@@ -50,9 +41,25 @@ function getAlertlevelFall(currWL, lastWL, delta, fallLevels) {
     var lvlBins = bs.rangeValue(fallLevels2, currWL, lastWL);
     var lvlIdxRange = bs.range(fallLevels2, currWL, lastWL);
     //
+    // Check whether within delta region, to help adjust wl.
+    // Do a threshold match with original thresholds, without delta.
+    var lvlBinsNoDelta = bs.rangeValue(fallLevels, currWL, lastWL);
+    var lvlIdxRangeNoDelta = bs.range(fallLevels, currWL, lastWL);
+    if(lvlBinsNoDelta.length > lvlBins.length) {
+        // The fall value is within a delta region.
+        isDeltaRegion = true;
+        correctedWL = lvlBinsNoDelta[0];
+    }
+    //
     alertLevel = getAlertLevel(lvlBins, lastWL, false);
+    alertObj = {
+        "alertLevel" : alertLevel,
+        "isDeltaRegion" : isDeltaRegion,
+        "correctedWL" : correctedWL
+    }
     // TODO: Handle critical level.
-    return alertLevel;
+    //return alertLevel;
+    return alertObj;
 }
 
 function getAlertLevel(lvlBins, lastWL, isRise) {
@@ -79,7 +86,7 @@ function getAlertLevel(lvlBins, lastWL, isRise) {
         if(isRise) {
             alertLevel = lvlBins[lvlBins.length - 1];
             // TODO: Possible spike case.
-    } else {
+        } else {
             // For fall select the lower range value for threshold.
             alertLevel = lvlBins[0];
         }
@@ -134,6 +141,32 @@ function setShadowState(iotdata, config, callback) {
     });
 }
 
+function addToDDB(tableName, msg, callback) {
+
+    var params = {
+        TableName: 'Table',
+        Item: {
+            HashKey: 'haskey',
+            NumAttribute: 1,
+            BoolAttribute: true,
+            ListAttribute: [1, 'two', false],
+            MapAttribute: { foo: 'bar' },
+            NullAttribute: null
+        }
+    };
+
+    dynDoc.put(params, function (err, data) {
+        if (err) {
+            console.log(err);
+            callback(err);
+        }
+        else {
+            //console.log(data);
+            callback(null, data);
+        }
+    });
+}
+
 //
 function composeSMS(msg, alertLevel, wlRise, devState) {
     var timeNow = new Date();
@@ -166,3 +199,20 @@ function composeSMS(msg, alertLevel, wlRise, devState) {
     console.log("Message to send: " + messageText);
     return messageText;
 }
+
+/*
+var getClosestValues = function(a, x) {
+    var lo = -1, hi = a.length;
+    while (hi - lo > 1) {
+        var mid = Math.round((lo + hi)/2);
+        if (a[mid] <= x) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    if (a[lo] == x) hi = lo;
+    return [a[lo], a[hi]];
+}
+*/
+

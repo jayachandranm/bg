@@ -25,20 +25,17 @@ module.exports.processWL = processWL;
 
 // Set up the code to call when the Lambda function is invoked
 //exports.handler = (event, context, callback) => {
-function processWL(stream, context, callback) {
+function processWL(event, context, callback) {
     // Load the message passed into the Lambda function into a JSON object
-    //var eventText = JSON.stringify(msg, null, 2);
-    var record_0 = stream.Records[0].dynamodb;
-    var eventText = JSON.stringify(record_0, null, 2);
+    var msg = event;
+    var eventText = JSON.stringify(msg, null, 2);
     // Log a message to the console, you can view this text in the Monitoring tab in the Lambda console or in the CloudWatch Logs console
-    //console.log("Received DDB record-0:", eventText);
+    //console.log("Received msg from device:", eventText);
  
-    var msg_0 = record_0.NewImage;
-    var msg = parse({"M": msg_0});
-    //console.log("Received DDB record-0 (NewImage):", JSON.stringify(msg_0, null, 2));
     var currWL = msg.wl;
-    var lastWL = currWL;
     //var lastWL = msg.hs.wl_1;
+    // Take last WL from DB instead.
+    var lastWL = currWL;
     var sid = msg.sid;
     //var thingName = sid; 
     var ts_unix = msg.ts;
@@ -50,13 +47,14 @@ function processWL(stream, context, callback) {
     }
     //
     console.log("New msg:", msg);
-
+    //
+    var tablename = 'pubc5wl-ddb';
     // If md is defined, do nothing, just return.
     //if (msg.hasOwnProperty(md) ) { // && msg.md !== null) {
     if (typeof(msg.md) !== 'undefined') { // && msg.md !== null) {
-        console.log("Flag md set, either maintenance or spike. Recieved Record: ", eventText);
-        callback(null, "Maintenance, Exit.");
-        return;
+        var logMsg = "Either maintenance or spike. Recieved Record: " 
+        console.log(logMsg, eventText);
+        addToDDBexit(tablename, msg, logMsg, callback);
     }
 
     var riseLevels = process.env.RISE_LVLS === undefined ? config.riseLvls : process.env.RISE_LVLS;
@@ -76,7 +74,7 @@ function processWL(stream, context, callback) {
     var devState;
 
     // Get prev value for this sid from DDB table.
-    var tablename = 'pubc5wl-ddb';
+    // As the new msg is not yet added to DDB, get most recent entry.
     var ddb_params = {
         TableName: tablename,
         KeyConditionExpression: 'sid = :hkey',
@@ -84,42 +82,52 @@ function processWL(stream, context, callback) {
             ':hkey': sid
         },
         ScanIndexForward: false,
-        Limit: 2,
+        //Limit: 2,
+        Limit: 1,
     };
 
-    var record_1;
+    var record_0;
     dynDoc.query(ddb_params, function (err, data) {
         if (err) {
             console.log(err, err.stack);
+            // Something wrong with DDB, will not try to write the new msg.
             callback(err);
         }
         else {
-            record_1 = data.Items[1];
-            lastWL = record_1.wl;
-            console.log("Prev record: ", JSON.stringify(record_1, null, 2));
-            if (typeof(record_1.md) !== 'undefined') {
-                console.log("Flag md (maintenance or spike) set in prev msg. Skip.");
-                callback(null, "Prev message is Spike or Maintenance. Exit.");
-                return;
+            //record_1 = data.Items[0]; 
+            record_0 = data.Items[0]; 
+            lastWL = record_0.wl;
+            console.log("Prev record: ", JSON.stringify(record_0, null, 2));
+            if (typeof(record_0.md) !== 'undefined') {
+                var logMsg = "Prev message is Spike or Maintenance. Exit."
+                console.log(logMsg);
+                addToDDBexit(tablename, msg, logMsg, callback);
             }
             //
             else if( (currWL < lowestLvl) && (lastWL < lowestLvl) ) {
                 // If both current and last values are below lowest thresholds, no further processing required.
-                console.log("Current and Prev values below Threshold, nothing to process.");
-                callback(null, "Both values out of active range. Exit.")
-                return;
+                var logMsg = "Current and Prev values below Threshold, nothing to process." 
+                console.log(logMsg);
+                addToDDBexit(tablename, msg, logMsg, callback);
             }
             // Handle possible device failure to detect spike.
             else if ((currWL >= spikeRange[1]) && (lastWL < spikeRange[0])) {
-                // Set dev to maintenance mode.
                 console.log("Level increased by large margin. Set the device to maintenance mode.");
+                // Write new msg to DDB.
+                utils.addToDDB(tablename, msg, function (err, data) {
+                    if (err) {
+                        context.fail(err);
+                    } else {
+                        console.log("Added new msg to DDB.");
+                    }
+                });
+                // Set dev to maintenance mode.
                 var config_mnt = {
                     mode: "maintenance",
                     thingName: msg.sid
                 };
                 utils.setShadowState(iotdata, config_mnt, function (err, data) {
                     if (err) {
-                        //console.log("Error in setting Shadow.");
                         context.fail(err);
                     } else {
                         console.log("Setting Shadow succeeded.");
@@ -149,16 +157,39 @@ function processWL(stream, context, callback) {
                             wlRise = true;
                             alertLevel = utils.getAlertlevelRise(currWL, lastWL, riseLevels);
                             console.log("Rise Level ->", alertLevel);
+                            // Write new msg to DDB.
+                            utils.addToDDB(tablename, msg, function (err, data) {
+                                if (err) {
+                                    context.fail(err);
+                                } else {
+                                    console.log("Added new msg to DDB.");
+                                }
+                            });
                         } 
                         else if (currWL < lastWL) {
                             console.log("Level Falling..");
                             wlRise = false;
                             alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
+                            alertObj = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
+                            alertLevel = alertObj.alertLevel;
                             console.log("Fall Level ->", alertLevel);
+                            var isDeltaRegion = alertObj.isDeltaRegion;
+                            if (isDeltaRegion) {
+                                msg.wl = alertObj.correctedWL;
+                            }
+                            utils.addToDDB(tablename, msg, function (err, data) {
+                                if (err) {
+                                    context.fail(err);
+                                } else {
+                                    console.log("Added new msg to DDB.");
+                                }
+                            });
                         }
                         else {
-                            // If currWL==lastWL, no action.
-                            console.log("No Level change.");
+                            // If currWL==lastWL, no action. Just write to DDB.
+                            var logMsg = "No Level change." 
+                            console.log(logMsg);
+                            addToDDBexit(tablename, msg, logMsg, callback);
                         }
                         // May have to use history by accessing Shadow.
                         if (alertLevel) {
@@ -179,6 +210,18 @@ function processWL(stream, context, callback) {
     }); // dyn qyery
 } 
 
+function addToDDBexit(tablename, msg, logMsg, callback) {
+    utils.addToDDB(tablename, msg, function (err, data) {
+        if (err) {
+            context.fail(err);
+        } else {
+            console.log("Added new msg to DDB.");
+        }
+        callback(null, logMsg)
+        // TODO: Needed?
+        return;
+    });
+}
 
 function sendMsgByTopic(sid, topicName, messageText) {
     //
