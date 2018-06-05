@@ -13,6 +13,7 @@ module.exports = {
     getAlertlevelFall,
     //getShadowState,
     setShadowState,
+    addToDDB,
     composeSMS
 };
 
@@ -37,6 +38,7 @@ function getAlertlevelFall(currWL, lastWL, delta, fallLevels) {
     var fallLevels2 = fallLevels.map( function(value) { 
         return value - delta; 
     });
+    console.log("Fall Thresholds: ", fallLevels, fallLevels2, delta);
     // Here currWL is the lower range than lastWL.
     var lvlBins = bs.rangeValue(fallLevels2, currWL, lastWL);
     var lvlIdxRange = bs.range(fallLevels2, currWL, lastWL);
@@ -45,17 +47,24 @@ function getAlertlevelFall(currWL, lastWL, delta, fallLevels) {
     // Do a threshold match with original thresholds, without delta.
     var lvlBinsNoDelta = bs.rangeValue(fallLevels, currWL, lastWL);
     var lvlIdxRangeNoDelta = bs.range(fallLevels, currWL, lastWL);
+    console.log("Lvl Bins: ", lvlBins, lvlBinsNoDelta);
     if(lvlBinsNoDelta.length > lvlBins.length) {
         // The fall value is within a delta region.
+        console.log("Delta region.");
         isDeltaRegion = true;
         correctedWL = lvlBinsNoDelta[0];
     }
     //
     alertLevel = getAlertLevel(lvlBins, lastWL, false);
+    // If alertLevel is 0, means no alert, return as 0.
+    if(alertLevel != 0) {
+        // Level is detected delta below, Report this for original threshold.
+        alertLevel = alertLevel + delta;
+    }
     alertObj = {
-        "alertLevel" : alertLevel,
-        "isDeltaRegion" : isDeltaRegion,
-        "correctedWL" : correctedWL
+        alertLevel : alertLevel,
+        isDeltaRegion : isDeltaRegion,
+        correctedWL : correctedWL
     }
     // TODO: Handle critical level.
     //return alertLevel;
@@ -68,7 +77,7 @@ function getAlertLevel(lvlBins, lastWL, isRise) {
         // Neither value is within the range of interest. alertLevel remains 0.
         console.log("No Lvl bins, both values within same range, no alerts.");
     }
-    if (lvlBins.length == 1) {
+    else if (lvlBins.length == 1) {
         // Either both values are split across a threshold.
         // OR at least one of the values is exactly at the threshold.
         if(lastWL == lvlBins[0]) {
@@ -80,7 +89,7 @@ function getAlertLevel(lvlBins, lastWL, isRise) {
             console.log("Single Lvl bin, threshold cross, create alert.");
         }
     }
-    if (lvlBins.length > 1) {
+    else if (lvlBins.length > 1) {
         // A large jump, at least one complete threshold level. Mark this as alert and handle separately.
         console.log("Large jump, at least one complete threshold range, set alert.");
         if(isRise) {
@@ -142,9 +151,9 @@ function setShadowState(iotdata, config, callback) {
 }
 
 function addToDDB(tableName, msg, callback) {
-
+/*
     var params = {
-        TableName: 'Table',
+        TableName: tableName,
         Item: {
             HashKey: 'haskey',
             NumAttribute: 1,
@@ -153,6 +162,11 @@ function addToDDB(tableName, msg, callback) {
             MapAttribute: { foo: 'bar' },
             NullAttribute: null
         }
+    };
+*/
+    var params = {
+        TableName: tableName,
+        Item: msg
     };
 
     dynDoc.put(params, function (err, data) {

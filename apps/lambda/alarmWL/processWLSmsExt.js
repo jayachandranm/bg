@@ -41,10 +41,12 @@ function processWL(event, context, callback) {
     var ts_unix = msg.ts;
     var ts_r = msg.ts_r;
 
+    /*
     if(!sid.includes("TST")) {
         console.log("Not TEST device, ignore.")
         return;
     }
+    */
     //
     console.log("New msg:", msg);
     //
@@ -149,7 +151,7 @@ function processWL(event, context, callback) {
                         devState = jsonPayload.state.reported;
                         // var delta = devState.delta
                         // delta is handled at device side. Within delta range, wl sticks to previous value when wa changes.
-                        var delta = 0;
+                        var delta = devState.delta;
                         //
                         var wlRise = true;
                         if (currWL > lastWL) {
@@ -169,19 +171,20 @@ function processWL(event, context, callback) {
                         else if (currWL < lastWL) {
                             console.log("Level Falling..");
                             wlRise = false;
-                            alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
+                            //alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
                             alertObj = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
                             alertLevel = alertObj.alertLevel;
                             console.log("Fall Level ->", alertLevel);
                             var isDeltaRegion = alertObj.isDeltaRegion;
                             if (isDeltaRegion) {
+                                console.log("Correcting msg..");
                                 msg.wl = alertObj.correctedWL;
                             }
                             utils.addToDDB(tablename, msg, function (err, data) {
                                 if (err) {
                                     context.fail(err);
                                 } else {
-                                    console.log("Added new msg to DDB.");
+                                    console.log("Added new msg to DDB after correction.");
                                 }
                             });
                         }
@@ -192,7 +195,7 @@ function processWL(event, context, callback) {
                             addToDDBexit(tablename, msg, logMsg, callback);
                         }
                         // May have to use history by accessing Shadow.
-                        if (alertLevel) {
+                        if (alertLevel != 0) {
                             var messageText = utils.composeSMS(msg, alertLevel, wlRise, devState);
                             //
                             var mainTopic = sid;
@@ -267,7 +270,7 @@ function sendMsg(sid, msgTxt, subsList) {
     var path3 = "&sendid=" + encodeURI(sms_from)
         + "&dstno=" + encodeURI(subsCsvList);
     //
-    console.log(path1 + path2 + path3);
+    //console.log(path1 + path2 + path3);
 
     var options = {
         host: sms_server,
@@ -310,7 +313,7 @@ function storeInS3(sid, smsMsg, subsCsvList) {
     var sms_report = sid + '\t' + dt + '\t' + subsCsvList
         + '\t' + smsMsg.replace(/(?:\r\n|\r|\n)/g, ', ');
     console.log('Report filename: ', s3_key);
-    console.log('Log_msg: ', sms_report);
+    //console.log('Log_msg: ', sms_report);
     var params = {
         Bucket: bucket_name,
         Key: s3_key,
