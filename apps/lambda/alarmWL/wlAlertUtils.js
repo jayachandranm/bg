@@ -48,14 +48,21 @@ function getAlertlevelFall(currWL, lastWL, delta, fallLevels) {
     var lvlBinsNoDelta = bs.rangeValue(fallLevels, currWL, lastWL);
     var lvlIdxRangeNoDelta = bs.range(fallLevels, currWL, lastWL);
     console.log("Lvl Bins: ", lvlBins, lvlBinsNoDelta);
-    if(lvlBinsNoDelta.length > lvlBins.length) {
+    if(lvlBinsNoDelta.length != lvlBins.length) {
         // The fall value is within a delta region.
-        console.log("Delta region.");
-        isDeltaRegion = true;
-        correctedWL = lvlBinsNoDelta[0];
+        if(lvlBinsNoDelta.length > lvlBins.length) {
+            console.log("Delta region.");
+            isDeltaRegion = true;
+            correctedWL = lvlBinsNoDelta[0];
+            alertLevel = 0;
+        } else {
+            // Prev value within delta region, no correction needed.
+            alertLevel = 0;
+        }
     }
-    //
-    alertLevel = getAlertLevel(lvlBins, lastWL, false);
+    else {
+        alertLevel = getAlertLevel(lvlBins, lastWL, false);
+    }
     // If alertLevel is 0, means no alert, return as 0.
     if(alertLevel != 0) {
         // Level is detected delta below, Report this for original threshold.
