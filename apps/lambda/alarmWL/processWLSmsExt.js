@@ -57,6 +57,8 @@ function processWL(event, context, callback) {
         var logMsg = "Either maintenance or spike. Recieved Record: " 
         console.log(logMsg, eventText);
         addToDDBexit(tablename, msg, logMsg, callback);
+        // TODO: Needed?
+        return;
     }
 
     var riseLevels = process.env.RISE_LVLS === undefined ? config.riseLvls : process.env.RISE_LVLS;
@@ -89,6 +91,7 @@ function processWL(event, context, callback) {
     };
 
     var record_0;
+    console.log("Get previous record from DDB.");
     dynDoc.query(ddb_params, function (err, data) {
         if (err) {
             console.log(err, err.stack);
@@ -104,6 +107,8 @@ function processWL(event, context, callback) {
                 var logMsg = "Prev message is Spike or Maintenance. Exit."
                 console.log(logMsg);
                 addToDDBexit(tablename, msg, logMsg, callback);
+                // TODO: Needed?
+                return;
             }
             //
             else if( (currWL < lowestLvl) && (lastWL < lowestLvl) ) {
@@ -111,6 +116,8 @@ function processWL(event, context, callback) {
                 var logMsg = "Current and Prev values below Threshold, nothing to process." 
                 console.log(logMsg);
                 addToDDBexit(tablename, msg, logMsg, callback);
+                // TODO: Needed?
+                return;
             }
             // Handle possible device failure to detect spike.
             else if ((currWL >= spikeRange[1]) && (lastWL < spikeRange[0])) {
@@ -193,6 +200,8 @@ function processWL(event, context, callback) {
                             var logMsg = "No Level change." 
                             console.log(logMsg);
                             addToDDBexit(tablename, msg, logMsg, callback);
+                            // TODO: Needed?
+                            return;
                         }
                         // May have to use history by accessing Shadow.
                         if (alertLevel != 0) {
@@ -221,8 +230,6 @@ function addToDDBexit(tablename, msg, logMsg, callback) {
             console.log("Added new msg to DDB.");
         }
         callback(null, logMsg)
-        // TODO: Needed?
-        return;
     });
 }
 
@@ -278,11 +285,11 @@ function sendMsg(sid, msgTxt, subsList) {
         //method: 'POST'
     };
     //var req = http.request(options, callback);
-    var req = https.get(options, callback).end();
+    var req = https.get(options, smsCallback).end();
     // TODO: Update log based on SMS send response.
     storeInS3(sid, msgTxt, subsCsvList);
 
-    var callback = function (response) {
+    var smsCallback = function (response) {
         var str = '';
 
         //another chunk of data has been recieved, so append it to `str`
