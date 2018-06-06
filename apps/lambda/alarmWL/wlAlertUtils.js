@@ -23,81 +23,101 @@ function getAlertlevelRise(currWL, lastWL, riseLevels) {
     var lvlBins = bs.rangeValue(riseLevels, lastWL, currWL);
     var lvlIdxRange = bs.range(riseLevels, lastWL, currWL);
     // thrBins === undefined ||
-    alertLevel = getAlertLevel(lvlBins, lastWL, true);
+    if (lvlBins.length > 0) {
+        // Neither value is within the range of interest. alertLevel remains 0.
+        console.log("Thr crossing on Rise, look for alert.");
+        alertLevel = getAlertLevel(lvlBins, currWL, lastWL, true);
+    } else {
+        console.log("No crossing of any Thr, both values within same range, no alerts.");
+    }
+
     // TODO: Handle critical level.
     return alertLevel;
 }
 
 function getAlertlevelFall(currWL, lastWL, delta, fallLevels) {
-    var alertObj = {};
     var alertLevel = 0;
     var isDeltaRegion = false;
     var correctedWL = currWL;
+    var alertObj = {};
 
     // Subtract delta from each fall level.
     var fallLevels2 = fallLevels.map( function(value) { 
         return value - delta; 
     });
     console.log("Fall Thresholds: ", fallLevels, fallLevels2, delta);
-    // Here currWL is the lower range than lastWL.
-    var lvlBins = bs.rangeValue(fallLevels2, currWL, lastWL);
-    var lvlIdxRange = bs.range(fallLevels2, currWL, lastWL);
-    //
-    // Check whether within delta region, to help adjust wl.
+
     // Do a threshold match with original thresholds, without delta.
+    // For fall, currWL is the lower range than lastWL.
     var lvlBinsNoDelta = bs.rangeValue(fallLevels, currWL, lastWL);
     var lvlIdxRangeNoDelta = bs.range(fallLevels, currWL, lastWL);
-    console.log("Lvl Bins: ", lvlBins, lvlBinsNoDelta);
-    if(lvlBinsNoDelta.length != lvlBins.length) {
-        // The fall value is within a delta region.
+    // If no crossing, no further check or action is needed.
+    if(lvlBinsNoDelta.length == 0) {
+        console.log("No crossing of any Thr, both values within same range, no alerts.");
+        alertLevel = 0;
+    }
+    else {
+        // If there is crossing, check crossing with delta applied.
+        var lvlBins = bs.rangeValue(fallLevels2, currWL, lastWL);
+        var lvlIdxRange = bs.range(fallLevels2, currWL, lastWL);
+        console.log("Lvl Bins: ", lvlBins, lvlBinsNoDelta);
+        //
+        if(lvlBins.length > 0) {
+            alertLevel = getAlertLevel(lvlBins, currWL, lastWL, false);
+        }
+        // Check whether currWL within delta region, to help adjust wl.
+        // If lesser Thr crossing with delta, currWL in delta region.
         if(lvlBinsNoDelta.length > lvlBins.length) {
             console.log("Delta region.");
             isDeltaRegion = true;
             correctedWL = lvlBinsNoDelta[0];
-            alertLevel = 0;
-        } else {
-            // Prev value within delta region, no correction needed.
-            alertLevel = 0;
         }
-    }
-    else {
-        alertLevel = getAlertLevel(lvlBins, lastWL, false);
+        // If currWL exactly on delta-Thr, consider it still delta region.
+        if(lvlBins.length > 0) {
+            if(currWL == lvlBins[0]) {
+                console.log("Delta region.");
+                isDeltaRegion = true;
+                correctedWL = lvlBinsNoDelta[0];                    
+            }
+        }
     }
     // If alertLevel is 0, means no alert, return as 0.
     if(alertLevel != 0) {
         // Level is detected delta below, Report this for original threshold.
         alertLevel = alertLevel + delta;
     }
+
     alertObj = {
         alertLevel : alertLevel,
         isDeltaRegion : isDeltaRegion,
         correctedWL : correctedWL
     }
+
     // TODO: Handle critical level.
-    //return alertLevel;
     return alertObj;
 }
 
-function getAlertLevel(lvlBins, lastWL, isRise) {
+function getAlertLevel(lvlBins, currWL, lastWL, isRise) {
     var alertLevel = 0;
-    if (lvlBins.length == 0) {
-        // Neither value is within the range of interest. alertLevel remains 0.
-        console.log("No Lvl bins, both values within same range, no alerts.");
-    }
-    else if (lvlBins.length == 1) {
+    if (lvlBins.length == 1) {
         // Either both values are split across a threshold.
         // OR at least one of the values is exactly at the threshold.
-        if(lastWL == lvlBins[0]) {
-            // Whether Rise or Fall, in this case the bs detected value is lastWL.
-            console.log("Single Lvl bin, but last value exactly on Thr, no alerts.");
+        if((lastWL == lvlBins[0]) && isRise){
+            // When Rise, currWL exactly on Thr-level is an alert.
+            // Ignore lastWL exactly on Thr-level.
+            console.log("Rise, last value exactly on Thr, one bin, no alerts.");
+        } 
+        else if((currWL == lvlBins[0]) && !isRise){
+            console.log("Fall, curr value exactly on Thr, one bin, no alerts.");
         } 
         else {
             alertLevel = lvlBins[0];
-            console.log("Single Lvl bin, threshold cross, create alert.");
+            console.log("Single Lvl bin, threshold cross, alert.");
         }
     }
     else if (lvlBins.length > 1) {
-        // A large jump, at least one complete threshold level. Mark this as alert and handle separately.
+        // A large jump, at least one complete threshold level. 
+        // Mark this as alert and handle separately.
         console.log("Large jump, at least one complete threshold range, set alert.");
         if(isRise) {
             alertLevel = lvlBins[lvlBins.length - 1];
