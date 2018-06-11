@@ -404,7 +404,11 @@ function _lift_details_to_db($node, $flag)
     $tid_supplier = $node->field_lift_supplier['und'][0]['target_id'];
     $node_supplier = node_load($tid_supplier);
     $supplier_nid = $node_supplier->nid;
-    $sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+    if(count($node_supplier->field_sms_nums2['und']) > 0) { 
+      $sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+    } else {
+       $sms_list = "";
+    }
     //dpm($sms_list);
     //$flag = false;
     module_load_include("config.inc", "jav");
@@ -416,7 +420,12 @@ function _lift_details_to_db($node, $flag)
 function _update_db_referencing_lifts($node_supplier, $flag)
 {
     $supplier_nid = $node_supplier->nid;
-    $sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+    //dpm($node_supplier);
+    if(count($node_supplier->field_sms_nums2['und']) > 0) {
+        $sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
+    } else {
+        $sms_list = "";
+    }
     // Get all lifts referencing to this node entity.
     module_load_include("config.inc", "jav");
     $jav_db = getExtDBConfig();
