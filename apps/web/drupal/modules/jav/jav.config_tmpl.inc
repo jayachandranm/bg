@@ -1,13 +1,13 @@
 <?php
 function getExtDBConfig() {
-    $bg_db = array(
+    $jav_db = array(
         'database' => 'mydb',
         'username' => 'user', 
         'password' => 'pass',  
         'host' => 'localhost',  
         'driver' => 'mysql',  
     );
-    return $bg_db;
+    return $jav_db;
 }
 /*
 return [
