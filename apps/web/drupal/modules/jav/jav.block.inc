@@ -33,8 +33,31 @@ function jav_block_info()
         'info' => t('JAV Reports'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
+    $blocks['dash_info'] = array(
+        'info' => t('Info Widgets'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
     return $blocks;
 }
+
+/**
+ *
+ * Implements hook_theme().
+ */
+function jav_theme()
+{
+    $theme_subfolder = drupal_get_path('module', 'jav') . "/theme";
+    return array(
+        'jav_dash_info' => array(
+            'path' => $theme_subfolder,
+            'template' => 'jav_dash_info_blk',
+            'arguments' => array('items' => NULL),
+            // All preprocess hooks in .theme.inc.
+            //'file' => 'bgmap.theme.inc',
+        ),
+    );
+}
+
 
 /**
  * Implements hook_block_view().
@@ -200,7 +223,7 @@ function jav_block_view($delta = '')
                 $filter->start = -1;
                 $filter->end = -1;
                 //dpm($sid_list);
-                $sid_list = ['99'];
+                //$sid_list = ['99'];
                 $filter->sidList = $sid_list;
                 //$filter->sidList = ['99'];
                 //
@@ -216,7 +239,7 @@ function jav_block_view($delta = '')
                 $lift_event = 'None';
                 $rpt_time = 'NA';
                 foreach ($result as $row) {
-                    //dpm($result);
+                    //dpm($row);
                     $is_set = $row->is_set;
                     if ($is_set == 1) {
                         $lift_event = $row->value;
@@ -449,6 +472,25 @@ function jav_block_view($delta = '')
             } // if user_access
             break;
             //
+        case 'dash_info':
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t(''),
+                    'content' => array
+                    (
+                        'info_block' => array
+                        (
+                            '#prefix' => "<div id='info'>",
+                            '#suffix' => "</div>",
+                            '#markup' => t("Info....."),
+                        ),
+                    ),
+                );
+                $items2 = array();
+                $block['content']['info_block']['#markup'] = theme('jav_dash_info', array('items' => $items2));
+            } // if user_access
+            break;
         case 'aob':
             if (user_access('access content')) {
                 print_r("Unexpected switch");
