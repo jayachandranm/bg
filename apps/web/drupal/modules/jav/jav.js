@@ -6,8 +6,12 @@
             showTodayButton: true,
             showClear: true
         };
-        $('#sort-table').DataTable();
-        $('#tbl-dashboard-view').DataTable();
+        $('#sort-table').DataTable({
+                "order": [[0, "desc"]]
+              });
+        $('#tbl-dashboard-view').DataTable({
+                "order": [[0, "desc"]]
+              });
         $('#status-12345AB').html("Fiber err.");
         /*
                .yadcf([{
