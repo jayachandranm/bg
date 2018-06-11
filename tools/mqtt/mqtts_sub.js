@@ -30,7 +30,7 @@ var options = {
 	protocol: 'mqtts',
 	protocolId: 'MQIsdp',
 	username: 'admin',
-	password: 'pass',
+	password: 'i2ri2ri2r',
 	ca: CAfile,
 	key: KEY,
 	cert: CERT,
@@ -86,9 +86,14 @@ client.on('message', function (topic, message) {
 	  client.publish('res', replyMsg);
 	  var liftEvent = dcMsg['type'];
 	  if(liftEvent && dcMsg['set_reset']) {
-              console.log("Send Alert: ");
-	      //alert_utils.sendSMS("123456", dcMsg);
-              //alert_utils.sendAlert(liftId, dcMsg);
+			console.log("Send Alert: ");
+			var smsSubsList = dbutil.getSubsList(liftId, function(err, smsSubsList) {
+				if(err) console.log(err);
+				console.log("SMS List: ", smsSubsList);
+     	        //alert_utils.sendSMS("123456", dcMsg);
+				//alert_utils.sendAlert(liftId, dcMsg, smsSubsList);
+				alert_utils.sendSMS(liftId, dcMsg, smsSubsList);
+			});
 	  }
 	  break;
 	  case 'alt2':
