@@ -13,7 +13,8 @@ module.exports.getSubsList = getSubsList;
 
 
 var pool = mysql.createPool({
-    connectionLimit: 10,
+    connectionLimit: 100,
+    waitForConnections: false,
     host: 'localhost',
     user: 'jav',
     password: 'hdb%jav$1',
@@ -144,13 +145,14 @@ function transformAlt1Msg(alt1Msg) {
 }
 
 function add2dbAlerts(liftId, dcMsg) {
+    console.log("DB, requesting connection from pool for event insert.");
     pool.getConnection(function (err, connection) {
         // Use the connection
         if (err) {
             console.log("DB connection error: ", err);
         }
         else {
-            console.log("user: ", config.mysql.user)
+            console.log("Got DB pool, user: ", config.mysql.user);
             var uTime = dcMsg['ts'] * 1000;
             var liftEvent = dcMsg['type'];
             var srcSensorGroup = dcMsg['sensor'];
@@ -175,17 +177,20 @@ function add2dbAlerts(liftId, dcMsg) {
             connection.query('INSERT INTO lift_events SET ?',
                 { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, is_set: isSet, value: liftEvent },
                 function (err, result) {
-                    connection.release();
                     if (err) {
-                        throw err;
+                        //throw err;
+                        console.log("DB insert error: ", err);
+                    } else {
+                        console.log("DB insert success, id = ", result.insertId);
+                        connection.release();
                     }
-                    console.log(result.insertId);
                 });
         }
     });
 }
 
 function add2dbErrors(liftId, dcMsg) {
+    console.log("DB, requesting connection from pool for error insert.");
     pool.getConnection(function (err, connection) {
         // Use the connection
         if (err) {
@@ -193,6 +198,7 @@ function add2dbErrors(liftId, dcMsg) {
         }
         else {
             // err_event, err_rpt
+            console.log("DB received pool.");
             var msgType = dcMsg['msg_type'];
             var allHealthy = dcMsg['no_errors'];
             //
@@ -214,9 +220,12 @@ function add2dbErrors(liftId, dcMsg) {
                     function (err, result) {
                         // TODO: Release connection only after multiple insert is completed.
                         //connection.release();
-                        if (err)
-                            throw err;
-                        console.log(result.insertId);
+                        if (err) {
+                            //throw err;
+                            console.log("DB insert error: ", err);
+                        } else {
+                            console.log("DB insert success, id = ", result.insertId);
+                        }
                     });
             } else {
                 // For each sensor_group,
@@ -239,9 +248,12 @@ function add2dbErrors(liftId, dcMsg) {
                                 function (err, result) {
                                     // TODO: Release connection only after multiple insert is completed.
                                     //connection.release();
-                                    if (err)
-                                        throw err;
-                                    console.log(result.insertId);
+                                    if (err) {
+                                        //throw err;
+                                        console.log("DB insert error: ", err);
+                                    } else {
+                                        console.log("DB insert success, id = ", result.insertId);
+                                    }
                                 });
                         });
                     });
