@@ -282,6 +282,7 @@ function jav_libraries_info()
                     'buttons_file_export/buttons.print.min.js',
                     'buttons_file_export/dataTables.buttons.min.js',
                     'yadcf/jquery.dataTables.yadcf.js',
+                    'sorting/datetime-moment.js',
                 ),
                 'css' => array(
                     //'jquery.dataTables.css' => array(),
@@ -465,7 +466,7 @@ function jav_preprocess_views_view(&$vars)
 {
     $mpath = drupal_get_path('module', 'jav');
     //dpm($vars['view']);
-    if ($vars['view']->name == 'dashboard' && $vars['view']->current_display == 'page') {
+    if (($vars['view']->name == 'dashboard' || $vars['view']->name == 'dashboard2')  && $vars['view']->current_display == 'page') {
         $selected_devs = array();
         $dev_details = array();
         $selected_lifts = array();
@@ -473,6 +474,10 @@ function jav_preprocess_views_view(&$vars)
             //print_r($cell->node_title);
             //dpm($cell);
             $nid = $cell->nid;
+            $options = array('absolute' => TRUE);
+            $lift_url = url('node/' . $nid, $options);
+            //$node = node_load($nid);
+            //dpm($node);
             $sid_content = $cell->field_field_lift_id[0];
             $sid = $sid_content['raw']['value'];
             //dpm($cell);
@@ -484,6 +489,7 @@ function jav_preprocess_views_view(&$vars)
                 'sid' => $sid,
                 'nid' => $nid,
                 'loc' => $loc,
+                'url' => $lift_url,
             );
             $selected_lifts[$sid] = $lift_details;
             //$active_sids[] = $sid_content['raw']['value'];
