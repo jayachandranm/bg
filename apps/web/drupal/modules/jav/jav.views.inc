@@ -72,13 +72,20 @@ function _get_lift_status($lift_id) {
     module_load_include("config.inc", "jav");
     $jav_db = getExtDBConfig();
     module_load_include("api.inc", "jav");
-    $result = _getdata_exdb($jav_db, $reqtype, $filter);
+/*
+    //$result = _getdata_exdb($jav_db, $reqtype, $filter);
     // Result will either be empty or single element.
     if($row = $result->fetch()) {
         $is_set = $row->is_set;
         if ($is_set == 1) {
             $status = 'Event';
         }
+    }
+*/
+    $result = _get_active_events($jav_db, $filter);
+    // If there is at least one active event for this lift, set status.
+    if(count($result) > 0) {
+        $status = 'Event';
     }
     $result = _get_sensorerr($jav_db, $lift_id);
     // Only need to look at the last row.
