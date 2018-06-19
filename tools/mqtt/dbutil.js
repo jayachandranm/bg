@@ -218,16 +218,17 @@ function add2dbErrors(liftId, dcMsg) {
                 connection.query('INSERT INTO sensor_status SET ?',
                     { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroupAll, sensor: sensorAll, value: healthy },
                     function (err, result) {
-                        // TODO: Release connection only after multiple insert is completed.
-                        //connection.release();
                         if (err) {
                             //throw err;
                             console.log("DB insert error: ", err);
                         } else {
                             console.log("DB insert success, id = ", result.insertId);
+                            // Only one insert for this case.
+                            connection.release();
                         }
                     });
             } else {
+                let operations = [];
                 // For each sensor_group,
                 Object.keys(dcMsg['rpts']).forEach(function (key, index) {
                     var sGroup = key;
@@ -243,20 +244,29 @@ function add2dbErrors(liftId, dcMsg) {
                             }
                             */
                             console.log(msgType, sGroup, sensor, sensor_error);
-                            connection.query('INSERT INTO sensor_status SET ?',
-                                { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error },
-                                function (err, result) {
-                                    // TODO: Release connection only after multiple insert is completed.
-                                    //connection.release();
-                                    if (err) {
-                                        //throw err;
-                                        console.log("DB insert error: ", err);
-                                    } else {
-                                        console.log("DB insert success, id = ", result.insertId);
+                            operations.push(new Promise((resolve, reject) => {
+                                connection.query('INSERT INTO sensor_status SET ?',
+                                    { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error },
+                                    function (err, result) {
+                                        // TODO: Release connection only after multiple insert is completed.
+                                        //connection.release();
+                                        if (err) {
+                                            //throw err;
+                                            console.log("DB insert error: ", err);
+                                            reject(err);
+                                        } else {
+                                            console.log("DB insert success, id = ", result.insertId);
+                                            resolve();
+                                        }
                                     }
-                                });
+                                );
+                            }));
                         });
                     });
+                });
+                Promise.all(operations).then(() => {
+                    console.log("All DB insert completed. Release connection.");
+                    connection.release();
                 });
             }
         }
