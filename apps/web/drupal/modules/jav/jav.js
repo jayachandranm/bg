@@ -2,6 +2,7 @@
 
     $(document).ready(function () {
         'use strict';
+        $.fn.dataTable.moment( 'D-MMM-YY HH:mm' );
         var datepickerDefaults = {
             showTodayButton: true,
             showClear: true
@@ -10,6 +11,12 @@
                 "order": [[0, "desc"]]
               });
         $('#tbl-dashboard-view').DataTable({
+                "order": [[0, "desc"]]
+              });
+        $('#list-events-table').DataTable({
+                "order": [[0, "desc"]]
+              });
+        $('#sensor-status-table').DataTable({
                 "order": [[0, "desc"]]
               });
         $('#status-12345AB').html("Fiber err.");
