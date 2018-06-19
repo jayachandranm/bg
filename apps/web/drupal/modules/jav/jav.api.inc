@@ -29,6 +29,7 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
 
     $query = array();
     if ($reqtype == 'rt') {
+        //dpm($sid_list);
         $query_inner = db_select('lift_events', 'a')
             ->fields('a', array('lift_id', 'ts', 'value', 'is_set'))
             ->condition('lift_id', $sid_list, 'IN')
@@ -37,9 +38,10 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
         // TODO: Can be conditional, different for block and page.
         //$query->range(0, $max_num);
         // TODO: Use timestamp condition instead?
-        //$query_inner->range(0, 100);
-        $query_inner->range(0, 1);
+        $query_inner->range(0, 100);
+        //$query_inner->range(0, 1);
         //
+        //dpm($query_inner);
         $query = db_select($query_inner, 'b')
             ->fields('b', array('lift_id', 'ts', 'value', 'is_set'))
             ->groupBy('lift_id');
@@ -73,13 +75,42 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
             //->condition('status', 0,'>')
             ->condition('ts', array($start_time, $end_time), 'BETWEEN')
             //->orderBy('datetime', 'DESC');
-            ->orderBy('ts', 'ASC');
+            ->orderBy('ts', 'DESC');
     }
 
     $result = $query->execute();
     db_set_active();
     return $result;
 }
+
+function _get_active_events($jav_db, $filter)
+{     
+    $sid_list = $filter->sidList;
+    $start_time = $filter->start;
+    $end_time = $filter->end;
+
+    $result_all = array();
+
+    Database::addConnectionInfo('JAV', 'default', $jav_db);
+    db_set_active('JAV');
+
+    $event_types = array("fight", "vandalism", "fallen_human", "liquid", "urine", "co", "fire", "light_malfunction", "ventilation_malfunction", "co_low_level", "uncat");
+
+    foreach ($sid_list as $sid) {
+    foreach($event_types as $e_type) {
+        //$sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' and (ts > (select coalesce(max(ts),0) from `lift_events` where lift_id='$sid' and value='$e_type' AND is_set = 0))";
+        $sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' ORDER BY ts DESC limit 1";
+        $result = db_query($sql);
+        foreach($result as $row) {
+            if($row->is_set == 1) {
+                $result_all[] = $row;
+            }
+        }
+    }           
+    }           
+    return $result_all;
+}                       
+
 
 function _get_sensorerr($jav_db, $lift_id)
 {
@@ -126,7 +157,7 @@ function _get_sensorerr($jav_db, $lift_id)
     }
     $query = array();
     // get all errors from last rpt till now, including the rpt errors.
-    // (rpt + alt1)ts_rpt-now
+    // (rpt + alt1)ts_rpt - now
     $end_time = time() * 1000;
     $query = db_select('sensor_status', 'a')
         ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
