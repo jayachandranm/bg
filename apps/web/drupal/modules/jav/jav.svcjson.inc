@@ -43,3 +43,23 @@ function _get_geojson($rqtype)
     return drupal_json_output($geojson);
 }
 
+function _update_db()
+{
+    $received = $_POST['jsonPost'];
+    //$post_data = json_decode($_POST['jsonPost']);
+    // Use inputstream module.
+    //$received = file_get_contents("drupal://input");
+    $received = json_decode($received, TRUE);
+    //print_r($received['ts']);
+     
+    //dpm($received);
+    module_load_include("config.inc", "jav");
+    $bg_db = getExtDBConfig();
+    module_load_include("api.inc", "jav");
+    $res = _update_ext_db2($bg_db, $received);
+
+    //$reqtype = $post_data->reqtype;
+    $test_json = array('result' => 'ok');
+    return drupal_json_output($test_json);
+}
+
