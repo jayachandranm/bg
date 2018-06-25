@@ -1,6 +1,7 @@
 (function ($) {
 
     /* Custom filtering function which will search data in column four between two values */
+/*
     $.fn.dataTable.ext.search.push(
         function (settings, data, dataIndex) {
             var min = parseInt($('#min').val(), 10);
@@ -16,7 +17,7 @@
             return false;
         }
     );
-
+*/
     $(document).ready(function () {
         'use strict';
         var datepickerDefaults = {
