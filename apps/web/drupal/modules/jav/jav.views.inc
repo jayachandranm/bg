@@ -44,12 +44,17 @@ function jav_views_data_alter(&$data) {
  * eg. for disaplying data from ext db.
  */
 function jav_views_pre_render(&$view) {
+    //dpm($view);
+    if($view) {
+    if (($view->name == 'dashboard' || $view->name == 'dashboard2')) {
     foreach ($view->result as &$item) {
         $lift_id = $item->field_field_lift_id[0]['rendered']['#markup'];
         $lift_status = _get_lift_status($lift_id);
         $item->field_field_sensor_status[0]['rendered']['#markup'] = t($lift_status);
         $item->field_field_sensor_status[0]['raw']['value'] = t($lift_status);
         $item->field_field_sensor_status[0]['raw']['safe_value'] = t($lift_status);
+    }
+    }
     }
 }
 
