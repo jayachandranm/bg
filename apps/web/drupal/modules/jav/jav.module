@@ -108,6 +108,7 @@ function jav_init()
     }
 
 
+/*
     if (($library = libraries_detect('pdfmake')) && !empty($library['installed'])) {
         //print_r("pdfmake loaded");
     } else {
@@ -121,8 +122,9 @@ function jav_init()
     } else {
         print_r("Error: Library pdfmake is not loaded.");
     }
+*/
 
-
+/*
     if (($lib_avail = libraries_detect('datatables')) && !empty($lib_avail['installed'])) {
         // The library is installed. 
         //dpm($lib_avail);
@@ -133,16 +135,52 @@ function jav_init()
         $error_message = $lib_avail['error message'];
         print_r($error_message);
     }
-
     // Try to load the library and check if that worked.
     if (($lib_load = libraries_load('datatables')) && !empty($lib_load['loaded'])) {
         //print_r("Library datatables loaded.");
     } else {
         print_r("Error: Library datatables is not loaded.");
     }
+*/
+
+/*
+    if (($lib_avail = libraries_detect('yadcf')) && !empty($lib_avail['installed'])) {
+        // The library is installed. 
+        //dpm($lib_avail);
+    } else {
+        // Something went wrong. :(
+        print_r("Error: Library yadcf is not installed</br>");
+        $error = $lib_avail['error'];
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
+    if (($lib_load = libraries_load('yadcf')) && !empty($lib_load['loaded'])) {
+        //print_r("Library yadcf loaded.");
+    } else {
+        print_r("Error: Library yadcf is not loaded.");
+    }
+*/
+
+/*
+    if (($lib_avail = libraries_detect('bootboxjs')) && !empty($lib_avail['installed'])) {
+        // The library is installed. 
+        //dpm($lib_avail);
+    } else {
+        // Something went wrong. :(
+        print_r("Error: Library bootboxjs is not installed</br>");
+        $error = $lib_avail['error'];
+        $error_message = $lib_avail['error message'];
+        print_r($error_message);
+    }
+    if (($lib_load = libraries_load('bootboxjs')) && !empty($lib_load['loaded'])) {
+        //print_r("Library bootbaoxjs loaded.");
+    } else {
+        print_r("Error: Library bootboxjs is not loaded.");
+    }
+*/
 
     // TODO: Attach the JS to Dashboard view.
-    drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
+    //drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
     //drupal_add_css(drupal_get_path('module', 'jav') .'/your-css.css');
     //drupal_add_css(drupal_get_path('theme', 'hdbjav') .'/your-css.css');
 }
@@ -281,17 +319,53 @@ function jav_libraries_info()
                     'buttons_file_export/buttons.html5.min.js',
                     'buttons_file_export/buttons.print.min.js',
                     'buttons_file_export/dataTables.buttons.min.js',
-                    'yadcf/jquery.dataTables.yadcf.js',
                     'sorting/datetime-moment.js',
+                    'select/dataTables.select.min.js',
                 ),
                 'css' => array(
                     //'jquery.dataTables.css' => array(),
                     'media/css/dataTables.bootstrap.css' => array(),
-                    'yadcf/jquery.dataTables.yadcf.css' => array(),
+                    'select/select.dataTables.min.css' => array(),
+                    'buttons_file_export/buttons.dataTables.min.css' => array(),
                 ),
             ),
         );
     }
+
+    if (($library_path = libraries_get_path('yadcf'))) {
+        $libraries['yadcf'] = array(
+            'name' => 'yadcf',
+            'vendor url' => 'https://github.com/vedmack/yadcf',
+            'download url' => 'https://github.com/vedmack/yadcf',
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'jquery.dataTables.yadcf.js',
+                ),
+                'css' => array(
+                    //'jquery.dataTables.yadcf.css' => array(),
+                ),
+            ),
+            'dependencies' => array(
+                'datatables',
+            ),
+        );
+    }
+
+    if (($library_path = libraries_get_path('bootboxjs'))) {
+        $libraries['bootboxjs'] = array(
+            'name' => 'Bootbox JS',
+            'vendor url' => 'http://bootboxjs.com/',
+            'download url' => 'http://bootboxjs.com/',
+            'version callback' => 'jav_short_circuit_version',
+            'files' => array(
+                'js' => array(
+                    'bootbox.min.js',
+                ),
+            ),
+        );
+    }
+
     //print_r($libraries);
     return $libraries;
 }
@@ -331,6 +405,14 @@ function jav_menu()
     $items['jav/get'] = array(
         'title' => 'Real time updates',
         'page callback' => '_get_json',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access jav content'),
+        'file' => 'jav.svcjson.inc',
+        'type' => MENU_CALLBACK,
+    );
+    $items['jav/update/event'] = array(
+        'title' => 'Update event status',
+        'page callback' => '_update_db',
         //'page arguments' => array(1), //get param from URL.
         'access arguments' => array('access jav content'),
         'file' => 'jav.svcjson.inc',
