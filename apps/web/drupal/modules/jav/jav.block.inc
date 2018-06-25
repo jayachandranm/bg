@@ -189,11 +189,6 @@ function jav_block_view($delta = '')
                     $sid_list[] = $dev["sid"];
                 }
             }
-            $block['content']['#attached']['js'] = array(
-                array(
-                    'type' => 'file',
-                    'data' => $mpath . '/jav.js',),
-            );
             if (user_access('access content')) {
                 $block = array
                 (
@@ -202,14 +197,26 @@ function jav_block_view($delta = '')
                     (
                         'eventlist_block' => array
                         (
-                            '#prefix' => "<div id='rt_map'>",
-                            '#suffux' => "</div>",
+                            '#prefix' => "<div id='eventlist_all'>
+                                 <div class='form-check'>
+                                 <input type='checkbox' style='margin-left: 0%' class='form-check-input' id='remark_check'>
+                                 <label class='form-check-label' for='remark_check'>Clear with Remarks</label>
+                                 </div>",
+                            '#suffix' => "</div>",
                             '#markup' => t("Event table....."),
                         ),
                     ),
                 );
+                $block['content']['#attached']['libraries_load'][] = array('datatables');
+                $block['content']['#attached']['libraries_load'][] = array('bootboxjs');
+                $block['content']['#attached']['js'] = array(
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav.js',),
+                    );
 
                 $header = array(
+                    array('data' => t('')),
                     array('data' => t('Date Time')),
                     array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
@@ -271,7 +278,7 @@ function jav_block_view($delta = '')
                         //dpm($lift_url);
                         //$lift_url = url('node/' . $lift_nid, $options);
                         $lift_link = "<a href=$lift_url>$row->lift_id</a>";
-                        $items[] = array($rpt_time, $lift_link, $loc, $event_type, $lift_event);
+                        $items[] = array("", $rpt_time, $lift_link, $loc, $event_type, $lift_event);
                 }
 
                 foreach ($sid_list as $lift_id) {
@@ -293,7 +300,7 @@ function jav_block_view($delta = '')
                         //$options = array('absolute' => TRUE);
                         //$lift_url = url('node/' . $lift_nid, $options);
                         $lift_link = "<a href=$lift_url>$row->lift_id</a>";
-                        $items[] = array($err_time, $lift_link, $loc, $event_type, $err);
+                        $items[] = array("", $err_time, $lift_link, $loc, $event_type, $err);
                     }
                 }
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
@@ -301,11 +308,6 @@ function jav_block_view($delta = '')
             break;
             //
         case 'eventlist_single':
-            $block['content']['#attached']['js'] = array(
-                array(
-                    'type' => 'file',
-                    'data' => $mpath . '/jav.js',),
-            );
             if (user_access('access content')) {
                 $block = array
                 (
@@ -319,6 +321,12 @@ function jav_block_view($delta = '')
                             '#markup' => t("Event table....."),
                         ),
                     ),
+                );
+
+                $block['content']['#attached']['js'] = array(
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav.js',),
                 );
 
                 $header = array(
@@ -362,11 +370,6 @@ function jav_block_view($delta = '')
             break;
             //
         case 'sensor_status':
-            $block['content']['#attached']['js'] = array(
-                array(
-                    'type' => 'file',
-                    'data' => $mpath . '/jav.js',),
-            );
             if (user_access('access content')) {
                 $block = array
                 (
@@ -380,6 +383,11 @@ function jav_block_view($delta = '')
                             '#markup' => t("Sensor status....."),
                         ),
                     ),
+                );
+                $block['content']['#attached']['js'] = array(
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav.js',),
                 );
 
                 $header = array(
@@ -441,7 +449,15 @@ function jav_block_view($delta = '')
                         ),
                     ),
                 );
+                $block['content']['#attached']['libraries_load'][] = array('datatables');
+                $block['content']['#attached']['libraries_load'][] = array('pdfmake');
+                $block['content']['#attached']['libraries_load'][] = array('yadcf');
                 $block['content']['#attached']['js'] = array(
+/*
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav.js',),
+*/
                     array(
                         'type' => 'file',
                         'data' => $mpath . '/jav_reports.js',),
@@ -535,6 +551,7 @@ function jav_block_view($delta = '')
             break;
     } // switch
     //libraries_info('moment');
+    //dpm($block);
     return $block;
 }
 
