@@ -322,11 +322,12 @@ function jav_block_view($delta = '')
                 );
 
                 $header = array(
-                    array('data' => t('Date Time')),
-                    array('data' => t('Lift ID')),
+                    array('data' => t('Reported Time')),
+                    //array('data' => t('Lift ID')),
                     //array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
                     array('data' => t('Set / Reset')),
+                    array('data' => t('Remarks')),
                 );
 
                 $reqtype = 'trc';
@@ -352,7 +353,8 @@ function jav_block_view($delta = '')
                     //print_r($dtime, $row->snum);
                     //dpm($dev_list[$row->lift_id]);
                     $loc = $dev_list[$row->lift_id]["loc"];
-                    $items[] = array($dtime, $row->lift_id, $row->value, $row->is_set);
+                    //$items[] = array($dtime, $row->lift_id, $row->value, $row->is_set);
+                    $items[] = array($dtime, $row->value, $row->is_set, "");
                 }
                 //dpm($items);
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
@@ -385,7 +387,8 @@ function jav_block_view($delta = '')
                     //array('data' => t('Address'), 'colspan' => 3),
                     //array('data' => t('Sensor Name')),
                     array('data' => t('Reported Time')),
-                    array('data' => t('Status')),
+                    array('data' => t('Error Status')),
+                    array('data' => t('Sensor')),
                     array('data' => t('Remarks')),
                 );
 
@@ -413,7 +416,8 @@ function jav_block_view($delta = '')
                     $dtime = $date->format('d-M-y H:i');
                     //print_r($dtime, $row->snum);
                     //$items[] = array($dtime, $row->name, $row->status, $row->details);
-                    $items[] = array($dtime, $row->value, $row->sensor);
+                    //$items[] = array($dtime, $row->value, $row->sensor);
+                    $items[] = array($dtime, $row->value, $row->sensor, "");
                 }
                 //dpm($items);
 
