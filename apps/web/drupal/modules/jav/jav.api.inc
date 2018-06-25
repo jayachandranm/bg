@@ -206,6 +206,33 @@ function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $fla
     db_set_active();
 }
 
+function _update_ext_db2($db, $params)
+{
+    Database::addConnectionInfo('JAV', 'default', $db);
+    db_set_active('JAV');
+    // TODO: consider timezone.
+    $millis = round(microtime(true) * 1000);
+    $dt = date('Y-m-d H:i:s');
+
+    $lift_id = $params['lift_id']; //->lift_id;
+    $ts = $params['ts']; //->ts;
+    $msg_type = $params['msg_type']; //->msg_type;
+    $sgroup = $params['sensor_group']; // ->sensor_group;
+    $event = $params['event']; //->event;
+    if(true) {
+        db_insert('lift_events')
+            ->fields(array(
+                'lift_id' => $lift_id,
+                'ts' => $millis,
+                'date_time' => $dt,
+                'msg_type' => $msg_type,
+                'sensor_group' => $sgroup,
+                'is_set' => 0,
+                'value' => $event,
+            ))->execute();
+    }
+}
+
 function _get_ext_db_liftlist($jav_db, $supplier_nid)
 {
     Database::addConnectionInfo('JAV', 'default', $jav_db);
