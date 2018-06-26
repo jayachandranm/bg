@@ -5,17 +5,23 @@
             // TODO: Where is the most appropriate place for this code?
             // Depends on Drupal behaviors.
             //
-            function updateServer(baseurl, row, remarks) {
+            function updateServer(baseurl, rows, remarks) {
                 var basepath = baseurl;
                 var post_url = basepath + '?q=jav/update/event';
-                var postData = {};
-                postData['ts'] = moment().valueOf();
-                postData['lift_id'] = row[2];
-                postData['msg_type'] = 'event_clear';
-                postData['sensor_group'] = 'manual';
-                postData['event'] = row[5];
-                postData['remarks'] = remarks;
-                var jsonPost = JSON.stringify(postData);
+                var postDataList = {};
+                var elems = [];
+                rows.forEach(row => {
+                    var postData = {};
+                    postData['ts'] = moment().valueOf();
+                    postData['lift_id'] = row[2];
+                    postData['msg_type'] = 'event_clear';
+                    postData['sensor_group'] = 'manual';
+                    postData['event'] = row[5];
+                    postData['remarks'] = remarks;
+                    elems.push(postData);
+                });
+                postDataList['rows'] = elems;
+                var jsonPost = JSON.stringify(postDataList);
                 console.log(jsonPost);
                 $.ajax({
                     url: post_url,
@@ -54,6 +60,7 @@
                 /*
                  * Real time updates.
                  */
+                $.fn.dataTable.moment('D-MMM-YY HH:mm');
                 var alerts_table = $('#alerts-table').DataTable({
                     "dom": 'Bfrtip',
                     columnDefs: [{
@@ -72,8 +79,9 @@
                             text: 'Clear Alert',
                             key: 'c',
                             action: function (e, dt, node, config) {
-                                var rows = dt.rows({ selected: true }).count();
-                                var rowvals = dt.rows({ selected: true }).data();
+                                //var rowvals = [];
+                                var count = dt.rows({ selected: true }).count();
+                                var rowvals = dt.rows({ selected: true }).data().toArray();
                                 console.log(rowvals);
                                 var withRemark = $('#remark_check').is(":checked");
                                 if (withRemark) {
@@ -85,17 +93,19 @@
                                             callback: function (result) {
                                                 console.log(result);
                                                 if (result) {
-                                                    dt.row('.selected').remove().draw(false);
+                                                    //dt.row('.selected').remove().draw(false);
+                                                    dt.rows('.selected').remove().draw(false);
                                                     var remarks = result;
-                                                    updateServer(basepath, rowvals[0], remarks);
+                                                    updateServer(basepath, rowvals, remarks);
                                                 }
                                             }
                                         });
                                 }
                                 else {
-                                    dt.row('.selected').remove().draw(false);
+                                    //dt.row('.selected').remove().draw(false);
+                                    dt.rows('.selected').remove().draw(false);
                                     var remarks = "";
-                                    updateServer(basepath, rowvals[0], remarks);
+                                    updateServer(basepath, rowvals, remarks);
                                 }
 
                                 //alert( 'There are '+rows+'(s) selected in the table' );

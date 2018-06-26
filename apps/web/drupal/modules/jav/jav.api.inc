@@ -209,7 +209,7 @@ function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $fla
     db_set_active();
 }
 
-function _update_ext_db2($db, $params)
+function _update_ext_db2($db, $params_list)
 {
     Database::addConnectionInfo('JAV', 'default', $db);
     db_set_active('JAV');
@@ -217,24 +217,28 @@ function _update_ext_db2($db, $params)
     $millis = round(microtime(true) * 1000);
     $dt = date('Y-m-d H:i:s');
 
-    $lift_id = $params['lift_id']; //->lift_id;
-    $ts = $params['ts']; //->ts;
-    $msg_type = $params['msg_type']; //->msg_type;
-    $sgroup = $params['sensor_group']; // ->sensor_group;
-    $event = $params['event']; //->event;
-    $remarks = $params['remarks']; 
-    if(true) {
-        db_insert('lift_events')
-            ->fields(array(
-                'lift_id' => $lift_id,
-                'ts' => $millis,
-                'date_time' => $dt,
-                'msg_type' => $msg_type,
-                'sensor_group' => $sgroup,
-                'is_set' => 0,
-                'value' => $event,
-                'remarks' => $remarks,
-            ))->execute();
+    $list_params = $params_list['rows'];
+    //print_r($list_params);
+    foreach ($list_params as $key => $params) {
+        $lift_id = $params['lift_id']; //->lift_id;
+        $ts = $params['ts']; //->ts;
+        $msg_type = $params['msg_type']; //->msg_type;
+        $sgroup = $params['sensor_group']; // ->sensor_group;
+        $event = $params['event']; //->event;
+        $remarks = $params['remarks']; 
+        if(true) {
+            db_insert('lift_events')
+                ->fields(array(
+                    'lift_id' => $lift_id,
+                    'ts' => $millis,
+                    'date_time' => $dt,
+                    'msg_type' => $msg_type,
+                    'sensor_group' => $sgroup,
+                    'is_set' => 0,
+                    'value' => $event,
+                    'remarks' => $remarks,
+                ))->execute();
+        }
     }
     db_set_active();
 }
