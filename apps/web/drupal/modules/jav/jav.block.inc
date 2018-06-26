@@ -6,17 +6,6 @@
 function jav_block_info()
 {
     $blocks = array();
-    $blocks['rtsingle'] = array(
-        // The name that will appear in the block list.
-        'info' => t('JAV Tracking'),
-        // Default setting.
-        'cache' => DRUPAL_CACHE_PER_ROLE,
-        //'cache' => DRUPAL_CACHE_GLOBAL,
-    );
-    $blocks['rtmulti'] = array(
-        'info' => t('JAV Tracking All'),
-        'cache' => DRUPAL_CACHE_PER_ROLE,
-    );
     $blocks['eventlist_all'] = array(
         'info' => t('JAV Events'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
@@ -157,8 +146,7 @@ function jav_block_view($delta = '')
                     );
 
                 $header = array(
-                    array('data' => t('')),
-                    array('data' => t('Date Time')),
+                    array('data' => t('Reported Time')),
                     array('data' => t('Lift ID')),
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
@@ -203,7 +191,7 @@ function jav_block_view($delta = '')
                         //dpm($lift_url);
                         //$lift_url = url('node/' . $lift_nid, $options);
                         $lift_link = "<a href=$lift_url>$row->lift_id</a>";
-                        $items[] = array("", $rpt_time, $lift_link, $loc, $event_type, $lift_event);
+                        $items[] = array($rpt_time, $lift_link, $loc, $event_type, $lift_event);
                 }
 
                 foreach ($sid_list as $lift_id) {
@@ -224,10 +212,10 @@ function jav_block_view($delta = '')
                         //$options = array('absolute' => TRUE);
                         //$lift_url = url('node/' . $lift_nid, $options);
                         $lift_link = "<a href=$lift_url>$row->lift_id</a>";
-                        $items[] = array("", $err_time, $lift_link, $loc, $event_type, $err);
+                        $items[] = array($err_time, $lift_link, $loc, $event_type, $err);
                     }
                 }
-                $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sort-table')));
+                $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'eventlist-all-table')));
             } // if user_access
             break;
             //
@@ -247,6 +235,7 @@ function jav_block_view($delta = '')
                     ),
                 );
 
+                $block['content']['#attached']['libraries_load'][] = array('datatables');
                 $block['content']['#attached']['js'] = array(
                     array(
                         'type' => 'file',
@@ -288,7 +277,7 @@ function jav_block_view($delta = '')
                     $items[] = array($dtime, $row->value, $row->is_set, "");
                 }
                 //dpm($items);
-                $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'list-events-table')));
+                $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'eventlist-single-table')));
             } // if user_access
             break;
             //
@@ -368,7 +357,7 @@ function jav_block_view($delta = '')
             if (user_access('access content')) {
                 $block = array
                 (
-                    'subject' => t('Manange Alerts'),
+                    'subject' => t('Manage Alerts'),
                     'content' => array
                     (
                         'alertlist_block' => array
