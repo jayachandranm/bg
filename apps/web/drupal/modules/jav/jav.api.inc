@@ -89,13 +89,15 @@ function _get_active_events($jav_db, $filter)
     $start_time = $filter->start;
     $end_time = $filter->end;
 
+    //dpm($jav_db);
+ 
     $result_all = array();
 
     Database::addConnectionInfo('JAV', 'default', $jav_db);
     db_set_active('JAV');
 
     $event_types = array("fight", "vandalism", "fallen_human", "liquid", "urine", "co", "fire", "light_malfunction", "ventilation_malfunction", "co_low_level", "uncat");
-
+    
     foreach ($sid_list as $sid) {
     foreach($event_types as $e_type) {
         //$sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' and (ts > (select coalesce(max(ts),0) from `lift_events` where lift_id='$sid' and value='$e_type' AND is_set = 0))";
@@ -108,6 +110,7 @@ function _get_active_events($jav_db, $filter)
         }
     }           
     }           
+    db_set_active();
     return $result_all;
 }                       
 
@@ -219,6 +222,7 @@ function _update_ext_db2($db, $params)
     $msg_type = $params['msg_type']; //->msg_type;
     $sgroup = $params['sensor_group']; // ->sensor_group;
     $event = $params['event']; //->event;
+    $remarks = $params['remarks']; 
     if(true) {
         db_insert('lift_events')
             ->fields(array(
@@ -229,8 +233,10 @@ function _update_ext_db2($db, $params)
                 'sensor_group' => $sgroup,
                 'is_set' => 0,
                 'value' => $event,
+                'remarks' => $remarks,
             ))->execute();
     }
+    db_set_active();
 }
 
 function _get_ext_db_liftlist($jav_db, $supplier_nid)
