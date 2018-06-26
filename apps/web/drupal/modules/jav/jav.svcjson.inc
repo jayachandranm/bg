@@ -50,7 +50,7 @@ function _update_db()
     // Use inputstream module.
     //$received = file_get_contents("drupal://input");
     $received = json_decode($received, TRUE);
-    //print_r($received['ts']);
+    //print_r($received['rows']);
      
     //dpm($received);
     module_load_include("config.inc", "jav");
