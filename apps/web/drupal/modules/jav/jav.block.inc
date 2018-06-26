@@ -29,6 +29,10 @@ function jav_block_info()
         'info' => t('JAV Sensor Status'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
     );
+    $blocks['alerts_manage'] = array(
+        'info' => t('JAV Alerts'),
+        'cache' => DRUPAL_CACHE_PER_ROLE,
+    );
     $blocks['reports'] = array(
         'info' => t('JAV Reports'),
         'cache' => DRUPAL_CACHE_PER_ROLE,
@@ -118,65 +122,6 @@ function jav_block_view($delta = '')
         * presented as a JSON, where some parameters may be missing, if some fields on the page
         * is missing (eg. sensor_id).
         */
-        case 'rtsingle':
-            // Pass any node related parameters here, which can then be used by the JS during Ajax.
-            // Here will be an array that contains the filter values.
-            // if(isset($sid)) {}
-            $block['subject'] = t('Location...');
-            if (user_access('access content')) {
-                $block['content']['#markup'] = "<div id='rt_map'>Map will display here.....</div>";
-            }
-            $block['content']['#attached']['libraries_load'][] = array('leaflet');
-            // If not in libraries directory,
-            //$block['content']['#attached']['library'][] = array('system','ui.droppable');
-            $block['content']['#attached']['js'] = array(
-                array(
-                    'type' => 'file',
-                    'data' => $mpath . '/jav_rt.js',),
-                array(
-                    'type' => 'setting',
-                    'data' => array(
-                        'rt' => array(
-                            'veh_list' => array(
-                                $sid => array(
-                                    'sid' => $sid,
-                                    'nid' => $nid,
-                                    'vnum' => $vnum
-                                ),
-                            ),
-                        ),
-                    ),
-                )
-            );
-            break;
-            //
-        case 'rtmulti':
-            // Only appears in a view.
-            // TODO: What if this block is enabled for a node?
-            // TODO: nidList already set in the view preprocess.
-            if (user_access('access content')) {
-                $block = array
-                (
-                    'subject' => t('JAV Locations...'),
-                    'content' => array
-                    (
-                        'rtmulti_block' => array
-                        (
-                            '#prefix' => "<div id='rt_map'>",
-                            '#suffux' => "</div>",
-                            '#markup' => t("Map will display here....."),
-                        ),
-                    ),
-                );
-            }
-            $block['content']['#attached']['libraries_load'][] = array('leaflet');
-            $block['content']['#attached']['js'] = array(
-                array(
-                    'type' => 'file',
-                    'data' => $mpath . '/jav_rt.js',),
-            );
-            break;
-            //
         case 'eventlist_all':
             //$dev_list = _jav_set_list();
             //$dev_list = drupal_static('jav');
@@ -197,11 +142,7 @@ function jav_block_view($delta = '')
                     (
                         'eventlist_block' => array
                         (
-                            '#prefix' => "<div id='eventlist_all'>
-                                 <div class='form-check'>
-                                 <input type='checkbox' style='margin-left: 0%' class='form-check-input' id='remark_check'>
-                                 <label class='form-check-label' for='remark_check'>Clear with Remarks</label>
-                                 </div>",
+                            '#prefix' => "<div id='eventlist_all'>",
                             '#suffix' => "</div>",
                             '#markup' => t("Event table....."),
                         ),
@@ -245,22 +186,7 @@ function jav_block_view($delta = '')
                 // Only one result expected. If no entry, set default as None.
                 $lift_event = 'None';
                 $rpt_time = 'NA';
-/*
-                foreach ($result as $row) {
-                    //dpm($row);
-                    $is_set = $row->is_set;
-                    if ($is_set == 1) {
-                        $lift_event = $row->value;
-                        $event_type = "Lift Event";
-                        $date = new DateTime();
-                        $date->setTimestamp(intval($row->ts) / 1000);
-                        //$rpt_time = $date->format('j-M-y g:i a');
-                        $rpt_time = $date->format('d-M-y H:i');
-                        $loc = $dev_list[$row->lift_id]['loc'];
-                        $items[] = array($rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
-                    }
-                }
- */
+
                 $result_all = _get_active_events($jav_db, $filter);
                 foreach ($result_all as $row) {
                     //dpm($row);
@@ -272,7 +198,6 @@ function jav_block_view($delta = '')
                         $rpt_time = $date->format('d-M-y H:i');
                         $loc = $dev_list[$row->lift_id]['loc'];
                         $lift_url = $dev_list[$row->lift_id]['url'];
-                        //$lift_nid = $dev_list[$row->lift_id]['nid'];
                         //$options = array('absolute' => TRUE);
                         //$lift_url = drupal_get_path_alias("node/" . $lift_nid);
                         //dpm($lift_url);
@@ -296,7 +221,6 @@ function jav_block_view($delta = '')
                         $err_time = $date->format('d-M-y H:i');
                         $loc = $dev_list[$row->lift_id]['loc'];
                         $lift_url = $dev_list[$row->lift_id]['url'];
-                        //$lift_nid = $dev_list[$row->lift_id]['nid'];
                         //$options = array('absolute' => TRUE);
                         //$lift_url = url('node/' . $lift_nid, $options);
                         $lift_link = "<a href=$lift_url>$row->lift_id</a>";
@@ -361,7 +285,6 @@ function jav_block_view($delta = '')
                     //print_r($dtime, $row->snum);
                     //dpm($dev_list[$row->lift_id]);
                     $loc = $dev_list[$row->lift_id]["loc"];
-                    //$items[] = array($dtime, $row->lift_id, $row->value, $row->is_set);
                     $items[] = array($dtime, $row->value, $row->is_set, "");
                 }
                 //dpm($items);
@@ -416,24 +339,123 @@ function jav_block_view($delta = '')
                 //
                 $items = array();
                 foreach ($result as $row) {
-                    //dpm($row);
                     $date = new DateTime();
                     $date->setTimestamp(intval($row->ts) / 1000);
                     //$dtime = $date->format('d-M-y g:i a');
                     //$dtime = $date->format('d-M-y H:i a');
                     $dtime = $date->format('d-M-y H:i');
                     //print_r($dtime, $row->snum);
-                    //$items[] = array($dtime, $row->name, $row->status, $row->details);
-                    //$items[] = array($dtime, $row->value, $row->sensor);
                     $items[] = array($dtime, $row->value, $row->sensor, "");
                 }
-                //dpm($items);
 
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sensor-status-table')));
 
             } // if user_access
             break;
             //
+        case 'alerts_manage':
+            //$dev_list = _jav_set_list();
+            //$dev_list = drupal_static('jav');
+            $dev_list = $_SESSION['jav']['#selected_lifts'];
+            $sid_list = array();
+            if ($dev_list) {
+                //foreach($dev_list as $key => $value) {
+                foreach ($dev_list as $dev) {
+                    //$sid_list[] = $key;
+                    $sid_list[] = $dev["sid"];
+                }
+            }
+            if (user_access('access content')) {
+                $block = array
+                (
+                    'subject' => t('Manange Alerts'),
+                    'content' => array
+                    (
+                        'alertlist_block' => array
+                        (
+                            '#prefix' => "<div id='alerts_manage'>
+                                 <div class='form-check'>
+                                 <input type='checkbox' style='margin-left: 0%' class='form-check-input' id='remark_check'>
+                                 <label class='form-check-label' for='remark_check'>Clear with Remarks</label>
+                                 </div>",
+                            '#suffix' => "</div>",
+                            '#markup' => t("Alerts table....."),
+                        ),
+                    ),
+                );
+                $block['content']['#attached']['libraries_load'][] = array('datatables');
+                $block['content']['#attached']['libraries_load'][] = array('bootboxjs');
+                $block['content']['#attached']['js'] = array(
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav.js',
+                        ),
+                    array(
+                            'type' => 'file',
+                            'data' => $mpath . '/jav_alerts.js',
+                        ),
+                    array(
+                            'type' => 'setting',
+                            'data' => array(
+                                'jav_alerts' => array(
+                                    'dev_list' => array(
+                                        $sid => array(
+                                            'sid_list' => $sid_list
+                                        ),
+                                    ),
+                                ),
+                            ),        
+                        ),
+                    
+                );
+
+                $header = array(
+                    array('data' => t('')),
+                    array('data' => t('Date Time')),
+                    array('data' => t('Lift ID')),
+                    array('data' => t('Lift Location')),
+                    array('data' => t('Event Type')),
+                    array('data' => t('Event')),
+                );
+
+                $reqtype = 'rt';
+                $filter = new stdClass(); // (object) [];
+                // Get most recent values.
+                $filter->start = -1;
+                $filter->end = -1;
+                //dpm($sid_list);
+                //$sid_list = ['99'];
+                $filter->sidList = $sid_list;
+                //$filter->sidList = ['99'];
+                //
+                module_load_include("config.inc", "jav");
+                $jav_db = getExtDBConfig();
+                module_load_include("api.inc", "jav");
+                //$result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //dpm($result);
+                date_default_timezone_set('Asia/Singapore');
+                //
+                $items = array();
+                // Only one result expected. If no entry, set default as None.
+                $lift_event = 'None';
+                $rpt_time = 'NA';
+
+                $result_all = _get_active_events($jav_db, $filter);
+                foreach ($result_all as $row) {
+                    //dpm($row);
+                        $lift_event = $row->value;
+                        $event_type = "Lift Event";
+                        $date = new DateTime();
+                        $date->setTimestamp(intval($row->ts) / 1000);
+                        //$rpt_time = $date->format('j-M-y g:i a');
+                        $rpt_time = $date->format('d-M-y H:i');
+                        $loc = $dev_list[$row->lift_id]['loc'];
+                        $items[] = array("", $rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
+                }
+
+                $block['content']['alertlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'alerts-table')));
+            } // if user_access
+            break;
         case 'reports':
             if (user_access('access content')) {
                 $block = array
