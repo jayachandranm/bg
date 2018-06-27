@@ -34,8 +34,8 @@ function sendMsg(sid, msgTxt, subsList) {
     //var sms_server = 'www.commzgate.net/gateway/SendMsg';
 
     var postData = querystring.stringify({
-        'ID': user,
-        'Password': pass,
+        'ID': config.sms.user,
+        'Password': config.sms.pass,
         'Mobile': encodeURI(subsList),
         'Type': 'A',
         'Batch': 'true',
@@ -77,8 +77,8 @@ function sendMsg2(liftId, msgTxt, subsList) {
   
     api_url = 'https://www.commzgate.net/gateway/SendMsg';
   
-    userId = user;
-    pass = pass;
+    userId = config.sms.user;
+    pass = config.sms.pass;
     mobile = subsList;
 
     //
@@ -97,6 +97,9 @@ function sendMsg2(liftId, msgTxt, subsList) {
       if (!error && response.statusCode == 200) {
           // Print out the response body
           console.log(body)
+      } 
+      else {
+          console.log("SMS Gateway request failed.");
       }
     })
   }

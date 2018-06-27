@@ -1,6 +1,6 @@
 var mysql = require('mysql');
-//var config = require('./config');
-var config = require('./config.json');
+var config = require('./config');
+//var config = require('./config.json');
 
 
 //module.exports.updateDB = updateDB;
@@ -15,10 +15,10 @@ module.exports.getSubsList = getSubsList;
 var pool = mysql.createPool({
     connectionLimit: 100,
     waitForConnections: false,
-    host: 'localhost',
-    user: 'jav',
-    password: 'hdb%jav$1',
-    database: 'jav_data'
+    host: config.mysql.dbhost,
+    user: config.mysql.dbuser,
+    password: config.mysql.dbpass,
+    database: config.mysql.db
 });
 
 function transformRptMsg(rptMsg) {
@@ -159,6 +159,7 @@ function add2dbAlerts(liftId, dcMsg) {
             var sGroup = "";
             var isSet = dcMsg['set_reset'];
             var msgType = 'lift_event';
+            var eventRemarks = '';
             Object.keys(srcSensorGroup).forEach(function (key, index) {
                 var elementVal = srcSensorGroup[key];
                 if (elementVal === 1) {
@@ -175,7 +176,7 @@ function add2dbAlerts(liftId, dcMsg) {
             console.log("Event time :", uTime, "=>", datetime_db);
 
             connection.query('INSERT INTO lift_events SET ?',
-                { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, is_set: isSet, value: liftEvent },
+                { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, is_set: isSet, value: liftEvent, remarks: eventRemarks },
                 function (err, result) {
                     if (err) {
                         //throw err;

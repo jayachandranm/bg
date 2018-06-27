@@ -6,6 +6,7 @@ var decode_alt2 = require('./decode_mqtt_alt2');
 var assemble = require('./encode_mqtt');
 var dbutil = require('./dbutil');
 var alert_utils = require('./send_alert');
+var config = require('./config');
 
 //var client  = mqtt.connect('mqtt://localhost', { host: 'localhost', port: 8883 })
 
@@ -13,6 +14,7 @@ var deviceRoot="demo/device/"
 var mqtthost = 'localhost';
 
 var cert_folder = '/home/ubuntu/cert';
+//var cert_folder = '/home/i2r/Desktop/cert';
 
 var KEY = fs.readFileSync(cert_folder + '/client.key');
 var CERT = fs.readFileSync(cert_folder + '/client.crt');
@@ -29,8 +31,8 @@ var options = {
 	port: 8883,
 	protocol: 'mqtts',
 	protocolId: 'MQIsdp',
-	username: 'admin',
-	password: 'i2ri2ri2r',
+	username: config.mqtt.user,
+	password: config.mqtt.pass,
 	ca: CAfile,
 	key: KEY,
 	cert: CERT,
@@ -81,6 +83,7 @@ client.on('message', function (topic, message) {
 	  var base64str = new Buffer(message).toString('hex');
 	  console.log('DATA(base64) ' +  ': ' + base64str);
 	  var dcMsg = decode_alt1.decodeAlt1Message(message);
+          console.log("mqtts: adding event to DB.");
 	  dbutil.add2dbAlerts(liftId, dcMsg);
 	  var replyMsg = assemble.alt1Reply(dcMsg);
 	  client.publish('res', replyMsg);

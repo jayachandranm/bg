@@ -1,14 +1,16 @@
+let mqtt = {};
+mqtt.user = 'user';
+mqtt.pass = 'pass';
+
+let mysql = {};
+mysql.db = 'mydb';
+mysql.dbhost = 'localhost';
+mysql.dbuser = 'dbUser';
+mysql.dbpass = 'dbPass';
+
+let sms = {};
+sms.user = 'smsUser';
+sms.pass = 'smsPass';
+sms.from = 'from';
+
 module.exports = config;
-
-var config = {};
-
-config.mysql = {};
-
-config.mysql.db = 'mydb';
-config.mysql.dbhost = 'localhost';
-config.mysql.user = 'user';
-config.mysql.pass = 'pass';
-
-config.smsUser = 'user';
-config.smsPass = 'pass';
-config.smsFrom = 'from';

@@ -1,8 +1,0 @@
-{
-        "mysql": {
-            "db": "mydb",
-            "dbhost": "localhost",
-            "user": "user",
-            "pass": "pass"
-        }
-}
