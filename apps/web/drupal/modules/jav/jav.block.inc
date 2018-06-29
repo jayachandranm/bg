@@ -274,7 +274,11 @@ function jav_block_view($delta = '')
                     //print_r($dtime, $row->snum);
                     //dpm($dev_list[$row->lift_id]);
                     $loc = $dev_list[$row->lift_id]["loc"];
-                    $items[] = array($dtime, $row->value, $row->is_set, $row->remarks);
+                    $is_set = "Reset";
+                    if($row->is_set == 1) {
+                        $is_set = "Set";
+                    }
+                    $items[] = array($dtime, $row->value, $is_set, $row->remarks);
                 }
                 //dpm($items);
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'eventlist-single-table')));
