@@ -152,7 +152,7 @@ function add2dbAlerts(liftId, dcMsg) {
             console.log("DB connection error: ", err);
         }
         else {
-            console.log("Got DB pool, user: ", config.mysql.user);
+            console.log("Got DB pool.");
             var uTime = dcMsg['ts'] * 1000;
             var liftEvent = dcMsg['type'];
             var srcSensorGroup = dcMsg['sensor'];
@@ -202,6 +202,7 @@ function add2dbErrors(liftId, dcMsg) {
             console.log("DB received pool.");
             var msgType = dcMsg['msg_type'];
             var allHealthy = dcMsg['no_errors'];
+            var errorRemarks = '';
             //
             var uTime = dcMsg['ts'] * 1000;
             //
@@ -217,7 +218,7 @@ function add2dbErrors(liftId, dcMsg) {
                 var sensorAll = 'all';
                 var healthy = 'healthy';
                 connection.query('INSERT INTO sensor_status SET ?',
-                    { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroupAll, sensor: sensorAll, value: healthy },
+                    { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroupAll, sensor: sensorAll, value: healthy, remarks: errorRemarks },
                     function (err, result) {
                         if (err) {
                             //throw err;
@@ -247,7 +248,7 @@ function add2dbErrors(liftId, dcMsg) {
                             console.log(msgType, sGroup, sensor, sensor_error);
                             operations.push(new Promise((resolve, reject) => {
                                 connection.query('INSERT INTO sensor_status SET ?',
-                                    { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error },
+                                    { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error, remarks: errorRemarks },
                                     function (err, result) {
                                         // TODO: Release connection only after multiple insert is completed.
                                         //connection.release();
