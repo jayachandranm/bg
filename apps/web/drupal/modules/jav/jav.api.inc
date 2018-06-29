@@ -31,7 +31,7 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     if ($reqtype == 'rt') {
         //dpm($sid_list);
         $query_inner = db_select('lift_events', 'a')
-            ->fields('a', array('lift_id', 'ts', 'value', 'is_set'))
+            ->fields('a', array('lift_id', 'ts', 'value', 'is_set', 'remarks'))
             ->condition('lift_id', $sid_list, 'IN')
             ->orderBy('ts', 'DESC');
         //$query->addExpression('MAX(id)');
@@ -43,13 +43,13 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
         //
         //dpm($query_inner);
         $query = db_select($query_inner, 'b')
-            ->fields('b', array('lift_id', 'ts', 'value', 'is_set'))
+            ->fields('b', array('lift_id', 'ts', 'value', 'is_set', 'remarks'))
             ->groupBy('lift_id');
 
     }
     if ($reqtype == 'trc') {
         $query = db_select('lift_events', 'a')
-            ->fields('a', array('lift_id', 'ts', 'value', 'is_set'))
+            ->fields('a', array('lift_id', 'ts', 'value', 'is_set', 'remarks'))
             ->condition('lift_id', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
@@ -59,7 +59,7 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     }
     if ($reqtype == 'rpt') {
         $query = db_select('lift_events', 'a')
-            ->fields('a', array('lift_id', 'ts', 'value', 'is_set'))
+            ->fields('a', array('lift_id', 'ts', 'value', 'is_set', 'remarks'))
             ->condition('lift_id', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
@@ -69,7 +69,7 @@ function _getdata_exdb($jav_db, $reqtype, $filter)
     }
     if ($reqtype == 'ss') {
         $query = db_select('sensor_status', 'a')
-            ->fields('a', array('lift_id', 'ts', 'sensor', 'value'))
+            ->fields('a', array('lift_id', 'ts', 'sensor', 'value', 'remarks'))
             ->condition('lift_id', $sid_list, 'IN')
             //->condition('sid', array(1,5,7),'IN')
             //->condition('status', 0,'>')
