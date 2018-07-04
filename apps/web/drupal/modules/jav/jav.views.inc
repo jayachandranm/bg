@@ -72,6 +72,7 @@ function _get_lift_status($lift_id) {
     $filter->start = -1;  $filter->end = -1;
     $sid_list[] = $lift_id;
     $filter->sidList = $sid_list;
+    $filter->condition = '';
     //$filter->sidList = ['99'];
     //
     module_load_include("config.inc", "jav");

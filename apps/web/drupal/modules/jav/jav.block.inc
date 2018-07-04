@@ -115,6 +115,7 @@ function jav_block_view($delta = '')
             //$dev_list = _jav_set_list();
             //$dev_list = drupal_static('jav');
             $dev_list = $_SESSION['jav']['#selected_lifts'];
+            //dpm($dev_list);
             $sid_list = array();
             if ($dev_list) {
                 //foreach($dev_list as $key => $value) {
@@ -143,6 +144,21 @@ function jav_block_view($delta = '')
                     array(
                         'type' => 'file',
                         'data' => $mpath . '/jav.js',),
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav_dashboard.js',),
+                    array(
+                            'type' => 'setting',
+                            'data' => array(
+                                'jav_dashboard' => array(
+                                    'dev_list' => array(
+                                        $sid => array(
+                                            'sid_list' => $sid_list
+                                        ),
+                                    ),
+                                ),
+                            ),        
+                        ),
                     );
 
                 $header = array(
@@ -161,6 +177,7 @@ function jav_block_view($delta = '')
                 //dpm($sid_list);
                 //$sid_list = ['99'];
                 $filter->sidList = $sid_list;
+                $filter->condition = 'tst';
                 //$filter->sidList = ['99'];
                 //
                 module_load_include("config.inc", "jav");
@@ -174,6 +191,8 @@ function jav_block_view($delta = '')
                 // Only one result expected. If no entry, set default as None.
                 $lift_event = 'None';
                 $rpt_time = 'NA';
+
+                //dpm($filter);
 
                 $result_all = _get_active_events($jav_db, $filter);
                 foreach ($result_all as $row) {
@@ -415,6 +434,7 @@ function jav_block_view($delta = '')
                 //dpm($sid_list);
                 //$sid_list = ['99'];
                 $filter->sidList = $sid_list;
+                $filter->condition = 'all_unack';
                 //$filter->sidList = ['99'];
                 //
                 module_load_include("config.inc", "jav");

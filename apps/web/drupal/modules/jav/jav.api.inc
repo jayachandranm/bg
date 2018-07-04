@@ -88,6 +88,9 @@ function _get_active_events($jav_db, $filter)
     $sid_list = $filter->sidList;
     $start_time = $filter->start;
     $end_time = $filter->end;
+    $condition = $filter->condition;
+  
+    //print_r($filter);
 
     //dpm($jav_db);
  
@@ -101,15 +104,30 @@ function _get_active_events($jav_db, $filter)
     foreach ($sid_list as $sid) {
     foreach($event_types as $e_type) {
         //$sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' and (ts > (select coalesce(max(ts),0) from `lift_events` where lift_id='$sid' and value='$e_type' AND is_set = 0))";
-        $sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' ORDER BY ts DESC limit 1";
+        if($condition == 'all_unack') {
+            $sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' ORDER BY ts DESC limit 1";
+            $result = db_query($sql);
+            $is_cleared = 0;
+            foreach($result as $row) {
+                if($row->msg_type == 'event_clear') {
+                    $is_cleared = 1;
+                }
+            }
+            if(!$is_cleared) {
+                $sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' and is_set=1 ORDER BY ts DESC limit 1";
+            }
+        }
+        else {
+            $sql = "SELECT * FROM `lift_events` WHERE lift_id='$sid' and value='$e_type' ORDER BY ts DESC limit 1";
+        }
         $result = db_query($sql);
         foreach($result as $row) {
             if($row->is_set == 1) {
                 $result_all[] = $row;
             }
-        }
-    }           
-    }           
+        } 
+    } // foreach e_type
+    } // foreach sid
     db_set_active();
     return $result_all;
 }                       

@@ -418,6 +418,14 @@ function jav_menu()
         'file' => 'jav.svcjson.inc',
         'type' => MENU_CALLBACK,
     );
+    $items['jav/get/eventcount'] = array(
+        'title' => 'Get event count',
+        'page callback' => '_get_event_count',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access jav content'),
+        'file' => 'jav.svcjson.inc',
+        'type' => MENU_CALLBACK,
+    );
     return $items;
 }
 
@@ -548,7 +556,7 @@ function jav_preprocess_views_view(&$vars)
 {
     $mpath = drupal_get_path('module', 'jav');
     //dpm($vars['view']);
-    if (($vars['view']->name == 'dashboard' || $vars['view']->name == 'dashboard2' || $vars['view']->name == 'alerts')  && $vars['view']->current_display == 'page') {
+    if (($vars['view']->name == 'dashboard' || $vars['view']->name == 'dashboard2' || $vars['view']->name == 'clone_of_dashboard')  && $vars['view']->current_display == 'page') {
         $selected_devs = array();
         $dev_details = array();
         $selected_lifts = array();
@@ -584,6 +592,7 @@ function jav_preprocess_views_view(&$vars)
         //$lift_list = $selected_lifts;
         $_SESSION['jav'] = array();
         $_SESSION['jav']['#selected_lifts'] = $selected_lifts;
+        //dpm($selected_lifts);
         drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
     }
 }
