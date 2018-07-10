@@ -183,7 +183,7 @@ function jav_block_view($delta = '')
                 module_load_include("config.inc", "jav");
                 $jav_db = getExtDBConfig();
                 module_load_include("api.inc", "jav");
-                $result = _getdata_exdb($jav_db, $reqtype, $filter);
+                //$result = _getdata_exdb($jav_db, $reqtype, $filter);
                 //dpm($result);
                 date_default_timezone_set('Asia/Singapore');
                 //
