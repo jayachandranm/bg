@@ -215,23 +215,25 @@ function jav_block_view($delta = '')
 
                 foreach ($sid_list as $lift_id) {
                     $result = _get_sensorerr($jav_db, $lift_id);
-                    foreach ($result as $row) {
-                        //dpm($result);
-                        $err_code = $row->value;
-                        $sensor = $row->sensor;
-                        $err_msg = _errcode_to_message($sensor, $err_code);
-                        $err = $sensor . ' / ' . $err_msg;
-                        $event_type = "Sensor Error";
-                        $date = new DateTime();
-                        $date->setTimestamp(intval($row->ts) / 1000);
-                        //$err_time = $date->format('j-M-y g:i a');
-                        $err_time = $date->format('d-M-y H:i');
-                        $loc = $dev_list[$row->lift_id]['loc'];
-                        $lift_url = $dev_list[$row->lift_id]['url'];
-                        //$options = array('absolute' => TRUE);
-                        //$lift_url = url('node/' . $lift_nid, $options);
-                        $lift_link = "<a href=$lift_url>$row->lift_id</a>";
-                        $items[] = array($err_time, $lift_link, $loc, $event_type, $err);
+                    if($result != null) {
+                        foreach ($result as $row) {
+                            //dpm($result);
+                            $err_code = $row->value;
+                            $sensor = $row->sensor;
+                            $err_msg = _errcode_to_message($sensor, $err_code);
+                            $err = $sensor . ' / ' . $err_msg;
+                            $event_type = "Sensor Error";
+                            $date = new DateTime();
+                            $date->setTimestamp(intval($row->ts) / 1000);
+                            //$err_time = $date->format('j-M-y g:i a');
+                            $err_time = $date->format('d-M-y H:i');
+                            $loc = $dev_list[$row->lift_id]['loc'];
+                            $lift_url = $dev_list[$row->lift_id]['url'];
+                            //$options = array('absolute' => TRUE);
+                            //$lift_url = url('node/' . $lift_nid, $options);
+                            $lift_link = "<a href=$lift_url>$row->lift_id</a>";
+                            $items[] = array($err_time, $lift_link, $loc, $event_type, $err);
+                        }
                     }
                 }
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'eventlist-all-table')));

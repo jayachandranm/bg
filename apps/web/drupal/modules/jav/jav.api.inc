@@ -166,28 +166,36 @@ function _get_sensorerr($jav_db, $lift_id)
         $s_err = $row->value;
         $s_name_err = $row->sensor;
         $ts_rpt = $row->ts;
+    } else {
+        db_set_active();
+        $result = null;
+        return $result;
     }
-    // If last rpt was all healthy, query everything after the rpt time.
-    // If last rpt had errors, include the rpt time in query, so that rpt errors
-    //      will be included in the final result.
-    if (($s_name_err == 'all') && ($s_err == 'healthy')) {
-        // Only one healthy entry exists for last report.
-        // TODO: Trick, just skip this entry from the error list.
-        // The default case is considered healthy at $ts_rpt = -1, sets $ts_rpt to 0.
-        $ts_rpt = $ts_rpt + 1;
+    $curr_time = time() * 1000;
+    // Do further check only if reports are not timed out (1 day).
+    // Otherwise return the single report entry to mark an error.
+    if( ($curr_time - $ts_rpt) < 24*60*60*1000) {
+        // If last rpt was all healthy, query everything after the rpt time.
+        // If last rpt had errors, include the rpt time in query, so that rpt errors
+        //      will be included in the final result.
+        if (($s_name_err == 'all') && ($s_err == 'healthy')) {
+            // Only one healthy entry exists for last report.
+            // TODO: Trick, just skip this entry from the error list.
+            // The default case is considered healthy at $ts_rpt = -1, sets $ts_rpt to 0.
+            $ts_rpt = $ts_rpt + 1;
+        }
+        $query = array();
+        // get all errors from last rpt till now, including the rpt errors.
+        // (rpt + alt1)ts_rpt - now
+        $query = db_select('sensor_status', 'a')
+            ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
+            ->condition('lift_id', $sid_list, 'IN')
+            //->condition('msg_type', $msg_type)
+            ->condition('ts', array($ts_rpt, $curr_time), 'BETWEEN')
+            ->orderBy('ts', 'DESC');
+        //$query->range(0, 1);
     }
-    $query = array();
-    // get all errors from last rpt till now, including the rpt errors.
-    // (rpt + alt1)ts_rpt - now
-    $end_time = time() * 1000;
-    $query = db_select('sensor_status', 'a')
-        ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
-        ->condition('lift_id', $sid_list, 'IN')
-        //->condition('msg_type', $msg_type)
-        ->condition('ts', array($ts_rpt, $end_time), 'BETWEEN')
-        ->orderBy('ts', 'DESC');
-    //$query->range(0, 1);
-    //
+    // Query again for the case of timeout as fetchAssoc has modified $result.
     $result = $query->execute();
     // $result will be empty if all sensors are considered healthy.
     db_set_active();

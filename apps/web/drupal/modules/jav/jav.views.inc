@@ -96,13 +96,34 @@ function _get_lift_status($lift_id) {
     $result = _get_sensorerr($jav_db, $lift_id);
     // Only need to look at the last row.
     //if($result->fetch()) {
-    if($result->fetchAssoc()) {
-        if($status === 'Event') {
-            $status = 'Event+Error';
-        } else {
-            $status = 'Error';
+    if($result != null) {
+        if($row = $result->fetchObject()) {
+            // Look for timeout case.
+            $ts_rpt = $row->ts;
+            $curr_time = time() * 1000;
+            $time_diff = $curr_time - $ts_rpt;
+            $is_timeout = false;
+            if($time_diff > 24*60*60*1000) {
+                $is_timeout = true;
+            }
+            if($status === 'Event') {
+                $status = 'Event+Error';
+                if($is_timeout) {
+                    // TODO: Event+Timeout?
+                    $status = 'Event+Error';
+                }
+            } else {
+                $status = 'Error';
+                if($is_timeout) {
+                    // TODO: Event+Timeout?
+                    $status = 'Error';
+                }
+            }
         }
+    } else {
+        $status = 'Error';
     }
+
     return $status;
 }
 //
