@@ -20,6 +20,7 @@ var alt1Message = new Parser()
             case 8: retVal = "light_malfunction"; break;
             case 9: retVal = "ventilation_malfunction"; break;
             case 10: retVal = "co_low_level"; break; // eg. smoking
+            case 11: retVal = "jerk_accel"; break;
             case 0xEF: retVal = "uncat"; break;
         }
         return retVal;
