@@ -10,10 +10,10 @@
                 var post_url = basepath + '?q=jav/update/sensor';
                 //var postDataList = {};
                 //var elems = [];
-                    var postData = {};
-                    postData['liftId'] = liftid;
-                    //postData['msg_type'] = 'event_clear';
-                    postData['sType'] = stype;
+                var postData = {};
+                postData['liftId'] = liftid;
+                //postData['msg_type'] = 'event_clear';
+                postData['sType'] = stype;
                 var jsonPost = JSON.stringify(postData);
                 console.log(jsonPost);
                 $.ajax({
@@ -37,12 +37,18 @@
                     }
                 }); // ajax
             }
-            
-            function enableButton() {
-                console.log("Enable button..");
-                $('#rst_light').removeClass('disabled');
+
+            function enableButton(type) {
+                if(type == 'light') {
+                    console.log("Enable light button..");
+                    $('#rst_light').removeClass('disabled');
+                } 
+                else if(type == 'vent') {
+                    console.log("Enable vent button..");
+                    $('#rst_vent').removeClass('disabled');
+                }
             }
-        
+
             //
             if (Drupal.settings.jav_lift) {
                 // No context parameters are required.
@@ -55,16 +61,16 @@
                 //sid_list = Object.keys(sidmap);
                 var basepath = Drupal.settings.basePath;
                 //
-        $('#rst_light').click(function () {
-            $('#rst_light').addClass('disabled');
-                updateSensor(basepath, liftId, 'lighting');
-                setTimeout(enableButton, 1000);
-        });
-        $('#rst_vent').click(function () {
-            $('#rst_vent').addClass('disabled');
-                updateSensor(basepath, liftId, 'ventilation');
-                setTimeout(enableButton, 1000);
-        });
+                $('#rst_light').click(function () {
+                    $('#rst_light').addClass('disabled');
+                    updateSensor(basepath, liftId, 'lighting');
+                    setTimeout(enableButton, 1000, 'light');
+                });
+                $('#rst_vent').click(function () {
+                    $('#rst_vent').addClass('disabled');
+                    updateSensor(basepath, liftId, 'ventilation');
+                    setTimeout(enableButton, 1000, 'vent');
+                });
             } // if settings, jav
         } // attach
 

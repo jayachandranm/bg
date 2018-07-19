@@ -110,13 +110,15 @@ function _get_lift_status($lift_id) {
                 $status = 'Event+Error';
                 if($is_timeout) {
                     // TODO: Event+Timeout?
-                    $status = 'Event+Error';
+                    //$status = 'Event+Error';
+                    $status = 'Timeout';
                 }
             } else {
                 $status = 'Error';
                 if($is_timeout) {
                     // TODO: Event+Timeout?
-                    $status = 'Error';
+                    //$status = 'Error';
+                    $status = 'Timeout';
                 }
             }
         }
