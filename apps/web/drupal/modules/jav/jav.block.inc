@@ -261,6 +261,17 @@ function jav_block_view($delta = '')
                     array(
                         'type' => 'file',
                         'data' => $mpath . '/jav.js',),
+                    array(
+                        'type' => 'file',
+                        'data' => $mpath . '/jav_lift.js',),
+                    array(
+                        'type' => 'setting',
+                        'data' => array(
+                            'jav_lift' => array(
+                                'lift_id' => $sid,
+                                ),
+                            ),
+                        ),                           
                 );
 
                 $header = array(

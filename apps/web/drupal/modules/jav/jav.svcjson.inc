@@ -97,3 +97,28 @@ function _update_db()
     return drupal_json_output($test_json);
 }
 
+function _notify_node() {
+    $received = $_POST['jsonPost'];
+    // $received = json_decode($received, TRUE);
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, 'http://localhost');
+    curl_setopt($ch, CURLOPT_PORT, 8001);
+    //curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+
+    $data = array( "liftId"=> $lift_id, "sType"=> $stype );
+    //$payload = json_encode($data);
+    $payload = $received;
+
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+    # Return response instead of printing.
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true );
+    //curl_setopt($ch, CURLOPT_DNS_LOCAL_IP4, '127.0.0.1' );
+
+    $result = curl_exec($ch);
+    curl_close($ch);
+    # Print response.
+    $test_json = array('result' => 'ok');
+    return drupal_json_output($test_json);
+}

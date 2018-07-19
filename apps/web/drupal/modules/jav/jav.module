@@ -180,7 +180,7 @@ function jav_init()
 */
 
     // TODO: Attach the JS to Dashboard view.
-    //drupal_add_js(drupal_get_path('module', 'jav') . '/jav.js');
+    //drupal_add_js(drupal_get_path('module', 'jav') . '/bootstrap-hover-dropdown.js');
     //drupal_add_css(drupal_get_path('module', 'jav') .'/your-css.css');
     //drupal_add_css(drupal_get_path('theme', 'hdbjav') .'/your-css.css');
 }
@@ -421,6 +421,14 @@ function jav_menu()
     $items['jav/get/eventcount'] = array(
         'title' => 'Get event count',
         'page callback' => '_get_event_count',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access jav content'),
+        'file' => 'jav.svcjson.inc',
+        'type' => MENU_CALLBACK,
+    );
+    $items['jav/update/sensor'] = array(
+        'title' => 'Perform updates on sensors',
+        'page callback' => '_notify_node',
         //'page arguments' => array(1), //get param from URL.
         'access arguments' => array('access jav content'),
         'file' => 'jav.svcjson.inc',
