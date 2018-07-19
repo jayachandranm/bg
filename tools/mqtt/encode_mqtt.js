@@ -4,6 +4,7 @@ module.exports.rptReply = rptReply;
 module.exports.alt1Reply = alt1Reply;
 module.exports.alt2Reply = alt2Reply;
 module.exports.updateTime = updateTime;
+module.exports.resetSensor = resetSensor;
 
 var c = Concentrate();
 
@@ -49,6 +50,32 @@ function updateTime(dcMsg) {
     var dataToDev = c.uint8('0x3D')
     .uint16be(currTime)
     .result();
+
+    //console.log(dataToDev);
+    c.reset();
+    return dataToDev;
+}
+
+function resetSensor(sensorType) {
+    //var currTime = Date.now() / 1000 | 0;
+    // Default sensor, 0x00.
+    var dataToDev = c.uint8('0x3F')
+        .uint8('0x00')
+        .result();
+    switch (sensorType) {
+        case 'lighting':
+            console.log('Reset lighting.');
+            dataToDev = c.uint8('0x3F')
+                .uint8('0x08')
+                .result();
+            break;
+        case 'ventilation':
+            console.log('Reset ventilation.');
+            dataToDev = c.uint8('0x3F')
+                .uint8('0x09')
+                .result();
+            break;
+    }
 
     //console.log(dataToDev);
     c.reset();
