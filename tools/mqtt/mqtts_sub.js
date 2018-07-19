@@ -9,22 +9,14 @@ var alert_utils = require('./send_alert');
 var config = require('./config');
 
 //var client  = mqtt.connect('mqtt://localhost', { host: 'localhost', port: 8883 })
-
-var deviceRoot = "demo/device/";
+//var deviceRoot = "demo/device/";
 var mqtthost = 'localhost';
 
-var cert_folder = '/home/ubuntu/cert';
-//var cert_folder = '/home/i2r/Desktop/cert';
+var cert_folder = config.aob.cert_folder;
 
 var KEY = fs.readFileSync(cert_folder + '/client.key');
 var CERT = fs.readFileSync(cert_folder + '/client.crt');
 var CAfile = fs.readFileSync(cert_folder + '/ca.crt');
-//var CAfile = [fs.readFileSync('/ca.crt')];
-/*
-var KEY = '/etc/keys/client.key';
-var CERT = '/etc/keys/client.crt';
-var CAfile = '/etc/keys/ca.crt';
-*/
 
 var isConnected = false;
 
@@ -43,11 +35,6 @@ var options = {
 	protocolVersion: 3
 };
 
-/*
-var client  = mqtt.connect('mqtt://test.mosquitto.org', {
-    rejectUnauthorized: false
-})
-*/
 
 var client = mqtt.connect(options);
 

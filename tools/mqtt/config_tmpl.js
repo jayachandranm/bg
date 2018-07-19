@@ -13,4 +13,7 @@ sms.user = 'smsUser';
 sms.pass = 'smsPass';
 sms.from = 'from';
 
+let aob = {};
+aob.cert_folder = '/folder/cert';
+
 module.exports = config;
