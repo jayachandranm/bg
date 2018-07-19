@@ -4,7 +4,7 @@ module.exports.rptReply = rptReply;
 module.exports.alt1Reply = alt1Reply;
 module.exports.alt2Reply = alt2Reply;
 module.exports.updateTime = updateTime;
-module.exports.resetSensor = resetSensor;
+module.exports.encodeReset = encodeReset;
 
 var c = Concentrate();
 
@@ -56,7 +56,7 @@ function updateTime(dcMsg) {
     return dataToDev;
 }
 
-function resetSensor(sensorType) {
+function encodeReset(sensorType) {
     //var currTime = Date.now() / 1000 | 0;
     // Default sensor, 0x00.
     var dataToDev = c.uint8('0x3F')

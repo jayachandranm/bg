@@ -1,4 +1,5 @@
 var mqtt = require('mqtt');
+var http = require('http');
 var fs = require('fs');
 var decode_rpt = require('./decode_mqtt_rpt');
 var decode_alt1 = require('./decode_mqtt_alt1');

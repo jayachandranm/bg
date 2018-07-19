@@ -16,4 +16,4 @@ sms.from = 'from';
 let aob = {};
 aob.cert_folder = '/folder/cert';
 
-module.exports = config;
+module.exports = {mqtt, mysql, sms, aob};
