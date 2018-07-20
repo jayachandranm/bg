@@ -10,10 +10,10 @@
                 var post_url = basepath + '?q=jav/update/sensor';
                 //var postDataList = {};
                 //var elems = [];
-                var postData = {};
-                postData['liftId'] = liftid;
-                //postData['msg_type'] = 'event_clear';
-                postData['sType'] = stype;
+                    var postData = {};
+                    postData['liftId'] = liftid;
+                    //postData['msg_type'] = 'event_clear';
+                    postData['sType'] = stype;
                 var jsonPost = JSON.stringify(postData);
                 console.log(jsonPost);
                 $.ajax({
@@ -37,18 +37,32 @@
                     }
                 }); // ajax
             }
-
+            
             function enableButton(type) {
                 if(type == 'light') {
                     console.log("Enable light button..");
                     $('#rst_light').removeClass('disabled');
-                } 
+                }  
                 else if(type == 'vent') {
                     console.log("Enable vent button..");
                     $('#rst_vent').removeClass('disabled');
                 }
+                else if(type == 'restart') {
+                    console.log("Enable restart button..");
+                    $('#restart').removeClass('disabled');
+                }
+                else if(type == 'maintenance') {
+                    $('#maintenance').removeClass('disabled');
+                    if($('#maintenance').hasClass('mnt')) {
+                        console.log("Switch operational button..");
+                        $('#maintenance').text('Switch to Operational');
+                    } else {
+                        console.log("Switch to maintenance button..");
+                        $('#maintenance').text('Switch to Maintenance');
+                    }
+                }
             }
-
+        
             //
             if (Drupal.settings.jav_lift) {
                 // No context parameters are required.
@@ -70,6 +84,22 @@
                     $('#rst_vent').addClass('disabled');
                     updateSensor(basepath, liftId, 'ventilation');
                     setTimeout(enableButton, 1000, 'vent');
+                });
+                $('#restart').click(function () {
+                    $('#restart').addClass('disabled');
+                    updateSensor(basepath, liftId, 'reboot');
+                    setTimeout(enableButton, 1000, 'restart');
+                });
+                $('#maintenance').click(function () {
+                    $('#maintenance').addClass('disabled');
+                    if($('#maintenance').hasClass('mnt')) {
+                        updateSensor(basepath, liftId, 'operational');
+                        $('#maintenance').removeClass('mnt');
+                    } else {
+                        $('#maintenance').addClass('mnt');
+                        updateSensor(basepath, liftId, 'maintenance');
+                    }
+                    setTimeout(enableButton, 1000, 'maintenance');
                 });
             } // if settings, jav
         } // attach
