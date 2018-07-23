@@ -68,7 +68,7 @@ client.on('message', function (topic, message) {
 			dbutil.add2dbErrors(liftId, dcMsg);
 			//var dcMsg = decode_alt1.decodeAlt1Message(message);
 			var replyMsg = assemble.rptReply(dcMsg);
-			client.publish('res', replyMsg);
+			client.publish(liftId + '/req', replyMsg);
 			break;
 		case 'alt1':
 			var base64str = new Buffer(message).toString('hex');
@@ -77,7 +77,7 @@ client.on('message', function (topic, message) {
 			console.log("mqtts: adding event to DB.");
 			dbutil.add2dbAlerts(liftId, dcMsg);
 			var replyMsg = assemble.alt1Reply(dcMsg);
-			client.publish('res', replyMsg);
+			client.publish(liftId + '/req', replyMsg);
 			var liftEvent = dcMsg['type'];
 			if (liftEvent && dcMsg['set_reset']) {
 				console.log("Send Alert: ");
@@ -97,12 +97,21 @@ client.on('message', function (topic, message) {
 			var dcMsg = dbutil.transformAlt2Msg(altMsg);
 			dbutil.add2dbErrors(liftId, dcMsg);
 			var replyMsg = assemble.alt2Reply(dcMsg);
-			client.publish('res', replyMsg);
+			client.publish(liftId + '/req', replyMsg);
 			break;
+		case 'res':
+			var base64str = new Buffer(message).toString('hex');
+			console.log('DATA(base64) ' + ': ' + base64str);
+/* 			var rptMsg = decode_rpt.decodeRptMessage(message);
+			var dcMsg = dbutil.transformRptMsg(rptMsg);
+			dbutil.add2dbErrors(liftId, dcMsg);
+ */			break;
 		case 'relay':
 			var resetMsg = assemble.resetSensor(message);
 			console.log("Relaying message to DC.");
-			client.publish('res', resetMsg);
+			if (isConnected) {
+				client.publish(liftId + '/req', resetMsg);
+			}
 			break;
 	}
 	//client.end()
@@ -123,6 +132,8 @@ var server = http.createServer(function (req, res) {
 			liftId = jsonData.liftId;
 			sensorType = jsonData.sType;
 			var resetMsg = assemble.encodeReset(sensorType);
+			let base64str = new Buffer(resetMsg).toString('hex');
+			console.log('DATA(base64) ' + ': ' + base64str);
 			console.log("Relaying message to DC.");
 			if (isConnected) {
 				client.publish(liftId + '/req', resetMsg);

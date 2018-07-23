@@ -65,14 +65,37 @@ function encodeReset(sensorType) {
     switch (sensorType) {
         case 'lighting':
             console.log('Reset lighting.');
+            c.reset();
             dataToDev = c.uint8('0x3F')
                 .uint8('0x08')
                 .result();
             break;
         case 'ventilation':
             console.log('Reset ventilation.');
+            c.reset();
             dataToDev = c.uint8('0x3F')
                 .uint8('0x09')
+                .result();
+            break;
+        case 'reboot':
+            console.log('Reboot.');
+            c.reset();
+            dataToDev = c.uint8('0x39')
+                .uint8('0x00')
+                .result();
+            break;
+        case 'maintenance':
+            console.log('Switch to maintenance.');
+            c.reset();
+            dataToDev = c.uint8('0x39')
+                .uint8('0x01')
+                .result();
+            break;
+        case 'operational':
+            console.log('Switch to operation.');
+            c.reset();
+            dataToDev = c.uint8('0x39')
+                .uint8('0x02')
                 .result();
             break;
     }
