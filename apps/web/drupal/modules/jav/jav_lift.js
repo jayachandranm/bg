@@ -38,7 +38,8 @@
                 }); // ajax
             }
             
-            function enableButton(type) {
+            function enableButton(css_id, type) {
+                /*
                 if(type == 'light') {
                     console.log("Enable light button..");
                     $('#rst_light').removeClass('disabled');
@@ -51,15 +52,20 @@
                     console.log("Enable restart button..");
                     $('#restart').removeClass('disabled');
                 }
-                else if(type == 'maintenance') {
-                    $('#maintenance').removeClass('disabled');
-                    if($('#maintenance').hasClass('mnt')) {
+                */
+                if(type == 'maintenance') {
+                    $(css_id).removeClass('disabled');
+                    if($(css_id).hasClass('mnt')) {
                         console.log("Switch operational button..");
-                        $('#maintenance').text('Switch to Operational');
+                        $(css_id).text('Switch to Operational');
                     } else {
                         console.log("Switch to maintenance button..");
-                        $('#maintenance').text('Switch to Maintenance');
+                        $(css_id).text('Switch to Maintenance');
                     }
+                }
+                else {
+                    console.log("Enable button..");
+                    $(css_id).removeClass('disabled');
                 }
             }
         
@@ -68,38 +74,47 @@
                 // No context parameters are required.
                 var sidmap = {};
                 console.log('Retrieving jav settings.');
-                var liftId = Drupal.settings.jav_lift.lift_id;
-                console.log(liftId);
+                //var liftId = Drupal.settings.jav_lift.lift_id;
+                var liftId;
+                //console.log(liftId);
                 var sid_list = [];
                 // ECMAScript 5 and later.
                 //sid_list = Object.keys(sidmap);
                 var basepath = Drupal.settings.basePath;
                 //
-                $('#rst_light').click(function () {
-                    $('#rst_light').addClass('disabled');
+                $('.rst_light').click(function (e) {
+                    var b_id = '#' + e.currentTarget.id;
+                    $(b_id).addClass('disabled');
+                    liftId = $(b_id).parent().attr('id');
                     updateSensor(basepath, liftId, 'lighting');
-                    setTimeout(enableButton, 1000, 'light');
+                    setTimeout(enableButton, 1000, b_id, 'light');
                 });
-                $('#rst_vent').click(function () {
-                    $('#rst_vent').addClass('disabled');
+                $('.rst_vent').click(function (e) {
+                    var b_id = '#' + e.currentTarget.id;
+                    $(b_id).addClass('disabled');
+                    liftId = $(b_id).parent().attr('id');
                     updateSensor(basepath, liftId, 'ventilation');
-                    setTimeout(enableButton, 1000, 'vent');
+                    setTimeout(enableButton, 1000, b_id, 'vent');
                 });
-                $('#restart').click(function () {
-                    $('#restart').addClass('disabled');
+                $('.restart').click(function (e) {
+                    var b_id = '#' + e.currentTarget.id;
+                    $(b_id).addClass('disabled');
+                    liftId = $(b_id).parent().attr('id');
                     updateSensor(basepath, liftId, 'reboot');
-                    setTimeout(enableButton, 1000, 'restart');
+                    setTimeout(enableButton, 1000, b_id, 'restart');
                 });
-                $('#maintenance').click(function () {
-                    $('#maintenance').addClass('disabled');
-                    if($('#maintenance').hasClass('mnt')) {
+                $('.maintenance').click(function (e) {
+                    var b_id = '#' + e.currentTarget.id;
+                    $(b_id).addClass('disabled');
+                    liftId = $(b_id).parent().attr('id');
+                    if($(b_id).hasClass('mnt')) {
                         updateSensor(basepath, liftId, 'operational');
-                        $('#maintenance').removeClass('mnt');
+                        $(b_id).removeClass('mnt');
                     } else {
-                        $('#maintenance').addClass('mnt');
+                        $(b_id).addClass('mnt');
                         updateSensor(basepath, liftId, 'maintenance');
                     }
-                    setTimeout(enableButton, 1000, 'maintenance');
+                    setTimeout(enableButton, 1000, b_id, 'maintenance');
                 });
             } // if settings, jav
         } // attach
