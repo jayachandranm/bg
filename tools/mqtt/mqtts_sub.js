@@ -62,7 +62,7 @@ client.on('message', function (topic, message) {
 	switch (javTopic) {
 		case 'rpt':
 			var base64str = new Buffer(message).toString('hex');
-			console.log('DATA(base64) ' + ': ' + base64str);
+			console.log('rpt->DATA(base64) ' + ': ' + base64str);
 			var rptMsg = decode_rpt.decodeRptMessage(message);
 			var dcMsg = dbutil.transformRptMsg(rptMsg);
 			dbutil.add2dbErrors(liftId, dcMsg);
@@ -72,7 +72,7 @@ client.on('message', function (topic, message) {
 			break;
 		case 'alt1':
 			var base64str = new Buffer(message).toString('hex');
-			console.log('DATA(base64) ' + ': ' + base64str);
+			console.log('alt1->DATA(base64) ' + ': ' + base64str);
 			var dcMsg = decode_alt1.decodeAlt1Message(message);
 			console.log("mqtts: adding event to DB.");
 			dbutil.add2dbAlerts(liftId, dcMsg);
@@ -92,7 +92,7 @@ client.on('message', function (topic, message) {
 			break;
 		case 'alt2':
 			var base64str = new Buffer(message).toString('hex');
-			console.log('DATA(base64) ' + ': ' + base64str);
+			console.log('alt2->DATA(base64) ' + ': ' + base64str);
 			var altMsg = decode_alt2.decodeAlt2Message(message);
 			var dcMsg = dbutil.transformAlt2Msg(altMsg);
 			dbutil.add2dbErrors(liftId, dcMsg);
@@ -101,11 +101,23 @@ client.on('message', function (topic, message) {
 			break;
 		case 'res':
 			var base64str = new Buffer(message).toString('hex');
-			console.log('DATA(base64) ' + ': ' + base64str);
-/* 			var rptMsg = decode_rpt.decodeRptMessage(message);
-			var dcMsg = dbutil.transformRptMsg(rptMsg);
-			dbutil.add2dbErrors(liftId, dcMsg);
- */			break;
+			console.log('res->DATA(base64) ' + ': ' + base64str);
+			var u8arr = new Uint8Array(message);
+			//console.log(u8arr);
+			// 0x4901:mnt, 0x4902:op; 0x49=73(decimal)
+			if(u8arr[0] == 73) { // if maintenance related..
+				var mode = '';
+				if(u8arr[1] == 1) {
+					// Lift switched to maintenance mode.
+					mode = 'maintenance';
+				}
+				else if(u8arr[1] == 2) {
+					// Lift switched to operational mode.
+					mode = '';
+				}
+				dbutil.updateRemarks(liftId, mode);
+			}
+			break;
 		case 'relay':
 			var resetMsg = assemble.resetSensor(message);
 			console.log("Relaying message to DC.");
