@@ -508,6 +508,9 @@ function _lift_details_to_db($node, $flag)
     //$view = node_view($node);
     $lift_nid = $node->nid;
     $lift_id = $node->field_lift_id['und'][0]['value'];
+    $field_addr_ref = field_get_items('node', $node, 'field_lift_address', 'en');
+    $lift_address = $field_addr_ref[0]['thoroughfare'];
+    //$lift_address = $node->field_lift_address['und'][0]['thoroughfare'];
     $tid_supplier = $node->field_lift_supplier['und'][0]['target_id'];
     $node_supplier = node_load($tid_supplier);
     $supplier_nid = $node_supplier->nid;
@@ -521,7 +524,7 @@ function _lift_details_to_db($node, $flag)
     module_load_include("config.inc", "jav");
     $jav_db = getExtDBConfig();
     module_load_include("api.inc", "jav");
-    _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+    _update_ext_db($jav_db, $lift_nid, $lift_id, $lift_address, $supplier_nid, $sms_list, $flag);
 }
 
 function _update_db_referencing_lifts($node_supplier, $flag)
@@ -542,9 +545,10 @@ function _update_db_referencing_lifts($node_supplier, $flag)
     foreach ($results as $row) {
         $lift_id = $row->lift_id;
         $lift_nid = intval($row->lift_nid);
+        $lift_address = $row->lift_address;
         $supplier_nid = intval($row->supplier_nid);
         $liftlist = $lift_id;
-        _update_ext_db($jav_db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag);
+        _update_ext_db($jav_db, $lift_nid, $lift_id, $lift_address, $supplier_nid, $sms_list, $flag);
     }
 }
 

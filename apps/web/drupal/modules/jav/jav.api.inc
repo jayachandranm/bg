@@ -227,7 +227,7 @@ function _get_mnt_lifts($jav_db, $lift_ids)
     return $result;
 }
 
-function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag)
+function _update_ext_db($db, $lift_nid, $lift_id, $lift_address, $supplier_nid, $sms_list, $flag)
 {
     Database::addConnectionInfo('JAV', 'default', $db);
     db_set_active('JAV');
@@ -240,16 +240,22 @@ function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $fla
     if ($flag) {
         db_insert('contact_list')
             ->fields(array(
+                'ts' => $millis,
+                'date_time' => $dt,
                 'lift_id' => $lift_id,
                 'lift_nid' => $lift_nid,
+                'lift_address' => $lift_address,
                 'supplier_nid' => $supplier_nid,
                 'sms_list' => $sms_list,
             ))->execute();
     } else {
         db_update('contact_list')
             ->fields(array(
+                'ts' => $millis,
+                'date_time' => $dt,
                 'lift_id' => $lift_id,
                 'lift_nid' => $lift_nid,
+                'lift_address' => $lift_address,
                 'supplier_nid' => $supplier_nid,
                 'sms_list' => $sms_list,
             ))
@@ -301,7 +307,7 @@ function _get_ext_db_liftlist($jav_db, $supplier_nid)
 
     $query = array();
     $query = db_select('contact_list', 'a')
-        ->fields('a', array('lift_id', 'lift_nid', 'supplier_nid', 'sms_list'))
+        ->fields('a', array('lift_id', 'lift_nid', 'lift_address','supplier_nid', 'sms_list'))
         //->condition('supplier_nid', $supplier_nid, 'IN');
         ->condition('supplier_nid', $supplier_nid);
 
