@@ -122,3 +122,32 @@ function _notify_node() {
     $test_json = array('result' => 'ok');
     return drupal_json_output($test_json);
 }
+
+function _get_mnt_status() {
+    $items = array();
+    if(isset($_POST['jsonPost'])) {
+        $received = $_POST['jsonPost'];
+        $received = json_decode($received, TRUE);
+        //print_r($received);
+        $lift_ids = $received['liftIds'];
+        //
+        module_load_include("config.inc", "jav");
+        $jav_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+        $result = _get_mnt_lifts($jav_db, $lift_ids);
+        //
+        foreach ($result as $row) {
+            //dpm($row);
+            $lift_remarks = $row->remarks;
+            if($lift_remarks === 'maintenance') {
+                $lift_id = $row->lift_id;
+                $date = new DateTime();
+                $date->setTimestamp(intval($row->ts) / 1000);
+                //$rpt_time = $date->format('j-M-y g:i a');
+                $items[] = array('lift_id' => $lift_id, 'lift_status' => $lift_remarks);
+            }
+        }
+
+    }
+    return drupal_json_output($items);
+}

@@ -202,6 +202,31 @@ function _get_sensorerr($jav_db, $lift_id)
     return $result;
 }
 
+function _get_mnt_lifts($jav_db, $lift_ids)
+{
+    // all sensor errors = sensor errors at last report 
+    //        + any extra errors reported from then till now in alt2 events.
+    Database::addConnectionInfo('JAV', 'default', $jav_db);
+    db_set_active('JAV');
+    $sid_list[] = $lift_ids;
+    //$msg_type = 'err_rpt';
+    //
+    $query = array();
+    // get last error status entry.
+    $query = db_select('sensor_status', 'a')
+        ->fields('a', array('lift_id', 'ts', 'value', 'sensor', 'remarks'))
+        ->condition('lift_id', $sid_list, 'IN')
+        //->condition('msg_type', $msg_type)
+        ->orderBy('ts', 'DESC');
+    $query->range(0, 1);
+    //
+    $result = $query->execute();
+    //
+    // $result will be empty if all sensors are considered healthy.
+    db_set_active();
+    return $result;
+}
+
 function _update_ext_db($db, $lift_nid, $lift_id, $supplier_nid, $sms_list, $flag)
 {
     Database::addConnectionInfo('JAV', 'default', $db);

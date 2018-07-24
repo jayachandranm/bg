@@ -256,6 +256,8 @@ function jav_block_view($delta = '')
                     ),
                 );
 
+                $lift_ids[] = $sid;
+
                 $block['content']['#attached']['libraries_load'][] = array('datatables');
                 $block['content']['#attached']['js'] = array(
                     array(
@@ -268,7 +270,7 @@ function jav_block_view($delta = '')
                         'type' => 'setting',
                         'data' => array(
                             'jav_lift' => array(
-                                'lift_id' => $sid,
+                                'lift_ids' => $lift_ids,
                                 ),
                             ),
                         ),                           

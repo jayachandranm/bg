@@ -434,6 +434,14 @@ function jav_menu()
         'file' => 'jav.svcjson.inc',
         'type' => MENU_CALLBACK,
     );
+    $items['jav/get/mntstatus'] = array(
+        'title' => 'Get maintenance status of lifts',
+        'page callback' => '_get_mnt_status',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access jav content'),
+        'file' => 'jav.svcjson.inc',
+        'type' => MENU_CALLBACK,
+    );
     return $items;
 }
 
@@ -604,8 +612,20 @@ function jav_preprocess_views_view(&$vars)
         drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
     }
     if ($vars['view']->name == 'my_lifts'  && $vars['view']->current_display == 'page') {
+        foreach ($vars['view']->result as $cnum => $cell) {
+            //print_r($cell->node_title);
+            //dpm($cell);
+            $nid = $cell->nid;
+            $node = node_load($nid);
+            $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
+            $lift_id = $field_dev[0]['safe_value'];
+            //dpm($lift_id);
+            //$sid_content = $cell->field_field_lift_id[0];
+            //$lift_id = $sid_content['raw']['value'];
+            $selected_lifts[] = $lift_id;
+        }
         drupal_add_js($mpath . '/jav_lift.js');
-        drupal_add_js(array('jav_lift' => array('dev_list' => $selected_lifts)), 'setting');
+        drupal_add_js(array('jav_lift' => array('lift_ids' => $selected_lifts)), 'setting');
     }   
 }
 

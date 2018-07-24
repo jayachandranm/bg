@@ -10,10 +10,10 @@
                 var post_url = basepath + '?q=jav/update/sensor';
                 //var postDataList = {};
                 //var elems = [];
-                    var postData = {};
-                    postData['liftId'] = liftid;
-                    //postData['msg_type'] = 'event_clear';
-                    postData['sType'] = stype;
+                var postData = {};
+                postData['liftId'] = liftid;
+                //postData['msg_type'] = 'event_clear';
+                postData['sType'] = stype;
                 var jsonPost = JSON.stringify(postData);
                 console.log(jsonPost);
                 $.ajax({
@@ -37,29 +37,57 @@
                     }
                 }); // ajax
             }
-            
+
+            function getMntStatus(baseurl, liftid_list) {
+                var basepath = baseurl;
+                var post_url = basepath + '?q=jav/get/mntstatus';
+                //var postDataList = {};
+                //var elems = [];
+                var postData = {};
+                postData['liftIds'] = liftid_list;
+                //postData['msg_type'] = 'event_clear';
+                //postData['sType'] = stype;
+                var jsonPost = JSON.stringify(postData);
+                console.log(jsonPost);
+                $.ajax({
+                    url: post_url,
+                    type: 'POST',
+                    dataType: 'json',
+                    //data: jsonPost,
+                    data: { jsonPost: jsonPost },
+                    success: function (jsonData) {
+                        console.log('Received data.', jsonData);
+                        jsonData.forEach(function(row){
+                           let b_id = "#maintenance-" + row.lift_id;
+                           $(b_id).text('Switch to Operational');
+                           $(b_id).addClass('mnt');
+                           $(b_id).removeClass('btn-primary');
+                           $(b_id).addClass('btn-info');
+                        });
+                    },
+                    complete: function () {
+                        console.log('Ajax processing complete.');
+                    },
+                    error: function (xhr, status, error) {
+                        //error: function () {
+                        //alert('Error loading ');
+                        console.log('Error: Ajax response', xhr, status, error);
+                    }
+                }); // ajax
+            }
+
             function enableButton(css_id, type) {
-                /*
-                if(type == 'light') {
-                    console.log("Enable light button..");
-                    $('#rst_light').removeClass('disabled');
-                }  
-                else if(type == 'vent') {
-                    console.log("Enable vent button..");
-                    $('#rst_vent').removeClass('disabled');
-                }
-                else if(type == 'restart') {
-                    console.log("Enable restart button..");
-                    $('#restart').removeClass('disabled');
-                }
-                */
-                if(type == 'maintenance') {
+                if (type == 'maintenance') {
                     $(css_id).removeClass('disabled');
-                    if($(css_id).hasClass('mnt')) {
+                    if ($(css_id).hasClass('mnt')) {
                         console.log("Switch operational button..");
+                        $(css_id).removeClass('btn-primary');
+                        $(css_id).addClass('btn-info');
                         $(css_id).text('Switch to Operational');
                     } else {
                         console.log("Switch to maintenance button..");
+                        $(css_id).removeClass('btn-info');
+                        $(css_id).addClass('btn-primary');
                         $(css_id).text('Switch to Maintenance');
                     }
                 }
@@ -68,19 +96,21 @@
                     $(css_id).removeClass('disabled');
                 }
             }
-        
+
             //
             if (Drupal.settings.jav_lift) {
                 // No context parameters are required.
                 var sidmap = {};
                 console.log('Retrieving jav settings.');
-                //var liftId = Drupal.settings.jav_lift.lift_id;
-                var liftId;
+                var liftIds = Drupal.settings.jav_lift.lift_ids;
+                //var liftId;
                 //console.log(liftId);
                 var sid_list = [];
                 // ECMAScript 5 and later.
                 //sid_list = Object.keys(sidmap);
                 var basepath = Drupal.settings.basePath;
+                // Update maintenance buttons based on current status of lifts.
+                getMntStatus(basepath, liftIds);
                 //
                 $('.rst_light').click(function (e) {
                     var b_id = '#' + e.currentTarget.id;
@@ -107,7 +137,7 @@
                     var b_id = '#' + e.currentTarget.id;
                     $(b_id).addClass('disabled');
                     liftId = $(b_id).parent().attr('id');
-                    if($(b_id).hasClass('mnt')) {
+                    if ($(b_id).hasClass('mnt')) {
                         updateSensor(basepath, liftId, 'operational');
                         $(b_id).removeClass('mnt');
                     } else {
