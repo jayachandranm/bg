@@ -372,7 +372,7 @@ function jav_block_view($delta = '')
                     //$dtime = $date->format('d-M-y H:i a');
                     $dtime = $date->format('d-M-y H:i');
                     //print_r($dtime, $row->snum);
-                    $items[] = array($dtime, $row->value, $row->sensor, "");
+                    $items[] = array($dtime, $row->value, $row->sensor, $row->remarks);
                 }
 
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sensor-status-table')));
