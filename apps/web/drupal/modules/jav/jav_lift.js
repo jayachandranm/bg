@@ -59,10 +59,13 @@
                         console.log('Received data.', jsonData);
                         jsonData.forEach(function(row){
                            let b_id = "#maintenance-" + row.lift_id;
+                           let alert_id = "#liftalert-" + row.lift_id;
                            $(b_id).text('Switch to Operational');
                            $(b_id).addClass('mnt');
                            $(b_id).removeClass('btn-primary');
                            $(b_id).addClass('btn-info');
+                           $(alert_id).addClass('alert alert-warning');
+                           $(alert_id).text('The lift is in maintenance mode.');
                         });
                     },
                     complete: function () {
@@ -76,7 +79,7 @@
                 }); // ajax
             }
 
-            function enableButton(css_id, type) {
+            function enableButton(css_id, alert_id, type) {
                 if (type == 'maintenance') {
                     $(css_id).removeClass('disabled');
                     if ($(css_id).hasClass('mnt')) {
@@ -84,11 +87,15 @@
                         $(css_id).removeClass('btn-primary');
                         $(css_id).addClass('btn-info');
                         $(css_id).text('Switch to Operational');
+                        $(alert_id).addClass('alert alert-warning');
+                        $(alert_id).text('The lift is in maintenance mode.');
                     } else {
                         console.log("Switch to maintenance button..");
                         $(css_id).removeClass('btn-info');
                         $(css_id).addClass('btn-primary');
                         $(css_id).text('Switch to Maintenance');
+                        $(alert_id).removeClass('alert alert-warning');
+                        $(alert_id).text('');
                     }
                 }
                 else {
@@ -116,27 +123,31 @@
                     var b_id = '#' + e.currentTarget.id;
                     $(b_id).addClass('disabled');
                     liftId = $(b_id).parent().attr('id');
+                    var alert_id = '#liftalert-' + liftId;
                     updateSensor(basepath, liftId, 'lighting');
-                    setTimeout(enableButton, 1000, b_id, 'light');
+                    setTimeout(enableButton, 1000, b_id, alert_id, 'light');
                 });
                 $('.rst_vent').click(function (e) {
                     var b_id = '#' + e.currentTarget.id;
                     $(b_id).addClass('disabled');
                     liftId = $(b_id).parent().attr('id');
+                    var alert_id = '#liftalert-' + liftId;
                     updateSensor(basepath, liftId, 'ventilation');
-                    setTimeout(enableButton, 1000, b_id, 'vent');
+                    setTimeout(enableButton, 1000, b_id, alert_id, 'vent');
                 });
                 $('.restart').click(function (e) {
                     var b_id = '#' + e.currentTarget.id;
                     $(b_id).addClass('disabled');
                     liftId = $(b_id).parent().attr('id');
+                    var alert_id = '#liftalert-' + liftId;
                     updateSensor(basepath, liftId, 'reboot');
-                    setTimeout(enableButton, 1000, b_id, 'restart');
+                    setTimeout(enableButton, 1000, b_id, alert_id, 'restart');
                 });
                 $('.maintenance').click(function (e) {
                     var b_id = '#' + e.currentTarget.id;
                     $(b_id).addClass('disabled');
                     liftId = $(b_id).parent().attr('id');
+                    var alert_id = '#liftalert-' + liftId;
                     if ($(b_id).hasClass('mnt')) {
                         updateSensor(basepath, liftId, 'operational');
                         $(b_id).removeClass('mnt');
@@ -144,7 +155,7 @@
                         $(b_id).addClass('mnt');
                         updateSensor(basepath, liftId, 'maintenance');
                     }
-                    setTimeout(enableButton, 1000, b_id, 'maintenance');
+                    setTimeout(enableButton, 1000, b_id, alert_id, 'maintenance');
                 });
             } // if settings, jav
         } // attach

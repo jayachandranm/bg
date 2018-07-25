@@ -80,6 +80,7 @@
  * @ingroup templates
  */
 ?>
+
 <article id="node-<?php print $node->nid; ?>" class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
   <?php if ((!$page && !empty($title)) || !empty($title_prefix) || !empty($title_suffix) || $display_submitted): ?>
   <header>
@@ -96,6 +97,8 @@
     <?php endif; ?>
   </header>
   <?php endif; ?>
+  <?php $lift_id = $content['field_lift_id']['#items']['0']['value']; ?>
+  <div id="liftalert-<?php print $lift_id ?>"></div>
   <?php
     // Hide comments, tags, and links now so that we can render them later.
     hide($content['comments']);
@@ -103,18 +106,12 @@
     hide($content['field_tags']);
     print render($content);
   ?>
-  <!--  <div class="row" style="margin-left: 0px; margin-top: 15px">
-            <button id="rst_light" class="btn btn-primary" type="submit">Reset Light</button>
-            <button id="rst_vent" class="btn btn-primary" type="submit">Reset Ventilation</button>
-    </div> -->
-   <?php $lift_id = $content['field_lift_id']['#items']['0']['value']; ?>
     <div id="<?php print $lift_id ?>"  class="row" style="margin-left: 0px; margin-top: 15px">
             <button id="rstlight-<?php print $lift_id ?>" class="btn btn-primary rst_light" type="submit">Reset Light</button>
             <button id="rstvent-<?php print $lift_id ?>" class="btn btn-primary rst_vent" type="submit">Reset Ventilation</button>
             <button id="reset-<?php print $lift_id ?>" class="btn btn-primary restart" type="submit">Restart System</button>
             <button id="maintenance-<?php print $lift_id ?>" class="btn btn-primary maintenance" type="submit">Switch to Maintenance</button>
     </div>
-
   <?php
     // Only display the wrapper div if there are tags or links.
     $field_tags = render($content['field_tags']);
