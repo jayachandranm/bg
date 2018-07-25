@@ -113,7 +113,7 @@ client.on('message', function (topic, message) {
 				}
 				else if(u8arr[1] == 2) {
 					// Lift switched to operational mode.
-					mode = '';
+					mode = 'operational';
 				}
 				dbutil.updateRemarks(liftId, mode);
 			}
