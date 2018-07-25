@@ -340,7 +340,7 @@ function updateRemarks(liftId, mode) {
 function getSubsList(liftId, callback) {
     var smsSubsList = "";
     pool.getConnection(function (err, connection) {
-        var queryString = 'SELECT * FROM contact_list WHERE lift_id = ? ORDER BY tid DESC LIMIT 1';
+        var queryString = 'SELECT * FROM contact_list WHERE lift_id = ? ORDER BY ts DESC LIMIT 1';
         connection.query(queryString, [liftId], function (err, rows, fields) {
             if (err) throw err;
 
