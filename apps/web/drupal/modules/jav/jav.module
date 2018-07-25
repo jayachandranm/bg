@@ -492,11 +492,15 @@ function jav_node_insert($node)
 function jav_node_update($node)
 {
     if ($node->type == 'lifts') {
-        $flag = false;
+        //$flag = false;
+        // Instead of modifying existing entry, add new entry for the lift.
+        $flag = true;
         _lift_details_to_db($node, $flag);
     }
     if ($node->type == 'lift_companies') {
-        $flag = false;
+        //$flag = false;
+        // Instead of modifying existing entry, add new entry for each associated lift.
+        $flag = true;
         _update_db_referencing_lifts($node, $flag);
     }
 }
@@ -531,15 +535,16 @@ function _update_db_referencing_lifts($node_supplier, $flag)
 {
     $supplier_nid = $node_supplier->nid;
     //dpm($node_supplier);
+    $sms_list = "";
     if(count($node_supplier->field_sms_nums2['und']) > 0) {
         $sms_list = $node_supplier->field_sms_nums2['und'][0]['value'];
-    } else {
-        $sms_list = "";
-    }
-    // Get all lifts referencing to this node entity.
+    } 
     module_load_include("config.inc", "jav");
     $jav_db = getExtDBConfig();
     module_load_include("api.inc", "jav");
+    /*
+    // Getting the referencing lifts from contacts list table using unique lift_ids.
+    // Have to handle the case of deleted nodes.
     $results = _get_ext_db_liftlist($jav_db, $supplier_nid);
     $liftlist = array();
     foreach ($results as $row) {
@@ -550,7 +555,32 @@ function _update_db_referencing_lifts($node_supplier, $flag)
         $liftlist = $lift_id;
         _update_ext_db($jav_db, $lift_nid, $lift_id, $lift_address, $supplier_nid, $sms_list, $flag);
     }
+    */
+    // Get all lifts referencing to this node entity.
+    $lift_nodes = _get_referencing_nodes($supplier_nid);
+    foreach ($lift_nodes as $node) {
+        $lift_nid = $node->nid;
+        $lift_id = $node->field_lift_id['und'][0]['value'];
+        $field_addr_ref = field_get_items('node', $node, 'field_lift_address', 'en');
+        $lift_address = $field_addr_ref[0]['thoroughfare'];    
+        _update_ext_db($jav_db, $lift_nid, $lift_id, $lift_address, $supplier_nid, $sms_list, $flag);
+    }
 }
+
+function _get_referencing_nodes($target_nid) {
+    $nids = array();
+    $query = new EntityFieldQuery();
+    // Get all nodes with given field name referring to given target_id.
+    $query->entityCondition('entity_type', 'node');
+    $query->fieldCondition('field_lift_supplier', 'target_id', $target_nid);
+    $result = $query->execute();
+    $nids = isset($result['node']) ? array_merge(array_keys($result['node']), $nids) : $nids;
+    $nodes = (!empty($nids)) ? node_load_multiple($nids) : array();
+    //dpm($nids);
+
+    return $nodes;
+}
+
 
 /**
  * http://willvincent.com/blog/building-custom-realtime-chat-module-drupal-7-part-3
