@@ -7,24 +7,25 @@ const querystring = require('querystring');
 
 module.exports.sendSMS = sendSMS;
 
-function composeSMS(liftId, msg) {
+function composeSMS(liftId, msg, liftAddress) {
     var timeNow = new Date();
-    console.log(timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds());
+    //console.log(timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds());
     var dt = moment(timeNow).utcOffset('+0800').format("YYYY-MM-DD HH:mm:ss");
     //var eventTxt = "None";
     var liftEvent = msg['type'];
 
     //
     var messageText = "Event from, " + liftId + "\n"
+        + " (" + liftAddress + ")" + "\n"
         + liftEvent + "\n"
-        + dt + "\n"
-        + ".";
+        + dt + "\n";
+        //+ ".";
     // Write the string to the console
     console.log("Message to send: " + messageText);
     return messageText;
 }
 
-function sendMsg(sid, msgTxt, subsList) {
+function sendMsg(liftId, msgTxt, subsList) {
     var user = encodeURI(config.smsUser);
     var pass = encodeURI(config.smsPass);
     var sms_from = encodeURI(config.smsFrom);
@@ -79,18 +80,25 @@ function sendMsg2(liftId, msgTxt, subsList) {
   
     userId = config.sms.user;
     pass = config.sms.pass;
+    //mobile = encodeURI(subsList);
     mobile = subsList;
 
     //
-    //liftEvent = dcMsg['type'];
-    //msg = liftEvent + ' event from ' + liftId;
+    //msg = encodeURI(msgTxt);
     msg = msgTxt;
     
     var options = {
       url: api_url,
       method: 'POST',
       headers: headers,
-      form: {'ID': userId, 'Password': pass, 'Mobile' : mobile, 'Type' : 'A', 'Message' : msg}
+      form: {
+          'ID': userId, 
+          'Password': pass, 
+          'Mobile' : mobile, 
+          'Type' : 'A', 
+          'Batch': 'true',
+          'Message' : msg
+        }
     } 
     //
     request(options, function (error, response, body) {
@@ -106,8 +114,8 @@ function sendMsg2(liftId, msgTxt, subsList) {
   
 
 
-function sendSMS(liftId, mqttMsg, smsSubsList) {
-    var messageText = composeSMS(liftId, mqttMsg);
+function sendSMS(liftId, mqttMsg, smsSubsList, liftAddress) {
+    var messageText = composeSMS(liftId, mqttMsg, liftAddress);
     //
     //sendMsg(liftId, messageText, smsSubsList);
     sendMsg2(liftId, messageText, smsSubsList);

@@ -339,17 +339,22 @@ function updateRemarks(liftId, mode) {
 
 function getSubsList(liftId, callback) {
     var smsSubsList = "";
+    var liftAddress = "";
     pool.getConnection(function (err, connection) {
         var queryString = 'SELECT * FROM contact_list WHERE lift_id = ? ORDER BY ts DESC LIMIT 1';
         connection.query(queryString, [liftId], function (err, rows, fields) {
             if (err) throw err;
 
+            // Expecting only a single row.
             for (var i in rows) {
-                smsList = rows[i].sms_list;
-                console.log('SMS List row: ', smsList);
-                smsSubsList = smsSubsList + smsList;
+                smsSubsList = rows[i].sms_list;
+                liftAddress = rows[i].lift_address;
+                //console.log('SMS List row: ', smsSubsList);
+                //smsSubsList = smsSubsList + smsList;
+                //smsSubsList = smsList;
+                //liftAddress = addr;
             }
-            callback(null, smsSubsList);
+            callback(null, smsSubsList, liftAddress);
         });
     });
 }

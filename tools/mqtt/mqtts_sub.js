@@ -81,12 +81,12 @@ client.on('message', function (topic, message) {
 			var liftEvent = dcMsg['type'];
 			if (liftEvent && dcMsg['set_reset']) {
 				console.log("Send Alert: ");
-				var smsSubsList = dbutil.getSubsList(liftId, function (err, smsSubsList) {
+				dbutil.getSubsList(liftId, function (err, smsSubsList, liftAddress) {
 					if (err) console.log(err);
-					console.log("SMS List: ", smsSubsList);
-					//alert_utils.sendSMS("123456", dcMsg);
+					//console.log("SMS List: ", smsSubsList);
+					//console.log("Lift Addr: ", liftAddress);
 					//alert_utils.sendAlert(liftId, dcMsg, smsSubsList);
-					alert_utils.sendSMS(liftId, dcMsg, smsSubsList);
+					alert_utils.sendSMS(liftId, dcMsg, smsSubsList, liftAddress);
 				});
 			}
 			break;
