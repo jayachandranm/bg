@@ -94,7 +94,7 @@ function _get_lift_status($lift_id) {
         $status = 'Event';
     }
     $result = _get_sensorerr($jav_db, $lift_id);
-    // Only need to look at the last row.
+    // Only need to look at the most recent row.
     //if($result->fetch()) {
     if($result != null) {
         if($row = $result->fetchObject()) {

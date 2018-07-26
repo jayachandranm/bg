@@ -145,7 +145,7 @@ function _get_sensorerr($jav_db, $lift_id)
     $query = array();
     // get last rpt entry.
     $query = db_select('sensor_status', 'a')
-        ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
+        ->fields('a', array('lift_id', 'ts', 'value', 'sensor', 'remarks'))
         ->condition('lift_id', $sid_list, 'IN')
         ->condition('msg_type', $msg_type)
         ->orderBy('ts', 'DESC');
@@ -188,7 +188,7 @@ function _get_sensorerr($jav_db, $lift_id)
         // get all errors from last rpt till now, including the rpt errors.
         // (rpt + alt1)ts_rpt - now
         $query = db_select('sensor_status', 'a')
-            ->fields('a', array('lift_id', 'ts', 'value', 'sensor'))
+            ->fields('a', array('lift_id', 'ts', 'value', 'sensor', 'remarks'))
             ->condition('lift_id', $sid_list, 'IN')
             //->condition('msg_type', $msg_type)
             ->condition('ts', array($ts_rpt, $curr_time), 'BETWEEN')
