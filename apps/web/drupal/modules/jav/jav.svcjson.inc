@@ -135,7 +135,7 @@ function _get_mnt_status() {
         $jav_db = getExtDBConfig();
         module_load_include("api.inc", "jav");
         $result = _get_mnt_lifts($jav_db, $lift_ids);
-        //
+        // Will return one entry, or empty.
         foreach ($result as $row) {
             //dpm($row);
             $lift_remarks = $row->remarks;

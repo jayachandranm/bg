@@ -204,8 +204,7 @@ function _get_sensorerr($jav_db, $lift_id)
 
 function _get_mnt_lifts($jav_db, $lift_ids)
 {
-    // all sensor errors = sensor errors at last report 
-    //        + any extra errors reported from then till now in alt2 events.
+    // Get the most recent record from sensor status table.
     Database::addConnectionInfo('JAV', 'default', $jav_db);
     db_set_active('JAV');
     $sid_list[] = $lift_ids;

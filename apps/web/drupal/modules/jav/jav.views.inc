@@ -126,6 +126,17 @@ function _get_lift_status($lift_id) {
         $status = 'Error';
     }
 
+    $result = _get_mnt_lifts($jav_db, $lift_id);
+    if(count($result) > 0) {
+        foreach($result as $row) {
+            //dpm($row);
+            $lift_remarks = $row->remarks;
+            if($lift_remarks === 'maintenance') {
+                // Override all other status.
+                $status = 'Maintenance';
+            }
+        }
+    }
     return $status;
 }
 //
