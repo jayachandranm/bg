@@ -13,7 +13,13 @@
             "order": [[0, "desc"]]
         });
         $('#eventlist-all-table').DataTable({
-            "order": [[0, "desc"]]
+            "order": [[0, "desc"]],
+            "createdRow": function (row, data, dataIndex) {
+                console.log(data[5]);
+                if (data[5] == "maintenance") {
+                    $(row).addClass('table-highlight');
+                }
+            }
         });
         $('#eventlist-single-table').DataTable({
             "order": [[0, "desc"]]
