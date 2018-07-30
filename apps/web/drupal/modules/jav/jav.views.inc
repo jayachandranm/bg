@@ -97,7 +97,8 @@ function _get_lift_status($lift_id) {
     // Only need to look at the most recent row.
     //if($result->fetch()) {
     if($result != null) {
-        if($row = $result->fetchObject()) {
+        // Loop till a valid row is evaluated. Skip mnt_event.
+        while($row = $result->fetchObject()) {
             // Look for timeout case.
             $ts_rpt = $row->ts;
             $curr_time = time() * 1000;
@@ -105,21 +106,24 @@ function _get_lift_status($lift_id) {
             $is_timeout = false;
             if($time_diff > 24*60*60*1000) {
                 $is_timeout = true;
+                $status = 'Timeout';
+                // In case of timeout, ignore all other status.
+                break;
             }
-            if($status === 'Event') {
-                $status = 'Event+Error';
-                if($is_timeout) {
-                    // TODO: Event+Timeout?
-                    //$status = 'Event+Error';
-                    $status = 'Timeout';
-                }
+            $msg_type = $row->msg_type;
+            $err_code = $row->value;
+            if($msg_type == 'mnt_event' || $err_code == 'healthy') {
+                // Skip this row, process next row.
+                continue;
             } else {
-                $status = 'Error';
-                if($is_timeout) {
-                    // TODO: Event+Timeout?
-                    //$status = 'Error';
-                    $status = 'Timeout';
+                // There are 'unheatlhy', non-mnt type rows.
+                if($status === 'Event') {
+                    $status = 'Event+Error';
+                } else {
+                    $status = 'Error';
                 }
+                // Only consider the most recent error related row, when that exists.
+                break;
             }
         }
     } else {
