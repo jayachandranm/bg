@@ -145,7 +145,7 @@ function _get_sensorerr($jav_db, $lift_id)
     $query = array();
     // get last rpt entry.
     $query = db_select('sensor_status', 'a')
-        ->fields('a', array('lift_id', 'ts', 'value', 'sensor', 'remarks'))
+        ->fields('a', array('lift_id', 'ts', 'msg_type', 'value', 'sensor', 'remarks'))
         ->condition('lift_id', $sid_list, 'IN')
         ->condition('msg_type', $msg_type)
         ->orderBy('ts', 'DESC');
@@ -174,21 +174,25 @@ function _get_sensorerr($jav_db, $lift_id)
     $curr_time = time() * 1000;
     // Do further check only if reports are not timed out (1 day).
     // Otherwise return the single report entry to mark an error.
+    // Even maintenance is valid, if not timed out.
     if( ($curr_time - $ts_rpt) < 24*60*60*1000) {
         // If last rpt was all healthy, query everything after the rpt time.
         // If last rpt had errors, include the rpt time in query, so that rpt errors
         //      will be included in the final result.
+        /*
         if (($s_name_err == 'all') && ($s_err == 'healthy')) {
             // Only one healthy entry exists for last report.
             // TODO: Trick, just skip this entry from the error list.
             // The default case is considered healthy at $ts_rpt = -1, sets $ts_rpt to 0.
             $ts_rpt = $ts_rpt + 1;
         }
+        */
         $query = array();
-        // get all errors from last rpt till now, including the rpt errors.
+        // get all errors from last rpt till now, including the rpt errors (skip healthy).
         // (rpt + alt1)ts_rpt - now
+        // There can be multiple entries for rpt, if not healthy, but with same timestamp.
         $query = db_select('sensor_status', 'a')
-            ->fields('a', array('lift_id', 'ts', 'value', 'sensor', 'remarks'))
+            ->fields('a', array('lift_id', 'ts', 'msg_type', 'value', 'sensor', 'remarks'))
             ->condition('lift_id', $sid_list, 'IN')
             //->condition('msg_type', $msg_type)
             ->condition('ts', array($ts_rpt, $curr_time), 'BETWEEN')
