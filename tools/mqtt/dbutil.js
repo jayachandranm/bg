@@ -11,6 +11,7 @@ module.exports.transformAlt2Msg = transformAlt2Msg;
 module.exports.transformAlt1Msg = transformAlt1Msg;
 module.exports.getSubsList = getSubsList;
 module.exports.updateRemarks = updateRemarks;
+module.exports.updateStatusMnt = updateStatusMnt;
 
 
 var pool = mysql.createPool({
@@ -344,6 +345,49 @@ function updateRemarks(liftId, mode) {
                         }
                     });
             });
+        }
+    });
+}
+
+
+function updateStatusMnt(liftId, mode) {
+    console.log("DB, requesting connection from pool for mnt insert.");
+    pool.getConnection(function (err, connection) {
+        // Use the connection
+        if (err) {
+            console.log("DB connection error: ", err);
+        }
+        else {
+            var dateNow = new Date();
+            var uTime = Date.now();
+            var offset = dateNow.getTimezoneOffset();
+            //console.log(offset);
+            var adjTime = uTime + (8 * 60 * 60 * 1000);
+            var datetime_db = new Date(adjTime).toISOString().slice(0, 19).replace('T', ' ');
+            console.log("Event time :", uTime, "=>", datetime_db);
+
+            var msgType = 'mnt_event';
+            var sGroupAll = 'all';
+            var sensorAll = 'all';
+            var value = 'Operational';
+            if(mode == 'maintenance') {
+                value = 'Maintenance';
+            }
+
+            // Add new row, with new time, keeping rest of the values
+            //       and new status in remarks.
+            connection.query('INSERT INTO sensor_status SET ?',
+                { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroupAll, sensor: sensorAll, value: value, remarks: mode },
+                function (err, result) {
+                    if (err) {
+                        //throw err;
+                        console.log("DB insert error: ", err);
+                    } else {
+                        console.log("DB insert success, id = ", result.insertId);
+                        // Only one insert for this case.
+                        connection.release();
+                    }
+                });
         }
     });
 }
