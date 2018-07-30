@@ -99,7 +99,7 @@ function _get_active_events($jav_db, $filter)
     Database::addConnectionInfo('JAV', 'default', $jav_db);
     db_set_active('JAV');
 
-    $event_types = array("fight", "vandalism", "fallen_human", "liquid", "urine", "co", "fire", "light_malfunction", "ventilation_malfunction", "co_low_level", "uncat");
+    $event_types = array("fight", "vandalism", "fallen_human", "liquid", "urine", "co", "fire", "light_malfunction", "ventilation_malfunction", "co_low_level", "jerk_accel", "uncat");
     
     foreach ($sid_list as $sid) {
     foreach($event_types as $e_type) {
