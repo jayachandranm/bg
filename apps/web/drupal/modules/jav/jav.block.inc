@@ -167,6 +167,7 @@ function jav_block_view($delta = '')
                     array('data' => t('Lift Location')),
                     array('data' => t('Event Type')),
                     array('data' => t('Event')),
+                    array('data' => t('Remarks')),
                 );
 
                 $reqtype = 'rt';
@@ -193,6 +194,61 @@ function jav_block_view($delta = '')
                 $rpt_time = 'NA';
 
                 //dpm($filter);
+                foreach ($sid_list as $lift_id) {
+                    $mnt_status = '';
+                    $exclude_healthy = true;
+                    $result = _get_sensorerr($jav_db, $lift_id);
+                    if($result != null) {
+                        // DatabaseStatementBase::fetchAssoc fetches the next row.
+                        // Convert to an array to access the element without foreach.
+                        $result = $result->fetchAll();
+                        // Get most recent record, to set current state for the lift_id.
+                        $recent = $result[0];
+                        if($recent->remarks == 'maintenance') {
+                            $mnt_status = 'maintenance';
+                            $dev_list[$row->lift_id]['mnt_status'] = $mnt_status;
+                            if($recent->value == 'healthy') {
+                                // If the most recent record with maintenance status happens
+                                //   to be healthy report, include this in the error list for display.
+                                $exclude_healthy = false;
+                            }
+                        }
+                    }
+                    if($result != null) {
+                        foreach ($result as $row) {
+                            $err_code = $row->value;
+                            $sensor = $row->sensor;
+                            $remarks = $row->remarks;
+                            //dpm($result);
+                            //if (($s_name_err == 'all') && ($s_err == 'healthy')) {
+                            if( $err_code == 'healthy' && $exclude_healthy == true ) {
+                                // An all healthy rpt, skip this from showing. 
+                                // Only used for getting latest maintenance status.
+                                continue;
+                            }
+                            $err_msg = _errcode_to_message($sensor, $err_code);
+                            $err = $sensor . ' / ' . $err_msg;
+                            $event_type = "Sensor Error";
+                            $msg_type = $row->msg_type;
+                            if($msg_type == 'mnt_event') {
+                                $event_type = "Switch Mode";
+                            }
+                            $date = new DateTime();
+                            $date->setTimestamp(intval($row->ts) / 1000);
+                            //$err_time = $date->format('j-M-y g:i a');
+                            $err_time = $date->format('d-M-y H:i');
+                            $loc = $dev_list[$row->lift_id]['loc'];
+                            $lift_url = $dev_list[$row->lift_id]['url'];
+                            //$options = array('absolute' => TRUE);
+                            //$lift_url = url('node/' . $lift_nid, $options);
+                            $lift_link = "<a href=$lift_url>$row->lift_id</a>";
+                            //$remarks = $row->remarks;
+                            $remarks = $mnt_status;
+                            $dev_list[$row->lift_id]['mnt_status'] = $remarks;
+                            $items[] = array($err_time, $lift_link, $loc, $event_type, $err, $remarks);
+                        }
+                    }
+                }
 
                 $result_all = _get_active_events($jav_db, $filter);
                 foreach ($result_all as $row) {
@@ -210,32 +266,16 @@ function jav_block_view($delta = '')
                         //dpm($lift_url);
                         //$lift_url = url('node/' . $lift_nid, $options);
                         $lift_link = "<a href=$lift_url>$row->lift_id</a>";
-                        $items[] = array($rpt_time, $lift_link, $loc, $event_type, $lift_event);
+                        $remarks = $row->remarks;
+                        if(isset($dev_list[$row->lift_id]['mnt_status'])) {
+                            $remarks_mnt = $dev_list[$row->lift_id]['mnt_status'];
+                            if($remarks_mnt == 'maintenance') {
+                                $remarks = $remarks_mnt;
+                            }
+                        }
+                        $items[] = array($rpt_time, $lift_link, $loc, $event_type, $lift_event, $remarks);
                 }
 
-                foreach ($sid_list as $lift_id) {
-                    $result = _get_sensorerr($jav_db, $lift_id);
-                    if($result != null) {
-                        foreach ($result as $row) {
-                            //dpm($result);
-                            $err_code = $row->value;
-                            $sensor = $row->sensor;
-                            $err_msg = _errcode_to_message($sensor, $err_code);
-                            $err = $sensor . ' / ' . $err_msg;
-                            $event_type = "Sensor Error";
-                            $date = new DateTime();
-                            $date->setTimestamp(intval($row->ts) / 1000);
-                            //$err_time = $date->format('j-M-y g:i a');
-                            $err_time = $date->format('d-M-y H:i');
-                            $loc = $dev_list[$row->lift_id]['loc'];
-                            $lift_url = $dev_list[$row->lift_id]['url'];
-                            //$options = array('absolute' => TRUE);
-                            //$lift_url = url('node/' . $lift_nid, $options);
-                            $lift_link = "<a href=$lift_url>$row->lift_id</a>";
-                            $items[] = array($err_time, $lift_link, $loc, $event_type, $err);
-                        }
-                    }
-                }
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'eventlist-all-table')));
             } // if user_access
             break;
@@ -606,7 +646,8 @@ function jav_block_view($delta = '')
 }
 
 function _errcode_to_message($sensor, $err_code) {
-    $err_msg = "error";
+    // By default, don't change.
+    $err_msg = $err_code;
     switch ($err_code) {
         case "error1":
             $err_msg = "sagnac low power.";
