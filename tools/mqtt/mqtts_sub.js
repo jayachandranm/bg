@@ -49,85 +49,91 @@ client.on('connect', function () {
 client.on('message', function (topic, message) {
 	// message is Buffer
 	//console.log('Message:', message.toString())
-	console.log('Topic:', topic);
-	var mqttTopic = topic;
-	var topicFields = mqttTopic.split('/');
-	if (topicFields.length != 2) {
-		console.log("Topic " + mqttTopic + " does not have two fields.")
-		return;
-	}
-	var liftId = topicFields[0];
-	var javTopic = topicFields[1];
-	//var clientId = message.clientId;
-	switch (javTopic) {
-		case 'rpt':
-			var base64str = new Buffer(message).toString('hex');
-			console.log('rpt->DATA(base64) ' + ': ' + base64str);
-			var rptMsg = decode_rpt.decodeRptMessage(message);
-			var dcMsg = dbutil.transformRptMsg(rptMsg);
-			dbutil.add2dbErrors(liftId, dcMsg);
-			//var dcMsg = decode_alt1.decodeAlt1Message(message);
-			var replyMsg = assemble.rptReply(dcMsg);
-			//client.publish(liftId + '/req', replyMsg);
-			break;
-		case 'alt1':
-			var base64str = new Buffer(message).toString('hex');
-			console.log('alt1->DATA(base64) ' + ': ' + base64str);
-			var dcMsg = decode_alt1.decodeAlt1Message(message);
-			console.log("mqtts: adding event to DB.");
-			dbutil.add2dbAlerts(liftId, dcMsg);
-			var replyMsg = assemble.alt1Reply(dcMsg);
-			//client.publish(liftId + '/req', replyMsg);
-			var liftEvent = dcMsg['type'];
-			if (liftEvent && dcMsg['set_reset']) {
-				console.log("Send Alert: ");
-				dbutil.getSubsList(liftId, function (err, smsSubsList, liftAddress) {
-					if (err) console.log(err);
-					//console.log("SMS List: ", smsSubsList);
-					//console.log("Lift Addr: ", liftAddress);
-					//alert_utils.sendAlert(liftId, dcMsg, smsSubsList);
-					alert_utils.sendSMS(liftId, dcMsg, smsSubsList, liftAddress);
-				});
-			}
-			break;
-		case 'alt2':
-			var base64str = new Buffer(message).toString('hex');
-			console.log('alt2->DATA(base64) ' + ': ' + base64str);
-			var altMsg = decode_alt2.decodeAlt2Message(message);
-			var dcMsg = dbutil.transformAlt2Msg(altMsg);
-			dbutil.add2dbErrors(liftId, dcMsg);
-			var replyMsg = assemble.alt2Reply(dcMsg);
-			//client.publish(liftId + '/req', replyMsg);
-			break;
-		case 'res':
-			var base64str = new Buffer(message).toString('hex');
-			console.log('res->DATA(base64) ' + ': ' + base64str);
-			var u8arr = new Uint8Array(message);
-			//console.log(u8arr);
-			// 0x4901:mnt, 0x4902:op; 0x49=73(decimal)
-			if(u8arr[0] == 73) { // if maintenance related..
-				var mode = '';
-				if(u8arr[1] == 1) {
-					// Lift switched to maintenance mode.
-					mode = 'maintenance';
+	try {
+		console.log('Topic:', topic);
+		var mqttTopic = topic;
+		var topicFields = mqttTopic.split('/');
+		if (topicFields.length != 2) {
+			console.log("Topic " + mqttTopic + " does not have two fields.")
+			return;
+		}
+		var liftId = topicFields[0];
+		var javTopic = topicFields[1];
+		//var clientId = message.clientId;
+		switch (javTopic) {
+			case 'rpt':
+				var base64str = new Buffer(message).toString('hex');
+				console.log('rpt->DATA(base64) ' + ': ' + base64str);
+				var rptMsg = decode_rpt.decodeRptMessage(message);
+				var dcMsg = dbutil.transformRptMsg(rptMsg);
+				dbutil.add2dbErrors(liftId, dcMsg);
+				//var dcMsg = decode_alt1.decodeAlt1Message(message);
+				var replyMsg = assemble.rptReply(dcMsg);
+				//client.publish(liftId + '/req', replyMsg);
+				break;
+			case 'alt1':
+				var base64str = new Buffer(message).toString('hex');
+				console.log('alt1->DATA(base64) ' + ': ' + base64str);
+				var dcMsg = decode_alt1.decodeAlt1Message(message);
+				console.log("mqtts: adding event to DB.");
+				dbutil.add2dbAlerts(liftId, dcMsg);
+				var replyMsg = assemble.alt1Reply(dcMsg);
+				//client.publish(liftId + '/req', replyMsg);
+				var liftEvent = dcMsg['type'];
+				if (liftEvent && dcMsg['set_reset']) {
+					console.log("Send Alert: ");
+					dbutil.getSubsList(liftId, function (err, smsSubsList, liftAddress) {
+						if (err) console.log(err);
+						//console.log("SMS List: ", smsSubsList);
+						//console.log("Lift Addr: ", liftAddress);
+						//alert_utils.sendAlert(liftId, dcMsg, smsSubsList);
+						alert_utils.sendSMS(liftId, dcMsg, smsSubsList, liftAddress);
+					});
 				}
-				else if(u8arr[1] == 2) {
-					// Lift switched to operational mode.
-					mode = '';
+				break;
+			case 'alt2':
+				var base64str = new Buffer(message).toString('hex');
+				console.log('alt2->DATA(base64) ' + ': ' + base64str);
+				var altMsg = decode_alt2.decodeAlt2Message(message);
+				var dcMsg = dbutil.transformAlt2Msg(altMsg);
+				dbutil.add2dbErrors(liftId, dcMsg);
+				var replyMsg = assemble.alt2Reply(dcMsg);
+				//client.publish(liftId + '/req', replyMsg);
+				break;
+			case 'res':
+				var base64str = new Buffer(message).toString('hex');
+				console.log('res->DATA(base64) ' + ': ' + base64str);
+				var u8arr = new Uint8Array(message);
+				//console.log(u8arr);
+				// 0x4901:mnt, 0x4902:op; 0x49=73(decimal)
+				if (u8arr[0] == 73) { // if maintenance related..
+					var mode = '';
+					if (u8arr[1] == 1) {
+						// Lift switched to maintenance mode.
+						mode = 'maintenance';
+					}
+					else if (u8arr[1] == 2) {
+						// Lift switched to operational mode.
+						mode = '';
+					}
+					//dbutil.updateRemarks(liftId, mode);
+					dbutil.updateStatusMnt(liftId, mode);
 				}
-				//dbutil.updateRemarks(liftId, mode);
-				dbutil.updateStatusMnt(liftId, mode);
-			}
-			break;
-		case 'relay':
-			var resetMsg = assemble.resetSensor(message);
-			console.log("Relaying message to DC.");
-			if (isConnected) {
-				client.publish(liftId + '/req', resetMsg);
-			}
-			break;
+				break;
+			case 'relay':
+				var resetMsg = assemble.resetSensor(message);
+				console.log("Relaying message to DC.");
+				if (isConnected) {
+					client.publish(liftId + '/req', resetMsg);
+				}
+				break;
+		}
+		//client.end()
 	}
-	//client.end()
+	catch (err) {
+		//console.error(err);
+		console.log(err);
+	}
 })
 
 var server = http.createServer(function (req, res) {

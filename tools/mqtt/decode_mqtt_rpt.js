@@ -57,6 +57,7 @@ var rptMessage = new Parser()
         type: lssb2Flags
     })
     .uint16('sw_version')
+    .uint8('mnt_state')
 
 
 function decodeRptMessage(mqttData) {

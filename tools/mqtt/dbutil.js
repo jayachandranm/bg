@@ -28,6 +28,7 @@ function transformRptMsg(rptMsg) {
     var dcMsg = {}
     dcMsg['ts'] = rptMsg['ts'];
     dcMsg['sw_version'] = rptMsg['sw_version'];
+    dcMsg['mnt_state'] = rptMsg['mnt_state'];
     dcMsg['msg_type'] = 'err_rpt';
     dcMsg['rpts'] = {};
     dcMsg['rpts']['fiber'] = {};
@@ -211,8 +212,16 @@ function add2dbErrors(liftId, dcMsg) {
                 for (var i in rows) {
                     mode = rows[i].remarks;
                 }
+                // TODO: If it is rpt msg, the status is contained in the message.
+                //  Skip this query and do not rely on last remarks value for this case.
+                // Now overwrite the previous record value for rpt msg.
+                if (typeof (dcMsg['mnt_state']) !== 'undefined') {
+                    if (dcMsg['mnt_state'] == 0)
+                        mode = 'maintenance';
+                    else if (dcMsg['mnt_state'] == 1)
+                        mode = '';
+                }
                 // err_event, err_rpt
-                var errorRemarks = mode;
                 var msgType = dcMsg['msg_type'];
                 var allHealthy = dcMsg['no_errors'];
                 //
@@ -230,7 +239,7 @@ function add2dbErrors(liftId, dcMsg) {
                     var sensorAll = 'all';
                     var healthy = 'healthy';
                     connection.query('INSERT INTO sensor_status SET ?',
-                        { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroupAll, sensor: sensorAll, value: healthy, remarks: errorRemarks },
+                        { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroupAll, sensor: sensorAll, value: healthy, remarks: mode },
                         function (err, result) {
                             if (err) {
                                 //throw err;
@@ -260,7 +269,7 @@ function add2dbErrors(liftId, dcMsg) {
                                 console.log(msgType, sGroup, sensor, sensor_error);
                                 operations.push(new Promise((resolve, reject) => {
                                     connection.query('INSERT INTO sensor_status SET ?',
-                                        { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error, remarks: errorRemarks },
+                                        { lift_id: liftId, ts: uTime, date_time: datetime_db, msg_type: msgType, sensor_group: sGroup, sensor: sensor, value: sensor_error, remarks: mode },
                                         function (err, result) {
                                             // TODO: Release connection only after multiple insert is completed.
                                             //connection.release();
@@ -370,7 +379,7 @@ function updateStatusMnt(liftId, mode) {
             var sGroupAll = 'all';
             var sensorAll = 'all';
             var value = 'Operational';
-            if(mode == 'maintenance') {
+            if (mode == 'maintenance') {
                 value = 'Maintenance';
             }
 
