@@ -144,6 +144,7 @@ function jav_block_view($delta = '')
                     array(
                         'type' => 'file',
                         'data' => $mpath . '/jav.js',),
+                        /*
                     array(
                         'type' => 'file',
                         'data' => $mpath . '/jav_dashboard.js',),
@@ -159,6 +160,7 @@ function jav_block_view($delta = '')
                                 ),
                             ),        
                         ),
+                        */
                     );
 
                 $header = array(
@@ -206,7 +208,12 @@ function jav_block_view($delta = '')
                         $recent = $result[0];
                         if($recent->remarks == 'maintenance') {
                             $mnt_status = 'maintenance';
-                            $dev_list[$row->lift_id]['mnt_status'] = $mnt_status;
+                            /*
+                            if(!isset($dev_list[$lift_id]['mnt_status'])) {
+                                $dev_list[$lift_id] = array();
+                            }
+                            */
+                            $dev_list[$lift_id]['mnt_status'] = $mnt_status;
                             if($recent->value == 'healthy') {
                                 // If the most recent record with maintenance status happens
                                 //   to be healthy report, include this in the error list for display.
