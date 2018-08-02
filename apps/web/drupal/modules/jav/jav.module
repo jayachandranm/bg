@@ -442,7 +442,14 @@ function jav_menu()
         'file' => 'jav.svcjson.inc',
         'type' => MENU_CALLBACK,
     );
-    return $items;
+    $items['jav/get/liftstatus/filtered'] = array(
+        'title' => 'Get maintenance status of lifts',
+        'page callback' => '_get_lift_status_filtered',
+        //'page arguments' => array(1), //get param from URL.
+        'access arguments' => array('access jav content'),
+        'file' => 'jav.svcjson.inc',
+        'type' => MENU_CALLBACK,
+    );    return $items;
 }
 
 function _jav_page()
@@ -643,7 +650,8 @@ function jav_preprocess_views_view(&$vars)
         $_SESSION['jav'] = array();
         $_SESSION['jav']['#selected_lifts'] = $selected_lifts;
         //dpm($selected_lifts);
-        drupal_add_js(array('rt' => array('dev_list' => $selected_lifts)), 'setting');
+        drupal_add_js($mpath . '/jav_dashboard.js');
+        drupal_add_js(array('jav_dashboard' => array('dev_list' => $selected_lifts)), 'setting');
     }
     if ($vars['view']->name == 'my_lifts'  && $vars['view']->current_display == 'page') {
         foreach ($vars['view']->result as $cnum => $cell) {

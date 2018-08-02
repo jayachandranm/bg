@@ -151,3 +151,91 @@ function _get_mnt_status() {
     }
     return drupal_json_output($items);
 }
+
+function _get_lift_status_filtered() {
+    $items = array();
+    if(isset($_POST['jsonPost'])) {
+        $received = $_POST['jsonPost'];
+        $received = json_decode($received, TRUE);
+        $lift_ids = $received['liftIds'];
+        //
+        module_load_include("config.inc", "jav");
+        $jav_db = getExtDBConfig();
+        module_load_include("api.inc", "jav");
+
+        foreach ($lift_ids as $lift_id) {
+            $status = 'Healthy';
+            $status_code = 0;
+            //
+            $reqtype = 'rt';
+            $filter = new stdClass();
+            // Get most recent values.
+            $filter->start = -1;  $filter->end = -1;
+            $sid_list[] = $lift_id;
+            $filter->sidList = $sid_list;
+            $filter->condition = '';
+            //
+            $result = _get_active_events($jav_db, $filter);
+            // If there is at least one active event for this lift, set status.
+            if(count($result) > 0) {
+                $status = 'Event';
+                $status_code = 1;
+            }
+            $result = _get_sensorerr($jav_db, $lift_id);
+            // Only need to look at the most recent row.
+            //if($result->fetch()) {
+            if($result != null) {
+                // Loop till a valid row is evaluated. Skip mnt_event.
+                while($row = $result->fetchObject()) {
+                    // Look for timeout case.
+                    $ts_rpt = $row->ts;
+                    $curr_time = time() * 1000;
+                    $time_diff = $curr_time - $ts_rpt;
+                    $is_timeout = false;
+                    if($time_diff > 24*60*60*1000) {
+                        $is_timeout = true;
+                        $status = 'Timeout';
+                        $status_code = 4;
+                        // In case of timeout, ignore all other status.
+                        break;
+                    }
+                    $msg_type = $row->msg_type;
+                    $err_code = $row->value;
+                    if($msg_type == 'mnt_event' || $err_code == 'healthy') {
+                        // Skip this row, process next row.
+                        continue;
+                    } else {
+                        // There are 'unheatlhy', non-mnt type rows.
+                        if($status === 'Event') {
+                            $status = 'Event+Error';
+                            $status_code = 3;
+                        } else {
+                            $status = 'Error';
+                            $status_code = 2;
+                        }
+                        // Only consider the most recent error related row, when that exists.
+                        break;
+                    }
+                }
+            } else {
+                $status = 'Error';
+                $status_code = 2;
+            }
+        
+            $result = _get_mnt_lifts($jav_db, $lift_id);
+            if(count($result) > 0) {
+                foreach($result as $row) {
+                    //dpm($row);
+                    $lift_remarks = $row->remarks;
+                    if($lift_remarks === 'maintenance') {
+                        // Override all other status.
+                        $status = 'Maintenance';
+                        $status_code = 5;
+                    }
+                }
+            }        
+            $items[] = array('lift_id' => $lift_id, 'status_code' => $status_code);
+        } // foreach lift_id
+    } // isset
+    return drupal_json_output($items);
+}
