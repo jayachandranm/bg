@@ -283,6 +283,11 @@ function jav_block_view($delta = '')
                         $items[] = array($rpt_time, $lift_link, $loc, $event_type, $lift_event, $remarks);
                 }
 
+                // If there are no items, either disable the table completely or show an empty row.
+                // Do not show just the header.
+                if(count($items) == 0) {
+                    $items[] = array("--", "--", "--", "--", "--", "--");
+                }
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'eventlist-all-table')));
             } // if user_access
             break;
@@ -362,6 +367,9 @@ function jav_block_view($delta = '')
                     $items[] = array($dtime, $row->value, $is_set, $row->remarks);
                 }
                 //dpm($items);
+                if(count($items) == 0) {
+                    $items[] = array("--", "--", "--", "--");
+                }
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'eventlist-single-table')));
             } // if user_access
             break;
@@ -422,6 +430,9 @@ function jav_block_view($delta = '')
                     $items[] = array($dtime, $row->value, $row->sensor, $row->remarks);
                 }
 
+                if(count($items) == 0) {
+                    $items[] = array("--", "--", "--", "--");
+                }
                 $block['content']['eventlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'sensor-status-table')));
 
             } // if user_access
@@ -528,6 +539,9 @@ function jav_block_view($delta = '')
                         $items[] = array("", $rpt_time, $row->lift_id, $loc, $event_type, $lift_event);
                 }
 
+                if(count($items) == 0) {
+                    $items[] = array("", "--", "--", "--", "--", "--");
+                }
                 $block['content']['alertlist_block']['#markup'] = theme('table', array('header' => $header, 'rows' => $items, 'attributes' => array('id' => 'alerts-table')));
             } // if user_access
             break;
