@@ -234,7 +234,7 @@ function _get_lift_status_filtered() {
                     }
                 }
             }        
-            $items[] = array('lift_id' => $lift_id, 'status_code' => $status_code);
+            $items[] = array('lift_id' => $lift_id, 'st' => $status_code);
         } // foreach lift_id
     } // isset
     return drupal_json_output($items);
