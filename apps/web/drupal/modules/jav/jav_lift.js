@@ -5,6 +5,14 @@
             // TODO: Where is the most appropriate place for this code?
             // Depends on Drupal behaviors.
             //
+            $.fn.dataTable.moment('D-MMM-YY HH:mm');
+            $('#eventlist-single-table').DataTable({
+                "order": [[0, "desc"]]
+            });
+            $('#sensor-status-table').DataTable({
+                "order": [[0, "desc"]]
+            });
+    
             function updateSensor(baseurl, liftid, stype) {
                 var basepath = baseurl;
                 var post_url = basepath + '?q=jav/update/sensor';

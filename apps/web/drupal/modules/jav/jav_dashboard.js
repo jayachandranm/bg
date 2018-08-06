@@ -162,6 +162,22 @@
         attach: function (context, settings) {
             console.log('JS attach for Dashboard, initialization.');
             //
+            $.fn.dataTable.moment('D-MMM-YY HH:mm');
+            $('#eventlist-all-table').DataTable({
+                "order": [[0, "desc"]],
+                "createdRow": function (row, data, dataIndex) {
+                    //console.log(data[5]);
+                    if (data[5] == "maintenance") {
+                        $(row).addClass('table-highlight');
+                    }
+                }
+            });
+            /*
+            if ( $.fn.dataTable.isDataTable( '#eventlist-all-table' ) ) {
+                console.log("DataTable already initialized..");
+            }
+            */
+    
             if (settings.jav_dashboard) {
                 // No context parameters are required.
                 //var lidmap = {};
