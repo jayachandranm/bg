@@ -63,6 +63,7 @@ function jav_block_view($delta = '')
     //$view_1 = views_get_view('dashboard');
     //$info = views_embed_view('dashboard');
     // Get the list of lifts based on the active view.
+    /*
     $dev_list = _jav_set_list();
     //$dev_list = drupal_static('jav');
     //dpm($this);
@@ -75,12 +76,14 @@ function jav_block_view($delta = '')
             $sid_list[] = $dev["sid"];
         }
     }
+    */
     $block = array();
     // TODO: exit if it is not a node but a view or something else. But should allow selected views.
     // TODO: Move this to init? For the case of view this happens outside.
     $mpath = drupal_get_path('module', 'jav');
 
     // For the case of block added to a Node.
+    $sid = "Unknown";
     if ($node = menu_get_object()) {
         // TODO: if($node) {}
         if ($node->type == 'lifts') {
@@ -90,13 +93,7 @@ function jav_block_view($delta = '')
             $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
             $sid = $field_dev[0]['safe_value'];
         } // if node-type.
-        else {
-            $sid = "Unknown";
-        }
     } // if node.
-    else {
-        $sid = "Unknown";
-    }
 
     // Always pass as an array of values, for generic handling at JS side.
     if ($sid) {
@@ -341,8 +338,8 @@ function jav_block_view($delta = '')
                 $filter = new stdClass(); // (object) [];
                 $filter->start = -1;
                 $filter->end = time() * 1000;
-                $filter->sidList = $sid_list;
-                //$filter->sidList = ['112233C'];
+                $filter->sidList = $lift_ids; //$sid_list;
+                //$filter->sidList = ['99'];
                 //
                 module_load_include("config.inc", "jav");
                 $jav_db = getExtDBConfig();
@@ -359,7 +356,7 @@ function jav_block_view($delta = '')
                     $dtime = $date->format('d-M-y H:i');
                     //print_r($dtime, $row->snum);
                     //dpm($dev_list[$row->lift_id]);
-                    $loc = $dev_list[$row->lift_id]["loc"];
+                    //$loc = $dev_list[$row->lift_id]["loc"];
                     $is_set = "Reset";
                     if($row->is_set == 1) {
                         $is_set = "Set";
@@ -395,6 +392,8 @@ function jav_block_view($delta = '')
                         'data' => $mpath . '/jav.js',),
                 );
 
+                $lift_ids[] = $sid;
+
                 $header = array(
                     //array('data' => t('Time'), 'field' => 'id', 'sort' => 'desc'),
                     //array('data' => t('Address'), 'colspan' => 3),
@@ -409,8 +408,8 @@ function jav_block_view($delta = '')
                 $filter = new stdClass(); // (object) [];
                 $filter->start = -1;
                 $filter->end = time() * 1000;
-                $filter->sidList = $sid_list;
-                //$filter->sidList = ['112233C'];
+                $filter->sidList = $lift_ids; //$sid_list;
+                //$filter->sidList = ['99'];
                 //
                 module_load_include("config.inc", "jav");
                 $jav_db = getExtDBConfig();
