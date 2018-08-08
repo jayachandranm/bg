@@ -573,6 +573,15 @@ function jav_block_view($delta = '')
                         'data' => $mpath . '/jav_reports.js',),
                 );
 
+                // Get all groups that the user is member of. Default is logged in user.
+                //global $user;
+                $current_user_groups = og_get_groups_by_user();
+                $u_group_ids = array();
+                foreach($current_user_groups as $entity_type => $group_ids) {
+                    // array of gids for each entity type.
+                    $u_group_ids = $group_ids;
+                }
+
                 $reqtype = 'rpt';
                 $filter = new stdClass(); // (object) [];
                 $filter->start = -1;
@@ -584,13 +593,22 @@ function jav_block_view($delta = '')
                 $nids = db_query("SELECT nid FROM {node} WHERE type = :type", array(':type' => $node_type))->fetchCol();
                 foreach ($nids as $nid) {
                     $node = node_load($nid);
-                    //dpm($node);
-                    $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
-                    $sid = $field_dev[0]['safe_value'];
-                    $sid_list[] = $sid;
+                    // Check whether this node is a member of any of the groups 
+                    // that the user is subscribed to.
+                    foreach($u_group_ids as $entity_id) {
+                        if(og_is_member('node', $entity_id, 'node', $node)) {
+                            $field_dev = field_get_items('node', $node, 'field_lift_id', 'en');
+                            $sid = $field_dev[0]['safe_value'];
+                            $sid_list[] = $sid;
+                            $group_node = node_load($entity_id);
+                            $grouplist[$sid] = $group_node->title;
+                        }
+                    }
 
                     //dpm($nid, $sid);
                     //$og_id = current($node->og_groups);
+                    /*
+                    // Get mapping of all gids to member nodes.
                     $og_groups = og_get_entity_groups('node', $node);
                     foreach ($og_groups as $entity_type => $og_memberships) {
                         foreach ($og_memberships as $membership_id => $entity_id) {
@@ -601,6 +619,7 @@ function jav_block_view($delta = '')
                             }
                         }
                     }
+                    */
                 }
                 $filter->sidList = $sid_list;
                 //$filter->sidList = ['112233C'];
