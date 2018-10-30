@@ -43,9 +43,9 @@ def lambda_handler(event, context):
     print("Received event: " + json.dumps(event, indent=2))
     #raise Exception('Something went wrong')
     #stations = ['TST001', 'TST002']
-    #levels = [50, 60, 75, 90, 100]
+    levels = [50, 60, 75, 90, 100]
     stations = os.environ.get('STATIONS', stations)
-    #levels = os.environ.get('RISE_LVLS', levels)
+    levels = os.environ.get('RISE_LVLS', levels)
     
     data_series = []
     
