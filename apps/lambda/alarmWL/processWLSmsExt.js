@@ -14,7 +14,7 @@ var iotdata = new AWS.IotData({endpoint: config.endpointAddress, region: 'ap-sou
 //var iotdata = new AWS.IotData({endpoint: config.endpointAddress});
 
 AWS.config.update({region: 'ap-southeast-1'});
-dynDoc = new AWS.DynamoDB.DocumentClient();
+var dynDoc = new AWS.DynamoDB.DocumentClient();
 var parse = AWS.DynamoDB.Converter.output;
 
 // Create an SNS object
@@ -127,7 +127,7 @@ function processWL(event, context, callback) {
                     if (err) {
                         context.fail(err);
                     } else {
-                        console.log("Added new msg to DDB.");
+                        console.log("Spike, added new msg to DDB.");
                     }
                 });
                 // Set dev to maintenance mode.
@@ -154,7 +154,7 @@ function processWL(event, context, callback) {
                         console.log("Error in getting Shadow.", err);
                     } else {
                         var jsonPayload = JSON.parse(data.payload);
-                        //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
+                        console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
                         devState = jsonPayload.state.reported;
                         // var delta = devState.delta
                         // delta is handled at device side. Within delta range, wl sticks to previous value when wa changes.
@@ -179,7 +179,7 @@ function processWL(event, context, callback) {
                             console.log("Level Falling..");
                             wlRise = false;
                             //alertLevel = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
-                            alertObj = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
+                            var alertObj = utils.getAlertlevelFall(currWL, lastWL, delta, fallLevels);
                             alertLevel = alertObj.alertLevel;
                             console.log("Fall Level ->", alertLevel);
                             var isDeltaRegion = alertObj.isDeltaRegion;
@@ -230,6 +230,8 @@ function addToDDBexit(tablename, msg, logMsg, callback) {
             console.log("Added new msg to DDB.");
         }
         callback(null, logMsg)
+        // TODO: Needed?
+        return;
     });
 }
 
