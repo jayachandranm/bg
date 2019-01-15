@@ -64,6 +64,55 @@ def gw_send_sms(sms_to, sms_msg):
     #    ok = "fail"
     return res.reason
 
+def handle_outstation(st_id, smsflag, sg_now, on_msg, sms_to):
+    sql = """select starttime,endtime from bl_outstationdays where stationID = %s"""
+    sql_data = (st_id)
+    with con.cursor(DictCursor) as cursor:
+        try:
+            cursor.execute(sql, sql_data)
+        except:
+            print("DB access error for time-range")
+            exit(0)
+    #
+    if cursor.rowcount == 0:
+        # No results for the query, skip further processing
+        return
+    row = cursor.fetchone()
+    outstarttime = row['starttime']
+    outendtime = row['endtime']
+    #
+    fmt = '%Y-%m-%d %H:%M'
+    starttime = datetime.strptime(outstarttime, fmt)
+    endtime = datetime.strptime(outendtime, fmt)
+    dt_now_str = sg_now.strftime('%Y-%m-%d %H:%M')
+    dt = sg_now.strftime('%Y-%m-%d %H:%M:%S')
+    currentdate = datetime.strptime(dt_now_str, fmt)
+    #
+    if (currentdate >= starttime and currentdate <= endtime):
+        # Update the DB with event if it's change of status.
+        #   Or just update the time of latest report.
+        sql = """UPDATE bl_stations 
+         SET stationflag = %d, smsflag = %d, Time = %s 
+         WHERE stID= %s"""
+        sql_data = (1, 1, dt, st_id)
+        try:
+            cursor = con.cursor(DictCursor)
+            # TODO: Enable after testing.
+            # cursor.execute(sql, sql_data)
+            # con.commit()
+        # except Error as error:
+        except:
+            print("DB update error")
+            exit(0)
+        #
+        # send SMS if smsflag is zero (no SMS sent for this event)
+        if smsflag == 0:
+            print("SMS Status - ON message: ")
+            sms_msg = on_msg + "\r\n" + dt
+            print(sms_msg)
+            #
+            # gw_send_sms(sms_to, sms_msg)
+
 
 def affected_stations():
     stations = {}
@@ -140,18 +189,17 @@ def alert_stations(st_list):
     sg_now = datetime.now(sg_tz)
     currenthour = sg_now.hour
 
-    for st in st_list:
+    #for st in st_list:
+    for st_id, st in st_list.iteritems():
         smsid = st['smsid']
-        dayval = 'weekdays'
-        if smsid == 2:
-            dayval = 'weekly'
-        elif smsid == 3:
-            dayval = currentday
-
+        on_msg = st['smsmessageON']
+        sms_to = st['userphone']
+        #
+        # Check whether masterflag is set
         sql = """select mflag, smsflag from bl_stations where stationID = %s"""
         with con.cursor(DictCursor) as cursor:
             try:
-                cursor.execute(sql, (st))
+                cursor.execute(sql, (st_id))
             except:
                 print("DB access error for mflag")
                 exit(0)
@@ -166,10 +214,24 @@ def alert_stations(st_list):
         if mflag == 1:
             continue
 
+        # Continue processing, if not masterflag.
+        dayval = 'weekdays'
+        if smsid == 2:
+            dayval = 'weekly'
+        elif smsid == 3:
+            dayval = currentday
+        elif smsid == 4:
+            handle_outstation(st_id, smsflag, sg_now, on_msg, sms_to)
+        else:
+            # Something wrong, skip this station
+            print('Unknown smsid for station ' + st_id)
+            continue
+
+
         sql = """select starttime,endtime,smsstarttime,smsendtime 
               from bl_induvidualdays where stationID = %s  
               and dayvalue = %s"""
-        sql_data = (st, currentday)
+        sql_data = (st_id, dayval)
         with con.cursor(DictCursor) as cursor:
             try:
                 cursor.execute(sql, sql_data)
@@ -193,7 +255,7 @@ def alert_stations(st_list):
             sql = """UPDATE bl_stations 
              SET stationflag = %d, smsflag = %d, Time = %s 
              WHERE stID= %s"""
-            sql_data = (1, 1, dt, st)
+            sql_data = (1, 1, dt, st_id)
             try:
                 cursor = con.cursor(DictCursor)
                 # TODO: Enable after testing.
@@ -208,8 +270,7 @@ def alert_stations(st_list):
             if smsflag == 0:
                 if (currenthour >= sms_starttime and currenthour < sms_endtime):
                     print("SMS Status - ON message: ")
-                    sms_msg = st['smsmessageON'] + "\r\n" + dt
-                    sms_to = st['userphone']
+                    sms_msg = on_msg + "\r\n" + dt
                     print(sms_msg)
                     #
                     #gw_send_sms(sms_to, sms_msg)

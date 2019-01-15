@@ -87,6 +87,7 @@ def reset_stations():
 
 if __name__ == "__main__":
     reset_stations()
+    # TODO: handle outstation seperately?
     # Close mysql connection.
     con.close()
 
