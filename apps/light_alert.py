@@ -104,7 +104,7 @@ def affected_stations():
             #    print row[0]
             for x in range(0, numrows):
                 row = cursor.fetchone()
-                st_id = row['stID']
+                st_id = row['stationID']
                 print(st_id)
                 st_range = row['schoolrange']
                 st_lat = row['lattitude']
@@ -190,7 +190,7 @@ def alert_stations(st_list):
             # Update the DB with event if it's change of status.
             #   Or just update the time of latest report.
             dt = sg_now.strftime('%Y-%m-%d') + ' ' + sg_now.strftime('%H:%M:%S')
-            sql = """UPDATE bl_stations
+            sql = """UPDATE bl_stations 
              SET stationflag = %d, smsflag = %d, Time = %s 
              WHERE stID= %s"""
             sql_data = (1, 1, dt, st)
