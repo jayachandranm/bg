@@ -20,8 +20,11 @@ data_obj = {'lightningType' : 'checkAlertRing'}
 data_json = json.dumps(data_obj)
 
 res = requests.post(service_url, data_json)
+#lighting_events = json.loads(res.text)
 
-lighting_events = json.loads(res.text)
+# TODO: For testing
+with open('test.json') as f:
+    lighting_events = json.load(f)
 
 con =  pymysql.connect(host=config['mysqlDB']['host'],
                      user=config['mysqlDB']['user'],
@@ -31,8 +34,7 @@ con =  pymysql.connect(host=config['mysqlDB']['host'],
 
 def distance(st_lat, st_long, evt_lat, evt_long, unit):
     theta = st_long - evt_long
-    dist = sin(radians(st_lat)) * sin(radians(evt_lat))
-    + cos(radians(st_lat)) * cos(radians(evt_lat)) * cos(radians(theta))
+    dist = sin(radians(st_lat)) * sin(radians(evt_lat)) + cos(radians(st_lat)) * cos(radians(evt_lat)) * cos(radians(theta))
     dist = acos(dist)
     dist = degrees(dist)
     miles = dist * 60 * 1.1515
@@ -114,10 +116,53 @@ def handle_outstation(st_id, smsflag, sg_now, on_msg, sms_to):
             # gw_send_sms(sms_to, sms_msg)
 
 
-def affected_stations():
+def get_all_stations():
     stations = {}
+    with con.cursor(DictCursor) as cursor:
+        try:
+            sql = """select stID,stationID,stName,schoolrange,lattitude,longitude,
+                  userphone,smsmessageON,smsmessageOFF,smsflag,mflag, stationflag,smsid 
+                  from bl_stations"""
+            num_rows_station = cursor.execute(sql)
+            # con.commit
+        except:
+            print("DB access error for station details")
+            exit(0)
+
+    num_rows_station = cursor.rowcount
+    print(num_rows_station)
+    for x in range(0, num_rows_station):
+        row = cursor.fetchone()
+        st_details = {}
+        st_id = row['stationID']
+        st_details['stName'] = row['stName']
+        st_details['schoolrange'] = row['schoolrange']
+        st_details['latitude'] = float(row['lattitude'])
+        st_details['longitude'] = float(row['longitude'])
+        st_details['userphone'] = row['userphone']
+        st_details['smsmessageON'] = row['smsmessageON']
+        st_details['smsmessageOFF'] = row['smsmessageOFF']
+        st_details['smsflag'] = row['smsflag']
+        st_details['mflag'] = row['mflag']
+        st_details['stationflag'] = row['stationflag']
+        st_details['smsid'] = row['smsid']
+        #
+        stations[st_id] = st_details
+    return stations
+
+
+def affected_stations(lighting_events, all_stations):
+    stations = {}
+
     for event in lighting_events:
         evt_long = event['longitude']
+        if 'latitude' in event:
+            evt_lat = event['latitude']
+        elif 'lattitude' in event:
+            evt_lat = event['lattitude']
+        else:
+            # Something wrong, skip this item and proceed to next.
+            continue
         # the key can be type or tsStatus
         desc = '0'
         if 'type' in event:
@@ -129,37 +174,18 @@ def affected_stations():
         # Ground lighning or thunderstrom
         #evt_lat = -1
         if (evt_type == 'G') or (desc == '1'):
-            if 'latitude' in event:
-                evt_lat = event['latitude']
-            elif 'lattitude' in event:
-                evt_lat = event['lattitude']
-            else:
-                # Something wrong, skip this item and proceed to next.
-                continue
             # Go through each station and update status.
-            with con.cursor(DictCursor) as cursor:
-                try:
-                    sql = """select stID,stationID,stName,schoolrange,lattitude,longitude,
-                          userphone,smsmessageON,smsmessageOFF,smsflag,stationflag,smsid 
-                          from bl_stations"""
-                    cursor.execute(sql)
-                    # con.commit
-                except:
-                    print("DB access error for station details")
-                    exit(0)
-
-            numrows = cursor.rowcount
             #for row in cursor.fetchall():
             #    print row[0]
-            for x in range(0, numrows):
-                row = cursor.fetchone()
-                st_id = row['stationID']
-                print(st_id)
+            #for x in range(0, num_rows_station):
+            for st_id, row in all_stations.iteritems():
+                #st_id = row['stationID']
                 st_range = row['schoolrange']
-                st_lat = row['lattitude']
+                st_lat = row['latitude']
                 st_long = row['longitude']
                 # Calculate distance between station and event.
-                dist = distance(st_lat, st_long, evt_lat, evt_long, 'K')
+                dist = distance(st_lat, st_long, evt_lat, evt_long, "K")
+                #print(st_id, st_lat, st_long, evt_lat, evt_long, dist)
 
                 # If event within range for the station, add this station to the list
                 #  for further processing.
@@ -173,6 +199,7 @@ def affected_stations():
                     st_details['smsmessageON'] = row['smsmessageON']
                     st_details['smsmessageOFF'] = row['smsmessageOFF']
                     st_details['smsflag'] = row['smsflag']
+                    st_details['mflag'] = row['mflag']
                     st_details['stationflag'] = row['stationflag']
                     st_details['smsid'] = row['smsid']
                     # add to list/dict
@@ -191,37 +218,30 @@ def alert_stations(st_list):
 
     #for st in st_list:
     for st_id, st in st_list.iteritems():
+        print(st_id)
         smsid = st['smsid']
         on_msg = st['smsmessageON']
         sms_to = st['userphone']
+        mflag = st['mflag']
+        smsflag = st['smsflag']
         #
         # Check whether masterflag is set
-        sql = """select mflag, smsflag from bl_stations where stationID = %s"""
-        with con.cursor(DictCursor) as cursor:
-            try:
-                cursor.execute(sql, (st_id))
-            except:
-                print("DB access error for mflag")
-                exit(0)
-        #
-        if cursor.rowcount == 0:
-            # No entries for the station id, skip to next station.
-            continue
-        row = cursor.fetchone()
-        mflag = row['mflag']
-        smsflag = row['smsflag']
         # if masterflag set, do nothing, skip to next station.
         if mflag == 1:
             continue
 
         # Continue processing, if not masterflag.
         dayval = 'weekdays'
-        if smsid == 2:
+        if smsid == 1:
+            dayval = 'weekdays'
+        elif smsid == 2:
             dayval = 'weekly'
         elif smsid == 3:
             dayval = currentday
         elif smsid == 4:
             handle_outstation(st_id, smsflag, sg_now, on_msg, sms_to)
+            # Skip the rest of the loop
+            continue
         else:
             # Something wrong, skip this station
             print('Unknown smsid for station ' + st_id)
@@ -239,6 +259,7 @@ def alert_stations(st_list):
                 print("DB access error for time-range")
                 exit(0)
         #
+        print(cursor.rowcount)
         if cursor.rowcount == 0:
             # No results for the query, skip to next station.
             continue
@@ -276,13 +297,15 @@ def alert_stations(st_list):
                     #gw_send_sms(sms_to, sms_msg)
                 else:
                     print("SMS Status - SMS time out of range")
-
         #
 
 
 if __name__ == "__main__":
-    st_list = affected_stations()
-    alert_stations(st_list)
+    num_rows_events = len(lighting_events)
+    if(num_rows_events) > 0:
+        all_stations = get_all_stations()
+        st_list = affected_stations(lighting_events, all_stations)
+        alert_stations(st_list)
     # Close mysql connection.
     con.close()
 
