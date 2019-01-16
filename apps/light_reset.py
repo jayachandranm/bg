@@ -26,13 +26,17 @@ def gw_send_sms(sms_to, sms_msg):
     sms_pass = config['SMS']['sms_pass']
     sms_from = config['SMS']['sms_from']
 
-    url1 = "api2.aspx?apiusername=" + sms_user + "&apipassword=" + sms_pass
-    url2 = "&senderid=" + urllib.urlencode(sms_from) +  "&mobileno=" + urllib.urlencode(sms_to)
-    url3 = "&message=" + urllib.urlencode(sms_msg.replace('/', '')) + "&languagetype=1"
-    url = "http://gateway80.onewaysms.sg/" + url1 + url2 + url3
+    params = {'apiusername': sms_user,
+              'apipassword': sms_pass,
+              'senderid': sms_from,
+              'mobileno': sms_to,
+              'message': sms_msg,
+              'languagetype': 1}
+
+    url = "http://gateway80.onewaysms.sg/api2.aspx?" + urllib.urlencode(params)
     # TODO: fix this. Enable SMS
     print(url)
-    res = requests.post(url)
+    #res = requests.post(url)
     return res.reason
 
 def reset_stations():
@@ -66,9 +70,7 @@ def reset_stations():
         #
         if (diff_mts > 5) and (sms_flag==1):
             # Reset the flag for this station.
-            sql = """UPDATE bl_stations 
-             SET stationflag = %d, smsflag = %d, Time = %s 
-             WHERE stID= %s"""
+            sql = """UPDATE bl_stations SET stationflag = %d, smsflag = %d, Time = %s WHERE stID= %s"""
             sql_data = (0, 0, dt_now_str, st_id)
             try:
                 cursor = con.cursor(DictCursor)

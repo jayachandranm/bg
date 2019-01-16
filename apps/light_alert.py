@@ -48,14 +48,19 @@ def distance(st_lat, st_long, evt_lat, evt_long, unit):
 
 
 def gw_send_sms(sms_to, sms_msg):
+    #
     sms_user = config['SMS']['sms_user']
     sms_pass = config['SMS']['sms_pass']
     sms_from = config['SMS']['sms_from']
 
-    url1 = "api2.aspx?apiusername=" + sms_user + "&apipassword=" + sms_pass
-    url2 = "&senderid=" + urllib.urlencode(sms_from) +  "&mobileno=" + urllib.urlencode(sms_to)
-    url3 = "&message=" + urllib.urlencode(sms_msg.replace('/', '')) + "&languagetype=1"
-    url = "http://gateway80.onewaysms.sg/" + url1 + url2 + url3
+    params = {'apiusername': sms_user,
+              'apipassword': sms_pass,
+              'senderid': sms_from,
+              'mobileno': sms_to,
+              'message': sms_msg,
+              'languagetype': 1}
+
+    url = "http://gateway80.onewaysms.sg/api2.aspx?" + urllib.urlencode(params)
     # TODO: fix this. Enable SMS
     print(url)
     #res = requests.post(url)
@@ -192,9 +197,6 @@ def affected_stations(lighting_events, all_stations):
                 if dist <= st_range:
                     st_details = {}
                     st_details['stName'] = row['stName']
-                    #st_details['schoolrange'] = row['schoolrange']
-                    #st_details['latitude'] = row['lattitude']
-                    #st_details['longitude'] = row['longitude']
                     st_details['userphone'] = row['userphone']
                     st_details['smsmessageON'] = row['smsmessageON']
                     st_details['smsmessageOFF'] = row['smsmessageOFF']
@@ -273,9 +275,7 @@ def alert_stations(st_list):
             # Update the DB with event if it's change of status.
             #   Or just update the time of latest report.
             dt = sg_now.strftime('%Y-%m-%d') + ' ' + sg_now.strftime('%H:%M:%S')
-            sql = """UPDATE bl_stations 
-             SET stationflag = %d, smsflag = %d, Time = %s 
-             WHERE stID= %s"""
+            sql = """UPDATE bl_stations SET stationflag = %d, smsflag = %d, Time = %s WHERE stID= %s"""
             sql_data = (1, 1, dt, st_id)
             try:
                 cursor = con.cursor(DictCursor)
@@ -294,7 +294,7 @@ def alert_stations(st_list):
                     sms_msg = on_msg + "\r\n" + dt
                     print(sms_msg)
                     #
-                    #gw_send_sms(sms_to, sms_msg)
+                    gw_send_sms(sms_to, sms_msg)
                 else:
                     print("SMS Status - SMS time out of range")
         #
