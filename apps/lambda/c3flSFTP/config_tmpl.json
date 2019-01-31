@@ -1,0 +1,10 @@
+{
+    "host" : "localhost",
+    "port" : 22,
+    "user" : "user",
+    "pass" : "tst",
+    "remote_dir" : "dir",
+    "s3_bucket" : "bucket",
+    "s3_folder" : "folder",
+    "s3_file" : "state.json"
+}
