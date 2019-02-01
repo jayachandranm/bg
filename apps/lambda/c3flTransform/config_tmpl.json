@@ -1,0 +1,8 @@
+{
+    "endpointAddress": "EP",
+    "snsArn": "snsARN",
+    "smsUser": "user",
+    "smsPass": "pass",
+    "smsFrom": "business",
+}
+
