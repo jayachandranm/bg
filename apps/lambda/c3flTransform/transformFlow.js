@@ -77,15 +77,16 @@ function transformFlow(event, context, callback) {
     */
 
 
-    // If md is defined, do nothing, just return.
+    // If md is defined, keep it in the DDB, else no field in the DDB.
     //if (msg.hasOwnProperty(md) ) { // && msg.md !== null) {
-    if (typeof (msg.md) !== 'undefined') { // && msg.md !== null) {
-        var logMsg = "Either maintenance or spike. Recieved Record: "
+    //if (typeof (msg.md) !== 'undefined') { // && msg.md !== null) {
+    var md = msg.md === undefined ? '0' : msg.md;
+    if (md !== '0') { 
+        var logMsg = "Maintenance mode."
         console.log(logMsg, eventText);
-        newmsgmsd = msg.md;
-        //addToDDBexit(tablename, msg, logMsg, callback);
-        // TODO: Needed?
-        //return;
+        newmsg.md = "maintenance";
+        // Continue to process rest of the data before writing to DDB.
+        //addToDDBexit(tablename, newmsg, callback);
     }
 
     // If fl is defined,
@@ -95,12 +96,17 @@ function transformFlow(event, context, callback) {
         if (flSType != 2) {
             var logMsg = "Sensor Type is not 2, nothing to transform, write to DDB.";
             console.log(logMsg);
+            console.log("Updated msg=", newmsg);
+            addToDDBexit(tablename, newmsg, callback);
             //context.success();
             //callback(null, logMsg);
         }
         else if (wa == 0) {
-            var logMsg = "Water level 0, nothing to transform, write to DDB.";
+            var logMsg = "Water level 0, set fl to 0, write to DDB.";
             console.log(logMsg);
+            newmsg.fl = 0;
+            console.log("Updated msg=", newmsg);
+            addToDDBexit(tablename, newmsg, callback);
         } else {
             //let name = event.name === undefined ? 'you' : event.name;
             var devState;
@@ -137,20 +143,21 @@ function transformFlow(event, context, callback) {
                         }
                         // if wh < h3, wa = 0, already handled before this condition.
                         var cArea = b3 * h3 + w3 * h3 + b2 * h2 + w2 * h2 + b1 * h1 + w1 * h1;
-                        fl = vl * cArea;
+                        newmsg.fl = vl * cArea;
+                        // Flow value might have been updated.
+                        console.log("Updated msg=", newmsg);
+                        addToDDBexit(tablename, newmsg, callback);
                     }
                 }
             }); // getThingShadow
         } // if 
     }
+}
 
-    // Flow value might have been updated.
-    newmsg.fl = fl;
-    console.log("Updated msg=", newmsg);
-
+function addToDDBexit(tablename, msg, callback) {
     var params = {
         TableName: tablename,
-        Item: newmsg
+        Item: msg
     };
 
     dynDoc.put(params, function (err, data) {
@@ -167,21 +174,4 @@ function transformFlow(event, context, callback) {
             callback(null, data);
         }
     });
-
-    // Write modified msg to DDB.
-    //function addToDDB(tableName, msg, callback) {
-    /*
-        var params = {
-            TableName: tableName,
-            Item: {
-                HashKey: 'haskey',
-                NumAttribute: 1,
-                BoolAttribute: true,
-                ListAttribute: [1, 'two', false],
-                MapAttribute: { foo: 'bar' },
-                NullAttribute: null
-            }
-        };
-    */
-    //}
 }
