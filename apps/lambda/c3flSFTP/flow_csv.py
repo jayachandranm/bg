@@ -112,14 +112,14 @@ def lambda_handler(event, context):
         try:
             wa = data_row0['wa']
         except:
-            print("No data")
+            print("No wa in DDB")
         #
         try:
             ts_millis = data_row0['ts']
         except:
-            print("No time")
+            print("No ts in DDB")
         #
-        wa = wa/100
+        #wa = wa/100
         ts = int(ts_millis / 1000)
         #dt1 = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
         #hm1 = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
@@ -134,18 +134,6 @@ def lambda_handler(event, context):
         # ISO 8601
         dt_hm1 = sg_time.strftime('%Y-%m-%dT%H:%M:%S')
         #
-        try:
-            #sid = data_row0['sid']
-            #print(sid)
-            al = data_row0['al']
-            #print(al)
-        except:
-            print("No SID")
-
-        # TODO:
-        if al > 2:
-            al = 2
-        flag = al
         #
         md_f = 0
         try:
@@ -164,7 +152,7 @@ def lambda_handler(event, context):
             #    print("There is no md here")
             #
         except:
-            print("No time")
+            print("Exception in handling md.")
 
         #print(flag)
         #
@@ -174,10 +162,11 @@ def lambda_handler(event, context):
         streamingBody = response["payload"]
         jsonState = json.loads(streamingBody.read())
         invert = jsonState["state"]["reported"]["invert_level"]
-        offset_o = jsonState["state"]["reported"]["offset_o"]
+        #offset_o = jsonState["state"]["reported"]["offset_o"]
+        offset = jsonState["state"]["reported"]["offset"]
         #
-        if wa <= ( 0.08 + (offset_o / 100) ):
-            wa = offset_o / 100
+        #if wa <= ( 0.08 + (offset_o / 100) ):
+        #    wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
         mrl_str = "{0:.3f}".format(mrl_val)
 
