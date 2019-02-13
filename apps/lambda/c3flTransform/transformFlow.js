@@ -2,18 +2,18 @@
 // Load the AWS SDK
 var AWS = require("aws-sdk");
 //var http = require('http');
-var https = require('https');
+//var https = require('https');
 //var sync_request = require('sync-request');
 var utils = require('./utils');
 var config = require('./config.json');
-var dateFormat = require('dateformat');
-var moment = require('moment');
+//var dateFormat = require('dateformat');
+//var moment = require('moment');
 
 var iotdata = new AWS.IotData({ endpoint: config.endpointAddress, region: 'ap-southeast-1' });
 
 AWS.config.update({ region: 'ap-southeast-1' });
 var dynDoc = new AWS.DynamoDB.DocumentClient();
-var parse = AWS.DynamoDB.Converter.output;
+//var parse = AWS.DynamoDB.Converter.output;
 
 // Create an SNS object
 var sns = new AWS.SNS({ region: 'ap-southeast-1' });
@@ -32,42 +32,51 @@ function transformFlow(event, context, callback) {
     var msg = event;
     var eventText = JSON.stringify(msg, null, 2);
     //console.log("Received msg from device:", eventText);
-    console.log("Msg:", msg);
+    console.log("MQTT msg:", eventText);
 
     var sid = msg.sid;
+    var ts = msg.ts;
+    if(ts < 1420045261000 || ts > 1735664461000) {
+        // If date is before Jan'2015 or after Jan'2025, ignore.
+        // To handle time received in ts_r for stored data.
+        var logMsg = "ts out of range, ignore data."
+        console.log(sid + ": error, " + logMsg);
+        callback(logMsg);
+        return;
+    }
     //var thingName = sid;
-    var sensorType = Number(msg.ty);
-    var ts_unix = msg.ts;
-    var ts_r = msg.ts_r;
+    var sensorType = msg.ty;
     // TODO: Check default value.
     // TODO: For now all values are received as string.
     // TODO: test.
-    var fl = msg.fl === undefined ? undefined : Number(msg.fl);
-    var vl = msg.vl === undefined ? undefined : Number(msg.vl);
-    var wa = msg.wa === undefined ? undefined : Number(msg.wa);
+    var fl = msg.fl === undefined ? undefined : msg.fl;
+    var vl = msg.vl === undefined ? undefined : msg.vl / 1000;
+    var wa = msg.wa === undefined ? undefined : msg.wa / 10000;
 
     // TODO: test
     //wa = 1;
 
     var newmsg = {};
     newmsg.sid = sid;
-    newmsg.ts = ts_unix;
-    newmsg.ty = sensorType;
+    newmsg.ts = msg.ts;
     newmsg.ts_r = msg.ts_r;
+    newmsg.ty = sensorType;
     //
     // Convert to appropriate scales.
     //newmsg.wa = wa;
     newmsg.vl = vl;
-    newmsg.wt = msg.wt === undefined ? undefined : Number(msg.wt);
-    newmsg.snr = msg.snr === undefined ? undefined : Number(msg.snr);
-    newmsg.ss = msg.ss === undefined ? undefined : Number(msg.ss);
-    newmsg.sp = msg.sp === undefined ? undefined : Number(msg.sp);
-    newmsg.bl = msg.bl === undefined ? undefined : Number(msg.bl);
-    newmsg.bd = msg.bd === undefined ? undefined : Number(msg.bd);
-    newmsg.ra = msg.ra === undefined ? undefined : Number(msg.ra);
-    newmsg.rt = msg.rt === undefined ? undefined : Number(msg.rt);
-    newmsg.rd = msg.rd === undefined ? undefined : Number(msg.rd);
-    newmsg.wr = msg.wr === undefined ? undefined : Number(msg.wr);
+    newmsg.wt = msg.wt === undefined ? undefined : msg.wt / 100;
+    newmsg.snr = msg.snr === undefined ? undefined : msg.snr;
+    newmsg.ss = msg.ss === undefined ? undefined : msg.ss;
+    newmsg.sp = msg.sp === undefined ? undefined : msg.sp;
+    newmsg.bl = msg.bl === undefined ? undefined : msg.bl / 100;
+    newmsg.bd = msg.bd === undefined ? undefined : msg.bd / 100;
+    newmsg.ra = msg.ra === undefined ? undefined : msg.ra / 100;
+    newmsg.rt = msg.rt === undefined ? undefined : msg.rt;
+    newmsg.rd = msg.rd === undefined ? undefined : msg.rd / 100;
+    newmsg.wr = msg.wr === undefined ? undefined : msg.wr / 10000;
+    //
+    newmsg.err = msg.err === undefined ? undefined : msg.err;
 
     /*
     if(!sid.includes("TST")) {
@@ -78,14 +87,18 @@ function transformFlow(event, context, callback) {
 
     // If md is defined, keep it in the DDB, else no field in the DDB.
     //if (msg.hasOwnProperty(md) ) { // && msg.md !== null) {
-    //if (typeof (msg.md) !== 'undefined') { // && msg.md !== null) {
-    var md = msg.md === undefined ? '0' : msg.md;
-    if (md !== '0') {
-        var logMsg = "Maintenance mode."
-        console.log(logMsg, eventText);
-        newmsg.md = "maintenance";
-        // Continue to process rest of the data before writing to DDB.
-        //addToDDBexit(tablename, newmsg, callback);
+    //var md = msg.md === undefined ? undefined : msg.md;
+    if (typeof (msg.md) !== 'undefined') { // && msg.md !== null) {
+        if (msg.md == 1) {
+            var logMsg = sid + ": maintenance mode."
+            console.log(logMsg, eventText);
+            newmsg.md = "maintenance";
+            // Continue to process rest of the data before writing to DDB.
+            //addToDDBexit(tablename, newmsg, callback);
+        }
+        else if (msg.md == 0) {
+            newmsg.md = undefined;
+        }
     }
 
     //let name = event.name === undefined ? 'you' : event.name;
@@ -99,7 +112,7 @@ function transformFlow(event, context, callback) {
         } else {
             // TODO: check that shadow is not empty.
             var jsonPayload = JSON.parse(data.payload);
-            console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
+            console.log(sid + ' shadow: ' + JSON.stringify(jsonPayload, null, 2));
             devState = jsonPayload.state.reported;
             var offset = devState.offset === undefined ? 0 : devState.offset;
             var cope = devState.cope_level === undefined ? 0 : devState.cope_level;

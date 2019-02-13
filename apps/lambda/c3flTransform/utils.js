@@ -1,6 +1,6 @@
 // Load the AWS SDK
 var AWS = require("aws-sdk");
-var moment = require('moment');
+//var moment = require('moment');
 //var math = require('mathjs')
 
 AWS.config.update({ region: 'ap-southeast-1' });
