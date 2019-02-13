@@ -136,14 +136,14 @@ def lambda_handler(event, context):
         try:
             wa = data_row0['wa']
         except:
-            print("No data")
+            print("No wa data from DDB")
         #
         try:
             ts_millis = data_row0['ts']
         except:
-            print("No time")
+            print("No ts from DDB")
         #
-        wa = wa/100
+        #wa = wa/100
         ts = int(ts_millis / 1000)
         curr_t = int(time.time())
         time_lag = curr_t - ts
@@ -156,18 +156,6 @@ def lambda_handler(event, context):
         sg_time = utc_dt.astimezone(sg_tz)
         dt1 = sg_time.strftime('%Y-%m-%d')
         hm1 = sg_time.strftime('%H:%M:%S')
-        try:
-            #sid = data_row0['sid']
-            #print(sid)
-            al = data_row0['al']
-            #print(al)
-        except:
-            print("No SID")
-
-        # TODO:
-        if al > 2:
-            al = 2
-        #flag = al
         flag = 0
         #
         md = "normal"
@@ -184,7 +172,7 @@ def lambda_handler(event, context):
             #    print("There is no md here")
             #
         except:
-            print("No time")
+            print("Exception in handling md.")
 
         # if no data for more than 30mts, set to maintenance
         if time_lag > 1800:
@@ -201,7 +189,8 @@ def lambda_handler(event, context):
         loc = jsonState["state"]["reported"]["location"]
         cope = jsonState["state"]["reported"]["cope_level"]
         invert = jsonState["state"]["reported"]["invert_level"]
-        offset_o = jsonState["state"]["reported"]["offset_o"]
+        #offset_o = jsonState["state"]["reported"]["offset_o"]
+        offset = jsonState["state"]["reported"]["offset"]
         #print(loc)
         dev_state_sid = dev_state_s3["dev_state"][sid]
         #print(dev_state_sid)
@@ -212,13 +201,14 @@ def lambda_handler(event, context):
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
         # Calibrate near zero.
-        if wa <= ( 0.08 + (offset_o / 100) ):
-            wa = offset_o / 100
+        #if wa <= ( 0.08 + (offset_o / 100) ):
+        #    wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
         mrl_str = "{0:.3f}".format(mrl_val)
         cope_str = "{0:.3f}".format(cope)
         invert_str = "{0:.3f}".format(invert)
-        op_level = invert + (offset_o / 100)
+        #op_level = invert + (offset_o / 100)
+        op_level = invert + offset
         op_str = "{0:.3f}".format(op_level)
 
         desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
