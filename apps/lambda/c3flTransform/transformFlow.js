@@ -101,6 +101,36 @@ function transformFlow(event, context, callback) {
         }
     }
 
+    var ddb_params = {
+        TableName: tablename,
+        KeyConditionExpression: 'sid = :hkey',
+        ExpressionAttributeValues: {
+            ':hkey': sid
+        },
+        ScanIndexForward: false,
+        Limit: 1,
+    };
+
+    var record_0;
+    var ts_0 = -1;
+    console.log("Get previous record from DDB.");
+    dynDoc.query(ddb_params, function (err, data) {
+        if (err) {
+            console.log(err, err.stack);
+            // Something wrong with DDB, will not try to write the new msg.
+            callback(err);
+        }
+        else {
+            //record_1 = data.Items[0]; 
+            record_0 = data.Items[0]; 
+            ts_0 = record_0.ts;
+            //console.log("Prev record: ", JSON.stringify(record_0, null, 2));
+            console.log(sid + ": prev ts: ", ts_0);
+        }
+    });
+
+    var ts_diff = ts - ts_0;
+
     //let name = event.name === undefined ? 'you' : event.name;
     var devState;
     iotdata.getThingShadow({
@@ -179,6 +209,10 @@ function transformFlow(event, context, callback) {
                     }
                 } // if st=2, else..
             } // if fl sensor.
+            else {
+                console.log("No fl to process, just add message to DDB.");
+                addToDDBexit(tablename, newmsg, callback);
+            }
         } // if shadow success
     }); // getThingShadow
 } // transformFlow
