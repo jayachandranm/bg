@@ -26,7 +26,7 @@ import pytz
 #stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-table = dynamodb.Table('pubc3fl-ddb')
+table = dynamodb.Table('pubc3flow-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 s3dev_state = boto3.resource('s3')
@@ -104,21 +104,37 @@ def lambda_handler(event, context):
         except:
             print("DB access error.")
         #
-        data_row0 = response["Items"][0]
+        try:
+            data_row0 = response["Items"][0]
+        except:
+            # If no records found, skip this sid and continue.
+            continue
+
         #print(data_row0)
-        wa = 0.0
+        wh = 0.0
         ts_millis = 0.0
         ts = 0
-        try:
-            wa = data_row0['wa']
-        except:
-            print("No wa in DDB")
         #
         try:
             ts_millis = data_row0['ts']
         except:
             print("No ts in DDB")
         #
+        try:
+            wh = data_row0['wh']
+        except:
+            print("No wh in DDB")
+        #
+        try:
+            fl = data_row0['fl']
+        except:
+            print("No fl in DDB.")
+        #
+        try:
+            vel = data_row0['vl']
+        except:
+            print("No vl in DDB.")
+
         #wa = wa/100
         ts = int(ts_millis / 1000)
         #dt1 = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
@@ -143,11 +159,6 @@ def lambda_handler(event, context):
                 #print(md)
                 if md == "maintenance":
                     md_f = 1
-
-                # TODO:
-                if md == "spike":
-                    flag = 3
-                    #md_f = 0
             #else:
             #    print("There is no md here")
             #
@@ -167,20 +178,20 @@ def lambda_handler(event, context):
         #
         #if wa <= ( 0.08 + (offset_o / 100) ):
         #    wa = offset_o / 100
-        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
+        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
         mrl_str = "{0:.3f}".format(mrl_val)
 
         # TODO:
-        depth_m = 0.232
-        vel_ms = 0.022
-        flow_m3s = 1.317
+        depth_str = "{0:.3f}".format(0.0)
+        vel_str = "{0:.3f}".format(vel)
+        fl_str = "{0:.3f}".format(fl)
 
         csv_to_write = str(sid) + "," \
                        + dt_hm1 + "," \
                        + mrl_str + "," \
-                       + depth_m + "," \ 
-                       + vel_ms + "," \ 
-                       + flow_m3s + "," \ 
+                       + depth_str + "," \ 
+                       + vel_str + "," \ 
+                       + fl_str + "," \ 
                        + str(md_f) + "\n"
         print(csv_to_write)
         try:
