@@ -128,20 +128,25 @@ def lambda_handler(event, context):
         except:
             print("DB access error.")
         #
-        data_row0 = response["Items"][0]
+        try:
+            data_row0 = response["Items"][0]
+        except:
+            continue
+
         #print(data_row0)
-        wa = 0.0
+        wh = 0.0
         ts_millis = 0.0
         ts = 0
-        try:
-            wa = data_row0['wa']
-        except:
-            print("No wa data from DDB")
         #
         try:
             ts_millis = data_row0['ts']
         except:
             print("No ts from DDB")
+        #
+        try:
+            wh = data_row0['wh']
+        except:
+            print("No wh data from DDB")
         #
         #wa = wa/100
         ts = int(ts_millis / 1000)
@@ -203,7 +208,7 @@ def lambda_handler(event, context):
         # Calibrate near zero.
         #if wa <= ( 0.08 + (offset_o / 100) ):
         #    wa = offset_o / 100
-        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
+        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
         mrl_str = "{0:.3f}".format(mrl_val)
         cope_str = "{0:.3f}".format(cope)
         invert_str = "{0:.3f}".format(invert)
@@ -220,14 +225,14 @@ def lambda_handler(event, context):
                         "x": lat_str,
                         "y": lon_str,
                         "fileDescription": desc,
-                        "wa": wa,
+                        "wa": wh,
                         "val": mrl_str,
                         "md": flag
                         }, "level")
 
         root.append(appt1)
 
-        wa_str = "{0:.3f}".format(wa)
+        wa_str = "{0:.3f}".format(wh)
         appt2 = create_series({
                         "locationId": sid,
                         "dt": dt1,
@@ -235,7 +240,7 @@ def lambda_handler(event, context):
                         "x": lat_str,
                         "y": lon_str,
                         "fileDescription": desc,
-                        "wa": wa,
+                        "wa": wh,
                         "val": wa_str,
                         "md": flag
                         }, "depth")

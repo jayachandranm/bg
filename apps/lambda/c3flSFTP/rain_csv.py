@@ -67,14 +67,14 @@ def lambda_handler(event, context):
     try:
         trans = paramiko.Transport(ssh_host, ssh_port)
         trans.connect(username=ssh_username, password=ssh_password)
+        sftp = paramiko.SFTPClient.from_transport(trans)
         print("Connected")
     except:
         print("Connect Error.")
-    try:
-        sftp = paramiko.SFTPClient.from_transport(trans)
-        print(sftp)
-    except paramiko.SSHException:
-        print("Connection Error")
+    #try:
+    #    print(sftp)
+    #except paramiko.SSHException:
+    #    print("Connection Error")
 
 #    try:
 #        sftp.chdir(ssh_dir)
@@ -90,8 +90,10 @@ def lambda_handler(event, context):
     sg_tz = pytz.timezone('Asia/Singapore')
     sg_time = utc_time.astimezone(sg_tz)
     tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
+    #
     dest = tm + ".csv"
-    csvfile=sftp.file(dest, "w", -1)
+    csvfile = sftp.file(dest, "w", -1)
+    #
     for sid in stations:
         #print("<-------------------->")
         #print(x)
@@ -104,20 +106,26 @@ def lambda_handler(event, context):
         except:
             print("DB access error.")
         #
-        data_row0 = response["Items"][0]
+        try:
+            data_row0 = response["Items"][0]
+        except:
+            # If no records found, skip this sid and continue.
+            continue
+
         #print(data_row0)
-        wa = 0.0
+        wh = 0.0
         ts_millis = 0.0
         ts = 0
-        try:
-            wa = data_row0['wa']
-        except:
-            print("No wa in DDB")
         #
         try:
             ts_millis = data_row0['ts']
         except:
             print("No ts in DDB")
+        #
+        try:
+            ra = data_row0['ra']
+        except:
+            print("No ra in DDB")
         #
         #wa = wa/100
         ts = int(ts_millis / 1000)
@@ -142,11 +150,6 @@ def lambda_handler(event, context):
                 #print(md)
                 if md == "maintenance":
                     md_f = 1
-
-                # TODO:
-                if md == "spike":
-                    flag = 3
-                    #md_f = 0
             #else:
             #    print("There is no md here")
             #
@@ -170,12 +173,9 @@ def lambda_handler(event, context):
         #mrl_str = "{0:.3f}".format(mrl_val)
 
         # TODO:
-        rain_fall = 2
+        rf_str = "{0:.3f}".format(ra)
 
-        csv_to_write = str(sid) + "," \
-                       + dt_hm1 + "," \
-                       + rain_fall + "," \
-                       + str(md_f) + "\n"
+        csv_to_write = str(sid) + "," + dt_hm1 + "," + rf_str + "," + str(md_f) + "\n"
         print(csv_to_write)
         try:
             csvfile.write(csv_to_write)  
