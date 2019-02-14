@@ -240,6 +240,20 @@ def lambda_handler(event, context):
 
         desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
+        appt1 = create_series({
+                        "locationId": sid,
+                        "dt": dt1,
+                        "tm": hm1,
+                        "x": lat_str,
+                        "y": lon_str,
+                        "fileDescription": desc,
+                        "wa": wh,
+                        "val": mrl_str,
+                        "md": flag
+                        }, "level")
+
+        root.append(appt1)
+
         wa_str = "{0:.3f}".format(wh)
         appt2 = create_series({
                         "locationId": sid,
@@ -255,19 +269,6 @@ def lambda_handler(event, context):
 
         root.append(appt2)
 
-        appt1 = create_series({
-                        "locationId": sid,
-                        "dt": dt1,
-                        "tm": hm1,
-                        "x": lat_str,
-                        "y": lon_str,
-                        "fileDescription": desc,
-                        "wa": wh,
-                        "val": mrl_str,
-                        "md": flag
-                        }, "level")
-
-        root.append(appt1)
 
         fl_str = "{0:.3f}".format(fl)
         appt3 = create_series({
@@ -297,7 +298,7 @@ def lambda_handler(event, context):
                         "md": flag
                         }, "vel")
 
-        root.append(appt1)
+        root.append(appt4)
 
 
     # remove lxml annotation
