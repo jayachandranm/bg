@@ -145,18 +145,31 @@ def lambda_handler(event, context):
             continue
         #print(data_row0)
         wh = 0.0
+        fl = 0.0
+        vel = 0.0
         ts_millis = 0.0
         ts = 0
-        try:
-            wh = data_row0['wh']
-        except:
-            print("No wh in DDB.")
         #
         try:
             ts_millis = data_row0['ts']
         except:
             print("No ts in DDB.")
         #
+        try:
+            wh = data_row0['wh']
+        except:
+            print("No wh in DDB.")
+        #
+        try:
+            fl = data_row0['fl']
+        except:
+            print("No fl in DDB.")
+        #
+        try:
+            vel = data_row0['vl']
+        except:
+            print("No vl in DDB.")
+
         #wa = wa/100
         ts = int(ts_millis / 1000)
         curr_t = int(time.time())
@@ -227,20 +240,6 @@ def lambda_handler(event, context):
 
         desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
-        appt1 = create_series({
-                        "locationId": sid,
-                        "dt": dt1,
-                        "tm": hm1,
-                        "x": lat_str,
-                        "y": lon_str,
-                        "fileDescription": desc,
-                        "wa": wh,
-                        "val": mrl_str,
-                        "md": flag
-                        }, "level")
-
-        root.append(appt1)
-
         wa_str = "{0:.3f}".format(wh)
         appt2 = create_series({
                         "locationId": sid,
@@ -255,6 +254,51 @@ def lambda_handler(event, context):
                         }, "depth")
 
         root.append(appt2)
+
+        appt1 = create_series({
+                        "locationId": sid,
+                        "dt": dt1,
+                        "tm": hm1,
+                        "x": lat_str,
+                        "y": lon_str,
+                        "fileDescription": desc,
+                        "wa": wh,
+                        "val": mrl_str,
+                        "md": flag
+                        }, "level")
+
+        root.append(appt1)
+
+        fl_str = "{0:.3f}".format(fl)
+        appt3 = create_series({
+                        "locationId": sid,
+                        "dt": dt1,
+                        "tm": hm1,
+                        "x": lat_str,
+                        "y": lon_str,
+                        "fileDescription": desc,
+                        "wa": wh,
+                        "val": fl_str,
+                        "md": flag
+                        }, "flow")
+
+        root.append(appt3)
+
+        vel_str = "{0:.3f}".format(vel)
+        appt4 = create_series({
+                        "locationId": sid,
+                        "dt": dt1,
+                        "tm": hm1,
+                        "x": lat_str,
+                        "y": lon_str,
+                        "fileDescription": desc,
+                        "wa": wh,
+                        "val": vel_str,
+                        "md": flag
+                        }, "vel")
+
+        root.append(appt1)
+
 
     # remove lxml annotation
     objectify.deannotate(root)
