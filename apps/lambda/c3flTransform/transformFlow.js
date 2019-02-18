@@ -36,9 +36,9 @@ function transformFlow(event, context, callback) {
 
     var sid = msg.sid;
     var ts = msg.ts;
-    if(ts < 1420045261000 || ts > 1735664461000) {
-        // If date is before Jan'2015 or after Jan'2025, ignore.
-        // To handle time received in ts_r for stored data.
+    // If date is before Jan'2015 or after Jan'2025, ignore.
+    // To handle time received in ts_r for stored data (converted to ts in Rule).
+    if (ts < 1420045261000 || ts > 1735664461000) {
         var logMsg = "ts out of range, ignore data."
         console.log(sid + ": error, " + logMsg);
         callback(logMsg);
@@ -71,9 +71,9 @@ function transformFlow(event, context, callback) {
     newmsg.sp = msg.sp === undefined ? undefined : msg.sp;
     newmsg.bl = msg.bl === undefined ? undefined : msg.bl / 100;
     newmsg.bd = msg.bd === undefined ? undefined : msg.bd / 100;
-    newmsg.ra = msg.ra === undefined ? undefined : msg.ra / 100;
+    newmsg.ra = msg.ra === undefined ? undefined : msg.ra / 1000;
     newmsg.rt = msg.rt === undefined ? undefined : msg.rt;
-    newmsg.rd = msg.rd === undefined ? undefined : msg.rd / 100;
+    newmsg.rd = msg.rd === undefined ? undefined : msg.rd / 1000;
     newmsg.wr = msg.wr === undefined ? undefined : msg.wr / 10000;
     //
     newmsg.err = msg.err === undefined ? undefined : msg.err;
@@ -122,13 +122,19 @@ function transformFlow(event, context, callback) {
         }
         else {
             //record_1 = data.Items[0]; 
-            record_0 = data.Items[0]; 
-            ts_0 = record_0.ts;
+            try {
+                record_0 = data.Items[0];
+                ts_0 = record_0.ts;
+            }
+            catch (ex) {
+                console.log(sid + ex.message + "No previous record.");
+            }
             //console.log("Prev record: ", JSON.stringify(record_0, null, 2));
             console.log(sid + ": prev ts: ", ts_0);
         }
     });
 
+    // TODO: Adjust sampling rate.
     var ts_diff = ts - ts_0;
 
     //let name = event.name === undefined ? 'you' : event.name;
@@ -144,19 +150,22 @@ function transformFlow(event, context, callback) {
             var jsonPayload = JSON.parse(data.payload);
             console.log(sid + ' shadow: ' + JSON.stringify(jsonPayload, null, 2));
             devState = jsonPayload.state.reported;
-            var offset = devState.offset === undefined ? 0 : devState.offset;
-            var cope = devState.cope_level === undefined ? 0 : devState.cope_level;
-            var invert = devState.invert_level === undefined ? 0 : devState.invert_level;
+            var offset = devState.offset === undefined ? 0 : Number(devState.offset);
+            var cope = devState.cope_level === undefined ? 0 : Number(devState.cope_level);
+            var invert = devState.invert_level === undefined ? 0 : Number(devState.invert_level);
 
             var wh = 0;
             if (sensorType == 1 || sensorType == 2) {
                 wh = wa + offset;
             } else if (sensorType == 3) {
                 // Depth sensor.
-                wh = cope + offset - newmsg.wr;
+                //console.log("calc wh, ", cope, offset, invert, newmsg.wr);
+                wh = cope + offset - invert - newmsg.wr;
+                console.log("Radar, wh=", wh);
             }
             else {
                 // Rain sensor.
+                //console.log("Other type, wh=", wh);
                 wh = undefined;
             }
             //
@@ -184,15 +193,16 @@ function transformFlow(event, context, callback) {
                     //
                     //var ct = devState.ct === undefined ? "generic" : devState.ct;
                     if (devState.ct === undefined || devState.ct === "generic") {
-                        var h1 = devState.h1 === undefined ? 0 : devState.h1;
-                        var b1 = devState.b1 === undefined ? 0 : devState.b1;
-                        var w1 = devState.w1 === undefined ? 0 : devState.w1;
-                        var h2 = devState.h2 === undefined ? 0 : devState.h2;
-                        var b2 = devState.b2 === undefined ? 0 : devState.b2;
-                        var w2 = devState.w2 === undefined ? 0 : devState.w2;
-                        var h3 = devState.h3 === undefined ? 0 : devState.h3;
-                        var b3 = devState.b3 === undefined ? 0 : devState.b3;
-                        var w3 = devState.w3 === undefined ? 0 : devState.w3;
+                        var h1 = devState.h1 === undefined ? 0 : Number(devState.h1);
+                        var b1 = devState.b1 === undefined ? 0 : Number(devState.b1);
+                        var w1 = devState.w1 === undefined ? 0 : Number(devState.w1);
+                        var h2 = devState.h2 === undefined ? 0 : Number(devState.h2);
+                        var b2 = devState.b2 === undefined ? 0 : Number(devState.b2);
+                        var w2 = devState.w2 === undefined ? 0 : Number(devState.w2);
+                        var h3 = devState.h3 === undefined ? 0 : Number(devState.h3);
+                        var b3 = devState.b3 === undefined ? 0 : Number(devState.b3);
+                        var w3 = devState.w3 === undefined ? 0 : Number(devState.w3);
+                        var area_delta = devState.area_delta === undefined ? 0 : Number(devState.area_delta);
                         //
                         if (wh <= h2) {
                             h1 = 0;
@@ -201,7 +211,7 @@ function transformFlow(event, context, callback) {
                             h2 = 0;
                         }
                         // if wh < h3, wa = 0, already handled before this condition.
-                        var cArea = b3 * h3 + w3 * h3 + b2 * h2 + w2 * h2 + b1 * h1 + w1 * h1;
+                        var cArea = b3 * h3 + w3 * h3 + b2 * h2 + w2 * h2 + b1 * h1 + w1 * h1 + area_delta;
                         newmsg.fl = vl * cArea;
                         // Flow value might have been updated.
                         console.log("Updated msg=", newmsg);
@@ -211,6 +221,9 @@ function transformFlow(event, context, callback) {
             } // if fl sensor.
             else {
                 console.log("No fl to process, just add message to DDB.");
+                // TODO: Fix this.
+                newmsg.wr = newmsg.wh;
+                console.log("Updated msg=", newmsg);
                 addToDDBexit(tablename, newmsg, callback);
             }
         } // if shadow success
