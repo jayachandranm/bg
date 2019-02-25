@@ -263,7 +263,11 @@ def lambda_handler(event, context):
     except:
         print("chdir failure.") 
 
-    tm = time.strftime('%Y-%m-%d_%H-%M-%S')
+    utc_time = datetime.utcnow()
+    utc_time = utc_time.replace(tzinfo=pytz.UTC)
+    sg_tz = pytz.timezone('Asia/Singapore')
+    sg_time = utc_time.astimezone(sg_tz)
+    tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
     dest = tm + ".xml"
     xmlfile = sftp.file(dest, "w", -1)
     #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
