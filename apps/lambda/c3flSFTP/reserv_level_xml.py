@@ -27,7 +27,7 @@ from lxml import etree, objectify
 #stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-table = dynamodb.Table('pubc3fl-ddb')
+table = dynamodb.Table('pubc3flow-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 s3dev_state = boto3.resource('s3')
@@ -118,7 +118,7 @@ def lambda_handler(event, context):
 
     for sid in stations:
         #print("<-------------------->")
-        #print(x)
+        print(sid)
         try:
             response = table.query(
                 Limit=1,
@@ -210,13 +210,13 @@ def lambda_handler(event, context):
         #    wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
         mrl_str = "{0:.3f}".format(mrl_val)
-        cope_str = "{0:.3f}".format(cope)
-        invert_str = "{0:.3f}".format(invert)
+        #cope_str = "{0:.3f}".format(cope)
+        #invert_str = "{0:.3f}".format(invert)
         #op_level = invert + (offset_o / 100)
-        op_level = invert + offset
-        op_str = "{0:.3f}".format(op_level)
+        #op_level = invert + offset
+        #op_str = "{0:.3f}".format(op_level)
 
-        //desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
+        #desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
         appt1 = create_series({
                         "locationId": sid,

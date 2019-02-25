@@ -27,7 +27,7 @@ from lxml import etree, objectify
 #stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-table = dynamodb.Table('pubc3fl-ddb')
+table = dynamodb.Table('pubc3flow-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 s3dev_state = boto3.resource('s3')
@@ -54,7 +54,7 @@ def create_series(data, stype):
     """
     dt = data["dt"]
     tm = data["tm"]
-    wa = data["wa"]
+    #wa = data["wa"]
     val = data["val"]
     loc = data["locationId"]
     gps_x = data["x"]
@@ -135,7 +135,7 @@ def lambda_handler(event, context):
             continue
 
         #print(data_row0)
-        wh = 0.0
+        ra = 0.0
         ts_millis = 0.0
         ts = 0
         #
@@ -209,15 +209,15 @@ def lambda_handler(event, context):
         # Calibrate near zero.
         #if wa <= ( 0.08 + (offset_o / 100) ):
         #    wa = offset_o / 100
-        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
-        mrl_str = "{0:.3f}".format(mrl_val)
-        cope_str = "{0:.3f}".format(cope)
-        invert_str = "{0:.3f}".format(invert)
+        #mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
+        #mrl_str = "{0:.3f}".format(mrl_val)
+        #cope_str = "{0:.3f}".format(cope)
+        #invert_str = "{0:.3f}".format(invert)
         #op_level = invert + (offset_o / 100)
-        op_level = invert + offset
-        op_str = "{0:.3f}".format(op_level)
+        #op_level = invert + offset
+        #op_str = "{0:.3f}".format(op_level)
 
-        //desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
+        #desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
         rf_str = "{0:.3f}".format(ra)
 
         appt1 = create_series({
@@ -227,7 +227,7 @@ def lambda_handler(event, context):
                         "x": lat_str,
                         "y": lon_str,
                         "fileDescription": "",
-                        "wa": 0,
+                        "wh": 0,
                         "val": rf_str,
                         "md": flag
                         }, "rain")
