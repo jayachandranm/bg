@@ -51,8 +51,8 @@ def lambda_handler(event, context):
     ssh_host = os.environ.get('SSH_HOST', config_host)
     ssh_username = os.environ.get('SSH_USERNAME', config_user)
     ssh_password = os.environ.get('SSH_PASSWORD', config_pass)
-    #ssh_dir = os.environ.get('SSH_DIR', config_dir)
-    ssh_dir = os.environ.get('SSH_DIR')
+    ssh_dir = os.environ.get('SSH_DIR', config_dir)
+    #ssh_dir = os.environ.get('SSH_DIR')
     ssh_port = int(os.environ.get('SSH_PORT', config_port))
     #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
     
@@ -67,20 +67,21 @@ def lambda_handler(event, context):
     try:
         trans = paramiko.Transport(ssh_host, ssh_port)
         trans.connect(username=ssh_username, password=ssh_password)
+        sftp = paramiko.SFTPClient.from_transport(trans)
         print("Connected")
     except:
         print("Connect Error.")
-    try:
-        sftp = paramiko.SFTPClient.from_transport(trans)
-        print(sftp)
-    except paramiko.SSHException:
-        print("Connection Error")
 
-#    try:
-#        sftp.chdir(ssh_dir)
-#        print("Changed remote to: " + ssh_dir)
-#    except:
-#        print("chdir failure") 
+    #try:
+        #print(sftp)
+    #except paramiko.SSHException:
+    #    print("Connection Error")
+
+    try:
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
+    except:
+        print("chdir failure") 
 
     #curr_t = int(time.time())
     #tm = time.strftime('%Y-%m-%d_%H-%M-%S')
@@ -97,9 +98,9 @@ def lambda_handler(event, context):
     csv_to_write = "StationID," \
                     + "Time," \
                     + "Level (mRL)," \
-                    + "Depth (m)," \ 
-                    + "Velocity (m/s)," \ 
-                    + "Flow (m3/s)," \ 
+                    + "Depth (m)," \
+                    + "Velocity (m/s)," \
+                    + "Flow (m3/s)," \
                     + "Status\n"
     print(csv_to_write)
     try:
@@ -202,12 +203,9 @@ def lambda_handler(event, context):
         vel_str = "{0:.3f}".format(vel)
         fl_str = "{0:.3f}".format(fl)
 
-        csv_to_write = str(sid) + "," \
-                       + dt_hm1 + "," \
-                       + mrl_str + "," \
-                       + depth_str + "," \ 
-                       + vel_str + "," \ 
-                       + fl_str + "," \ 
+        csv_to_write = str(sid) + "," + dt_hm1 + "," \
+                       + mrl_str + "," + depth_str + "," \
+                       + vel_str + "," + fl_str + "," \
                        + str(md_f) + "\n"
         print(csv_to_write)
         try:
