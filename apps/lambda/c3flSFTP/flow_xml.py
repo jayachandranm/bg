@@ -156,7 +156,7 @@ def lambda_handler(event, context):
             print("No ts in DDB.")
         #
         try:
-            wh = data_row0['wh']
+            wh = float(data_row0['wh'])
         except:
             print("No wh in DDB.")
         #
@@ -230,7 +230,8 @@ def lambda_handler(event, context):
         # Calibrate near zero.
         #if wa <= ( 0.08 + (offset_o / 100) ):
         #    wa = offset_o / 100
-        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
+        
+        mrl_val = invert + wh
         mrl_str = "{0:.3f}".format(mrl_val)
         cope_str = "{0:.3f}".format(cope)
         invert_str = "{0:.3f}".format(invert)
@@ -315,14 +316,14 @@ def lambda_handler(event, context):
         trans = paramiko.Transport(ssh_host, ssh_port)
         #print(t)
         trans.connect(username=ssh_username, password=ssh_password)
+        sftp = paramiko.SFTPClient.from_transport(trans)
         print("Connected")
     except:
         print("SFTP connect Error.")
-    try:
-        sftp = paramiko.SFTPClient.from_transport(trans)
-        print("SFTP client created.")
-    except paramiko.SSHException:
-        print("SFTP client creation error.")
+    #try:
+    #    print("SFTP client created.")
+    #except paramiko.SSHException:
+    #    print("SFTP client creation error.")
 
     try:
         sftp.chdir(ssh_dir)
