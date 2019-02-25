@@ -26,7 +26,7 @@ import pytz
 #stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-table = dynamodb.Table('pubc3fl-ddb')
+table = dynamodb.Table('pubc3flow-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 s3dev_state = boto3.resource('s3')
@@ -51,8 +51,8 @@ def lambda_handler(event, context):
     ssh_host = os.environ.get('SSH_HOST', config_host)
     ssh_username = os.environ.get('SSH_USERNAME', config_user)
     ssh_password = os.environ.get('SSH_PASSWORD', config_pass)
-    #ssh_dir = os.environ.get('SSH_DIR', config_dir)
-    ssh_dir = os.environ.get('SSH_DIR')
+    ssh_dir = os.environ.get('SSH_DIR', config_dir)
+    #ssh_dir = os.environ.get('SSH_DIR')
     ssh_port = int(os.environ.get('SSH_PORT', config_port))
     #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
     
@@ -67,20 +67,20 @@ def lambda_handler(event, context):
     try:
         trans = paramiko.Transport(ssh_host, ssh_port)
         trans.connect(username=ssh_username, password=ssh_password)
-        sftp = paramiko.SFTPClient.from_transport(trans)
         print("Connected")
     except:
         print("Connect Error.")
-    #try:
-    #    print(sftp)
-    #except paramiko.SSHException:
-    #    print("Connection Error")
+    try:
+        sftp = paramiko.SFTPClient.from_transport(trans)
+        print(sftp)
+    except paramiko.SSHException:
+        print("Connection Error")
 
-#    try:
-#        sftp.chdir(ssh_dir)
-#        print("Changed remote to: " + ssh_dir)
-#    except:
-#        print("chdir failure") 
+    try:
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
+    except:
+        print("chdir failure") 
 
     #curr_t = int(time.time())
     #tm = time.strftime('%Y-%m-%d_%H-%M-%S')
@@ -90,10 +90,9 @@ def lambda_handler(event, context):
     sg_tz = pytz.timezone('Asia/Singapore')
     sg_time = utc_time.astimezone(sg_tz)
     tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
-    #
     dest = tm + ".csv"
+    print(dest)
     csvfile = sftp.file(dest, "w", -1)
-    #
     for sid in stations:
         #print("<-------------------->")
         #print(x)
@@ -109,23 +108,20 @@ def lambda_handler(event, context):
         try:
             data_row0 = response["Items"][0]
         except:
-            # If no records found, skip this sid and continue.
             continue
-
         #print(data_row0)
-        wh = 0.0
+        ra = 0.0
         ts_millis = 0.0
         ts = 0
+        try:
+            ra = data_row0['ra']
+        except:
+            print("No ra in DDB")
         #
         try:
             ts_millis = data_row0['ts']
         except:
             print("No ts in DDB")
-        #
-        try:
-            ra = data_row0['ra']
-        except:
-            print("No ra in DDB")
         #
         #wa = wa/100
         ts = int(ts_millis / 1000)
@@ -175,7 +171,10 @@ def lambda_handler(event, context):
         # TODO:
         rf_str = "{0:.3f}".format(ra)
 
-        csv_to_write = str(sid) + "," + dt_hm1 + "," + rf_str + "," + str(md_f) + "\n"
+        csv_to_write = str(sid) + "," \
+                       + dt_hm1 + "," \
+                       + rf_str + "," \
+                       + str(md_f) + "\n"
         print(csv_to_write)
         try:
             csvfile.write(csv_to_write)  
