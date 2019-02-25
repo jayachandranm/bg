@@ -92,6 +92,22 @@ def lambda_handler(event, context):
     tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
     dest = tm + ".csv"
     csvfile=sftp.file(dest, "w", -1)
+
+    # Write header
+    csv_to_write = "StationID," \
+                    + "Time," \
+                    + "Level (mRL)," \
+                    + "Depth (m)," \ 
+                    + "Velocity (m/s)," \ 
+                    + "Flow (m3/s)," \ 
+                    + "Status\n"
+    print(csv_to_write)
+    try:
+        csvfile.write(csv_to_write)  
+        #file.flush()
+    except:
+        print("File write error for title.")
+
     for sid in stations:
         #print("<-------------------->")
         #print(x)
