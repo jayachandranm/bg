@@ -159,7 +159,7 @@ function transformFlow(event, context, callback) {
                 wh = wa + offset;
             } else if (sensorType == 3) {
                 // TODO: delete, feet instead of meter.
-                if(sid == WPD13) {
+                if(sid == 'WPD13') {
                     newmsg.wr = newmsg.wr * 0.3048
                 }
                 // Depth sensor.
