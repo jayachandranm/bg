@@ -50,8 +50,8 @@ function transformFlow(event, context, callback) {
     // TODO: For now all values are received as string.
     // TODO: test.
     var fl = msg.fl === undefined ? undefined : msg.fl;
-    var vl = msg.vl === undefined ? undefined : msg.vl / 1000;
-    var wa = msg.wa === undefined ? undefined : msg.wa / 10000;
+    var vl = msg.vl === undefined ? undefined : msg.vl/1000;
+    var wa = msg.wa === undefined ? undefined : msg.wa/10000;
 
     // TODO: test
     //wa = 1;
@@ -65,16 +65,16 @@ function transformFlow(event, context, callback) {
     // Convert to appropriate scales.
     //newmsg.wa = wa;
     newmsg.vl = vl;
-    newmsg.wt = msg.wt === undefined ? undefined : msg.wt / 100;
+    newmsg.wt = msg.wt === undefined ? undefined : msg.wt/100;
     newmsg.snr = msg.snr === undefined ? undefined : msg.snr;
     newmsg.ss = msg.ss === undefined ? undefined : msg.ss;
     newmsg.sp = msg.sp === undefined ? undefined : msg.sp;
-    newmsg.bl = msg.bl === undefined ? undefined : msg.bl / 100;
-    newmsg.bd = msg.bd === undefined ? undefined : msg.bd / 100;
-    newmsg.ra = msg.ra === undefined ? undefined : msg.ra / 1000;
+    newmsg.bl = msg.bl === undefined ? undefined : msg.bl/100;
+    newmsg.bd = msg.bd === undefined ? undefined : msg.bd/100;
+    newmsg.ra = msg.ra === undefined ? undefined : msg.ra/1000;
     newmsg.rt = msg.rt === undefined ? undefined : msg.rt;
-    newmsg.rd = msg.rd === undefined ? undefined : msg.rd / 1000;
-    newmsg.wr = msg.wr === undefined ? undefined : msg.wr / 10000;
+    newmsg.rd = msg.rd === undefined ? undefined : msg.rd/1000;
+    newmsg.wr = msg.wr === undefined ? undefined : msg.wr/10000;
     //
     newmsg.err = msg.err === undefined ? undefined : msg.err;
 
@@ -158,10 +158,14 @@ function transformFlow(event, context, callback) {
             if (sensorType == 1 || sensorType == 2) {
                 wh = wa + offset;
             } else if (sensorType == 3) {
+                // TODO: delete, feet instead of meter.
+                if(sid == WPD13) {
+                    newmsg.wr = newmsg.wr * 0.3048
+                }
                 // Depth sensor.
                 //console.log("calc wh, ", cope, offset, invert, newmsg.wr);
-                wh = cope + offset - invert - newmsg.wr;
-                console.log("Radar, wh=", wh);
+                wh = (cope - invert) + offset - newmsg.wr;
+                console.log(sid + " Radar, wh=", wh);
             }
             else {
                 // Rain sensor.
@@ -203,16 +207,21 @@ function transformFlow(event, context, callback) {
                         var b3 = devState.b3 === undefined ? 0 : Number(devState.b3);
                         var w3 = devState.w3 === undefined ? 0 : Number(devState.w3);
                         var area_delta = devState.area_delta === undefined ? 0 : Number(devState.area_delta);
-                        //
-                        if (wh <= h2) {
-                            h1 = 0;
+                        // Calculate flow area depending on water level.
+                        var wArea = 0.0;
+                        if(wh <= h3) {
+                            wArea = b3*wh + w3*wh;
                         }
-                        if (wh <= h3) {
-                            h2 = 0;
+                        else if (wh <= h2) {
+                            wArea = (b3*h3 + w3*h3) + (b2*wh + w2*wh);
                         }
-                        // if wh < h3, wa = 0, already handled before this condition.
-                        var cArea = b3 * h3 + w3 * h3 + b2 * h2 + w2 * h2 + b1 * h1 + w1 * h1 + area_delta;
-                        newmsg.fl = vl * cArea;
+                        if (wh <= h1) {
+                            wArea = (b3*h3 + w3*h3) 
+                            + (b2*h2 + w2*h2)
+                            + (b1*wh + w1*wh);
+                        }
+                        //var cArea = b3 * h3 + w3 * h3 + b2 * h2 + w2 * h2 + b1 * h1 + w1 * h1 + area_delta;
+                        newmsg.fl = vl * wArea;
                         // Flow value might have been updated.
                         console.log("Updated msg=", newmsg);
                         addToDDBexit(tablename, newmsg, callback);
