@@ -206,19 +206,50 @@ function transformFlow(event, context, callback) {
                         var h3 = devState.h3 === undefined ? 0 : Number(devState.h3);
                         var b3 = devState.b3 === undefined ? 0 : Number(devState.b3);
                         var w3 = devState.w3 === undefined ? 0 : Number(devState.w3);
-                        var area_delta = devState.area_delta === undefined ? 0 : Number(devState.area_delta);
+                        //
+                        var h4 = devState.h4 === undefined ? 0 : Number(devState.h4);
+                        var b4 = devState.b4 === undefined ? 0 : Number(devState.b4);
+                        var w4 = devState.w4 === undefined ? 0 : Number(devState.w4);
+                        var h5 = devState.h5 === undefined ? 0 : Number(devState.h5);
+                        var b5 = devState.b5 === undefined ? 0 : Number(devState.b5);
+                        var w5 = devState.w5 === undefined ? 0 : Number(devState.w5);
+                        //var area_delta = devState.area_delta === undefined ? 0 : Number(devState.area_delta);
                         // Calculate flow area depending on water level.
                         var wArea = 0.0;
                         if(wh <= h3) {
-                            wArea = b3*wh + w3*wh;
+                            var wh_rel = wh;
+                            // b3 varies by height depending on current level.
+                            var b3_cur = b3*wh_rel/h3;
+                            wArea = ( b3_cur + w3 ) * wh;
                         }
                         else if (wh <= h2) {
-                            wArea = (b3*h3 + w3*h3) + (b2*wh + w2*wh);
+                            var wh_rel = wh - h3;
+                            var b2_cur = b2*wh_rel/h2;
+                            wArea = (b3 + w3)*h3 + (b2_cur + w2)*wh_rel;
                         }
-                        if (wh <= h1) {
-                            wArea = (b3*h3 + w3*h3) 
-                            + (b2*h2 + w2*h2)
-                            + (b1*wh + w1*wh);
+                        else if (wh <= h1) {
+                            var wh_rel = wh - h2;
+                            var b1_cur = b1*wh_rel/h1;
+                            wArea = (b3 + w3)*h3 
+                            + (b2 + w2)*h2
+                            + (b1_cur + w1) * wh_rel;
+                        }
+                        else if (wh <= h4) {
+                            var wh_rel = wh - h3;
+                            var b4_cur = b4*wh_rel/h4;
+                            wArea = (b3 + w3)*h3 
+                            + (b2 + w2)*h2
+                            + (b3 + w3)*h3
+                            + (b4_cur + w4) * wh_rel;
+                        }
+                        else if (wh <= h5) {
+                            var wh_rel = wh - h4;
+                            var b5_cur = b5*wh_rel/h5;
+                            wArea = (b3 + w3)*h3 
+                            + (b2 + w2)*h2
+                            + (b3 + w3)*h3
+                            + (b4 + w4)*h4
+                            + (b5_cur + w5) * wh_rel;
                         }
                         //var cArea = b3 * h3 + w3 * h3 + b2 * h2 + w2 * h2 + b1 * h1 + w1 * h1 + area_delta;
                         newmsg.fl = vl * wArea;
