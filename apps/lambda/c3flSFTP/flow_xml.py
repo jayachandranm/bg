@@ -27,7 +27,7 @@ from lxml import etree, objectify
 #stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-table = dynamodb.Table('pubc3flow-ddb')
+table = dynamodb.Table('pubc3fl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 s3dev_state = boto3.resource('s3')

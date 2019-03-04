@@ -26,7 +26,7 @@ import pytz
 #stations = json_data['stations'] 
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
-table = dynamodb.Table('pubc3flow-ddb')
+table = dynamodb.Table('pubc3fl-ddb')
 
 iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
 s3dev_state = boto3.resource('s3')
@@ -197,9 +197,7 @@ def lambda_handler(event, context):
         #    wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
         mrl_str = "{0:.3f}".format(mrl_val)
-
-        # TODO:
-        depth_str = "{0:.3f}".format(0.0)
+        depth_str = "{0:.3f}".format(decimal.Decimal(wh))
         vel_str = "{0:.3f}".format(vel)
         fl_str = "{0:.3f}".format(fl)
 
