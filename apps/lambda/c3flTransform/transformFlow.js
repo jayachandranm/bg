@@ -18,7 +18,7 @@ var dynDoc = new AWS.DynamoDB.DocumentClient();
 // Create an SNS object
 var sns = new AWS.SNS({ region: 'ap-southeast-1' });
 
-var tablename = 'pubc3flow-ddb';
+var tablename = 'pubc3fl-ddb';
 
 //module.exports.transformFlow = transformFlow;
 exports.handler = function (event, context, callback) {
@@ -63,13 +63,15 @@ function transformFlow(event, context, callback) {
     newmsg.ty = sensorType;
     //
     // Convert to appropriate scales.
+    // TODO: temp, fix it.
+    var rg_bl = 12.8; // (11.8 + Math.random()).toFixed(2);
     //newmsg.wa = wa;
     newmsg.vl = vl;
     newmsg.wt = msg.wt === undefined ? undefined : msg.wt/100;
     newmsg.snr = msg.snr === undefined ? undefined : msg.snr;
     newmsg.ss = msg.ss === undefined ? undefined : msg.ss;
     newmsg.sp = msg.sp === undefined ? undefined : msg.sp;
-    newmsg.bl = msg.bl === undefined ? undefined : msg.bl/100;
+    newmsg.bl = msg.bl === undefined ? rg_bl : msg.bl/100;
     newmsg.bd = msg.bd === undefined ? undefined : msg.bd/100;
     newmsg.ra = msg.ra === undefined ? undefined : msg.ra/1000;
     newmsg.rt = msg.rt === undefined ? undefined : msg.rt;
@@ -89,7 +91,7 @@ function transformFlow(event, context, callback) {
     //if (msg.hasOwnProperty(md) ) { // && msg.md !== null) {
     //var md = msg.md === undefined ? undefined : msg.md;
     if (typeof (msg.md) !== 'undefined') { // && msg.md !== null) {
-        if (msg.md == 1) {
+        if (msg.md == 0) {
             var logMsg = sid + ": maintenance mode."
             console.log(logMsg, eventText);
             newmsg.md = "maintenance";
