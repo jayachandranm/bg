@@ -15,6 +15,12 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 
 
+con =  pymysql.connect(host=config['mysqlDB']['host'],
+                     user=config['mysqlDB']['user'],
+                     passwd=config['mysqlDB']['pass'],
+                     db=config['mysqlDB']['db'])
+
+
 map_url = "http://api.nea.gov.sg/api/WebAPI/?dataset=pm2.5_update&keyref=781CF461BB6606ADEA01E0CAF8B3527437F4C1B8ED5B986D"
 
 #doc = requests.get(map_url)
@@ -51,4 +57,22 @@ for region in items.findall('region'):
     NPSI_PM10 = 0;
     NPSI_PM25 = 0;
     NPSI_SO2 = 0;
+    #
+    sql = """INSERT INTO bl_psi 
+     (location_id, latitude, longitude, timestamp, psi_value, 
+     threeH_PSI, OneH_NO2, TwentyfourH_PM10, TwentyfourH_PM25, TwentyfourH_SO2,
+     eightH_CO, eightH_O3, NPSI_CO, NPSI_NO2, NPSI_O3, NPSI_PM10, NPSI_PM25, 
+     NPSI_SO2) VALUES (%s,%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    sql_data = (region_id, latitude, longitude, timestamp, PSI,
+                ThreeH_PSI, OneH_NO2, TwentyfourH_PM10, TwentyfourH_PM25, TwentyfourH_SO2,
+                EightH_CO, EightH_O3, NPSI_CO, NPSI_NO2, NPSI_O3, NPSI_PM10, NPSI_PM25, NPSI_SO2)
+    try:
+        cursor = con.cursor(DictCursor)
+        cursor.execute(sql, sql_data)
+        con.commit()
+    # except Error as error:
+    except:
+        print("DB update error")
+        exit(0)
+
 
