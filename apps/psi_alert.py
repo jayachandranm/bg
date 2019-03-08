@@ -8,6 +8,7 @@ from datetime import datetime
 import calendar
 import pytz
 import urllib2
+import urllib
 
 import xml.etree.ElementTree as ET
 
@@ -36,14 +37,14 @@ def gw_send_sms(sms_to, sms_msg):
 
     url = "http://gateway80.onewaysms.sg/api2.aspx?" + urllib.urlencode(params)
     # TODO: fix this. Enable SMS
-    print(url)
+    print("SMS request.")
     #res = requests.post(url)
     #if res.status_code == 200:
     #    ok = "success"
     #else:
     #    print("Please refer to API on Error : " + res.reason)
     #    ok = "fail"
-    return res.reason
+    #return res.reason
 
 
 map_url = "http://api.nea.gov.sg/api/WebAPI/?dataset=pm2.5_update&keyref=781CF461BB6606ADEA01E0CAF8B3527437F4C1B8ED5B986D"
@@ -58,7 +59,8 @@ root = ET.fromstring(doc)
 region = []
 record = []
 
-psi_regions = {}
+#psi_regions = {}
+psi_regions = []
 
 items = root.find('item')
 for region in items.findall('region'):
@@ -77,7 +79,9 @@ for region in items.findall('region'):
     psi_details['longitude'] = longitude
     psi_details['timestamp'] = timestamp
     psi_details['psi_value'] = PSI
-    psi_regions[region_id] = psi_details
+    #psi_regions[region_id] = psi_details
+    #print(psi_details)
+    psi_regions.append(psi_details)
     #
     ThreeH_PSI = 0
     OneH_NO2 = 0
@@ -103,8 +107,8 @@ for region in items.findall('region'):
                 EightH_CO, EightH_O3, NPSI_CO, NPSI_NO2, NPSI_O3, NPSI_PM10, NPSI_PM25, NPSI_SO2)
     try:
         cursor = con.cursor(DictCursor)
-        cursor.execute(sql, sql_data)
-        con.commit()
+        #cursor.execute(sql, sql_data)
+        #con.commit()
     # except Error as error:
     except:
         print("DB insert error")
@@ -117,6 +121,8 @@ sg_tz = pytz.timezone('Asia/Singapore')
 # sg_now = datetime.now().astimezone(sg_tz)
 sg_now = datetime.now(sg_tz)
 dt = sg_now.strftime('%d/%m/%Y') + ' ' + sg_now.strftime('%H:%M:%S')
+print('DateTime: ', dt)
+#print(psi_regions)
 #
 
 for details in psi_regions:
@@ -125,8 +131,11 @@ for details in psi_regions:
     longitude = details['longitude']
     timestamp = details['timestamp']
     station_psiValue = details['psi_value']
+    print("----------")
+    print('Region ID: ', region_id)
+    print('Station PSI: ', station_psiValue)
 
-    with con.cursor(DictCursor) as cursor:
+    with con.cursor(DictCursor) as cursor1:
         # Get all stations for the region_id.
         num_rows_station = 0
         try:
@@ -137,17 +146,18 @@ for details in psi_regions:
                 JOIN bl_psi_stations on bl_psi_user_stations.psi_station_name = bl_psi_stations.psi_station_name 
                 where bl_psi_stations.psi_station_sname=%s"""
             sql_data = (region_id)
-            num_rows_station = cursor.execute(sql)
+            #print(sql)
+            num_rows_station = cursor1.execute(sql, sql_data)
             con.commit()
         except:
             print("DB access error for station details")
             exit(0)
         # num_rows_station = cursor.rowcount
-        print(num_rows_station)
+        print('Number of stations for the region: ',num_rows_station)
         # For each station, evaluate event, act and update DB.
         for x in range(0, num_rows_station):
-            row = cursor.fetchone()
-            id = row['id']
+            row = cursor1.fetchone()
+            #id = row['id']
             psi_station_id = row['psi_station_id']
             user_station_name = row['user_station_name']
             psi_station_name = row['psi_station_name']
@@ -156,6 +166,8 @@ for details in psi_regions:
             sms_messageOFF = row['sms_of_message']
             psi_smsflag = row['psi_smsflag']
             trigger_category = row['trigger_cat']
+            print("->")
+            print("Station ID: ", psi_station_id)
             #
             sms_title = "Current PSI Value:"
             sms_msg = ""
@@ -164,7 +176,6 @@ for details in psi_regions:
             trigger_cat = 0
             if psi_smsflag == 0:
                 if station_psiValue >= 56:
-                    print(station_psiValue)
                     if (station_psiValue >= 56 and station_psiValue <= 150):
                         current_psi_status = "Band II / Elevated"
                         trigger_cat = 1
@@ -220,12 +231,12 @@ for details in psi_regions:
                     print("SMS Status - OFF message: ")
             #
             gw_send_sms(sms_to, sms_msg)
-            sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
-            sql_data = (smsflag, trigger_cat, id)
+            sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where psi_station_id=%s"""
+            sql_data = (smsflag, trigger_cat, psi_station_id)
             try:
-                cursor = con.cursor(DictCursor)
+                cursor2 = con.cursor(DictCursor)
                 # TODO: Enable after testing.
-                # cursor.execute(sql, sql_data)
+                # cursor2.execute(sql, sql_data)
                 # con.commit()
             # except Error as error:
             except:
