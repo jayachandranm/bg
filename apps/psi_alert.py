@@ -69,19 +69,19 @@ for region in items.findall('region'):
     reading = record.find('reading')
     PSI = reading.get('value')
     #
-    ThreeH_PSI = 0;
-    OneH_NO2 = 0;
-    TwentyfourH_PM10 = 0;
-    TwentyfourH_PM25 = 0;
-    TwentyfourH_SO2 = 0;
-    EightH_CO = 0;
-    EightH_O3 = 0;
-    NPSI_CO = 0;
-    NPSI_NO2 = 0;
-    NPSI_O3 = 0;
-    NPSI_PM10 = 0;
-    NPSI_PM25 = 0;
-    NPSI_SO2 = 0;
+    ThreeH_PSI = 0
+    OneH_NO2 = 0
+    TwentyfourH_PM10 = 0
+    TwentyfourH_PM25 = 0
+    TwentyfourH_SO2 = 0
+    EightH_CO = 0
+    EightH_O3 = 0
+    NPSI_CO = 0
+    NPSI_NO2 = 0
+    NPSI_O3 = 0
+    NPSI_PM10 = 0
+    NPSI_PM25 = 0
+    NPSI_SO2 = 0
     #
     sql = """INSERT INTO bl_psi 
      (location_id, latitude, longitude, timestamp, psi_value, 
@@ -97,23 +97,24 @@ for region in items.findall('region'):
         con.commit()
     # except Error as error:
     except:
-        print("DB update error")
+        print("DB insert error")
         exit(0)
 
 # Second stage
 #
 with con.cursor(DictCursor) as cursor:
+    num_rows_station = 0
     try:
         sql = """select id,psi_station_id,user_station_name,psi_station_name,
             user_phone,sms_on_message,sms_of_message,psi_smsflag 
             from bl_psi_user_stations"""
         num_rows_station = cursor.execute(sql)
-        con.commit
+        con.commit()
     except:
         print("DB access error for station details")
         exit(0)
 
-    num_rows_station = cursor.rowcount
+    #num_rows_station = cursor.rowcount
     print(num_rows_station)
 
     now = date.today()
@@ -187,113 +188,78 @@ with con.cursor(DictCursor) as cursor:
         trigger_category = row['trigger_cat']
 
         #
-        current_psi_value = "Current PSI Value:"
+        sms_title = "Current PSI Value:"
+        sms_msg = ""
+        current_psi_status = ""
+        smsflag = 0
+        trigger_cat = 0
         if psi_smsflag == 0:
             if station_psiValue >= 56:
-                print station_psiValue
-                if (station_psiValue >= 56 && station_psiValue <=150):
+                print(station_psiValue)
+                if (station_psiValue >= 56 and station_psiValue <=150):
                     current_psi_status = "Band II / Elevated"
                     trigger_cat = 1
-                elif (station_psiValue >= 151 && station_psiValue <= 250):
+                elif (station_psiValue >= 151 and station_psiValue <= 250):
                     current_psi_status = "Band III / High"
                     trigger_cat = 2
                 elif station_psiValue >= 251:
                     current_psi_status = "Band IV / Very High"
                     trigger_cat = 3
                 #
+                smsflag =1
                 sms_msg = sms_messageON + "\r\n" \
-                          + current_psi_value + station_psiValue + "\r\n" \
+                          + sms_title + station_psiValue + "\r\n" \
                           + current_psi_status + "\r\n" + dt
-                print "SMS Status - ON message: "
-                gw_send_sms(sms_to, sms_msg)
-                #
-                sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
-                sql_data = (1, trigger_cat, id)
-                try:
-                    cursor = con.cursor(DictCursor)
-                    # TODO: Enable after testing.
-                    #cursor.execute(sql, sql_data)
-                    #con.commit()
-                # except Error as error:
-                except:
-                    print("DB update error")
-                    exit(0)
+                print("SMS Status - ON message: ")
         else: # psi_smsflag
             if station_psiValue >= 56:
-                if (station_psiValue >= 56 && station_psiValue <= 150):
+                if (station_psiValue >= 56 and station_psiValue <= 150):
                     if trigger_category != 1:
                         current_psi_status = "II / Elevated"
+                        trigger_cat = 1
+                        smsflag = 1
                         sms_msg = sms_messageON + "\r\n" \
-                                  + current_psi_value + station_psiValue + "\r\n" \
+                                  + sms_title + station_psiValue + "\r\n" \
                                   + current_psi_status + "\r\n" + dt
-                        print "SMS Status - ON message: "
-                        gw_send_sms(sms_to, sms_msg)
-                        sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
-                        sql_data = (1, 1, id)
-                        try:
-                            cursor = con.cursor(DictCursor)
-                            # TODO: Enable after testing.
-                            #cursor.execute(sql, sql_data)
-                            #con.commit()
-                        # except Error as error:
-                        except:
-                            print("DB update error")
-                            exit(0)
-                if (station_psiValue >= 151 && station_psiValue <= 250):
+                        print("SMS Status - ON message: ")
+                if (station_psiValue >= 151 and station_psiValue <= 250):
                     if trigger_category != 2:
                         current_psi_status = "III / High"
+                        trigger_cat = 2
+                        smsflag = 1
                         sms_msg = sms_messageON + "\r\n" \
-                                  + current_psi_value + station_psiValue + "\r\n" \
+                                  + sms_title + station_psiValue + "\r\n" \
                                   + current_psi_status + "\r\n" + dt
-                        print "SMS Status - ON message: "
-                        gw_send_sms(sms_to, sms_msg)
-                        sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
-                        sql_data = (1, 2, id)
-                        try:
-                            cursor = con.cursor(DictCursor)
-                            # TODO: Enable after testing.
-                            #cursor.execute(sql, sql_data)
-                            #con.commit()
-                        # except Error as error:
-                        except:
-                            print("DB update error")
-                            exit(0)
+                        print("SMS Status - ON message: ")
 
                 if station_psiValue >= 251:
                     if trigger_category != 3:
                         current_psi_status = "IV / Very High"
+                        smsflag = 1
                         sms_msg = sms_messageON + "\r\n" \
-                                  + current_psi_value + station_psiValue + "\r\n" \
+                                  + sms_title + station_psiValue + "\r\n" \
                                   + current_psi_status + "\r\n" + dt
-                        print "SMS Status - ON message: "
-                        gw_send_sms(sms_to, sms_msg)
-                        sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
-                        sql_data = (1, 3, id)
-                        try:
-                            cursor = con.cursor(DictCursor)
-                            # TODO: Enable after testing.
-                            #cursor.execute(sql, sql_data)
-                            #con.commit()
-                        # except Error as error:
-                        except:
-                            print("DB update error")
-                            exit(0)
+                        trigger_cat = 3
+                        print("SMS Status - ON message: ")
             else: # station_psiValue
                 current_psi_status = "I / Normal"
                 sms_msg = sms_messageOFF + "\r\n" \
-                          + current_psi_value + station_psiValue + "\r\n" \
+                          + sms_title + station_psiValue + "\r\n" \
                           + current_psi_status + "\r\n" + dt
-                print "SMS Status - OFF message: "
-                gw_send_sms(sms_to, sms_msg)
-                sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
-                sql_data = (0, 0, id)
-                try:
-                    cursor = con.cursor(DictCursor)
-                    # TODO: Enable after testing.
-                    # cursor.execute(sql, sql_data)
-                    # con.commit()
-                # except Error as error:
-                except:
-                    print("DB update error")
-                    exit(0)
+                trigger_cat = 0
+                smsflag = 0
+                print("SMS Status - OFF message: ")
+        #
+        gw_send_sms(sms_to, sms_msg)
+        sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
+        sql_data = (smsflag, trigger_cat, id)
+        try:
+            cursor = con.cursor(DictCursor)
+            # TODO: Enable after testing.
+            # cursor.execute(sql, sql_data)
+            # con.commit()
+        # except Error as error:
+        except:
+            print("DB update error")
+            exit(0)
 
