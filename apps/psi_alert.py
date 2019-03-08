@@ -1,4 +1,4 @@
-#import requests
+import requests
 import json
 import pymysql
 from pymysql.cursors import DictCursor
@@ -38,13 +38,13 @@ def gw_send_sms(sms_to, sms_msg):
     url = "http://gateway80.onewaysms.sg/api2.aspx?" + urllib.urlencode(params)
     # TODO: fix this. Enable SMS
     print("SMS request.")
-    #res = requests.post(url)
+    res = requests.post(url)
     #if res.status_code == 200:
     #    ok = "success"
     #else:
     #    print("Please refer to API on Error : " + res.reason)
     #    ok = "fail"
-    #return res.reason
+    return res.reason
 
 
 map_url = "http://api.nea.gov.sg/api/WebAPI/?dataset=pm2.5_update&keyref=781CF461BB6606ADEA01E0CAF8B3527437F4C1B8ED5B986D"
@@ -107,8 +107,8 @@ for region in items.findall('region'):
                 EightH_CO, EightH_O3, NPSI_CO, NPSI_NO2, NPSI_O3, NPSI_PM10, NPSI_PM25, NPSI_SO2)
     try:
         cursor = con.cursor(DictCursor)
-        #cursor.execute(sql, sql_data)
-        #con.commit()
+        cursor.execute(sql, sql_data)
+        con.commit()
     # except Error as error:
     except:
         print("DB insert error")
@@ -235,9 +235,8 @@ for details in psi_regions:
             sql_data = (smsflag, trigger_cat, psi_station_id)
             try:
                 cursor2 = con.cursor(DictCursor)
-                # TODO: Enable after testing.
-                # cursor2.execute(sql, sql_data)
-                # con.commit()
+                cursor2.execute(sql, sql_data)
+                con.commit()
             # except Error as error:
             except:
                 print("DB update error")
