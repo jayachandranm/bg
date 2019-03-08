@@ -58,6 +58,8 @@ root = ET.fromstring(doc)
 region = []
 record = []
 
+psi_regions = {}
+
 items = root.find('item')
 for region in items.findall('region'):
     #print region.find('id').text
@@ -68,6 +70,14 @@ for region in items.findall('region'):
     timestamp = record.get('timestamp')
     reading = record.find('reading')
     PSI = reading.get('value')
+    #
+    psi_details = {}
+    psi_details['region_id'] = region_id
+    psi_details['latitude'] = latitude
+    psi_details['longitude'] = longitude
+    psi_details['timestamp'] = timestamp
+    psi_details['psi_value'] = PSI
+    psi_regions[region_id] = psi_details
     #
     ThreeH_PSI = 0
     OneH_NO2 = 0
@@ -100,166 +110,124 @@ for region in items.findall('region'):
         print("DB insert error")
         exit(0)
 
-# Second stage
 #
-with con.cursor(DictCursor) as cursor:
-    num_rows_station = 0
-    try:
-        sql = """select id,psi_station_id,user_station_name,psi_station_name,
-            user_phone,sms_on_message,sms_of_message,psi_smsflag 
-            from bl_psi_user_stations"""
-        num_rows_station = cursor.execute(sql)
-        con.commit()
-    except:
-        print("DB access error for station details")
-        exit(0)
+now = date.today()
+currentday = calendar.day_name[now.weekday()]
+sg_tz = pytz.timezone('Asia/Singapore')
+# sg_now = datetime.now().astimezone(sg_tz)
+sg_now = datetime.now(sg_tz)
+dt = sg_now.strftime('%d/%m/%Y') + ' ' + sg_now.strftime('%H:%M:%S')
+#
 
-    #num_rows_station = cursor.rowcount
-    print(num_rows_station)
+for details in psi_regions:
+    region_id = details['region_id']
+    latitude = details['latitude']
+    longitude = details['longitude']
+    timestamp = details['timestamp']
+    station_psiValue = details['psi_value']
 
-    now = date.today()
-    currentday = calendar.day_name[now.weekday()]
-    sg_tz = pytz.timezone('Asia/Singapore')
-    # sg_now = datetime.now().astimezone(sg_tz)
-    sg_now = datetime.now(sg_tz)
-    dt = sg_now.strftime('%d/%m/%Y') + ' ' + sg_now.strftime('%H:%M:%S')
-
-    for x in range(0, num_rows_station):
-        row = cursor.fetchone()
-        id = row['id']
-        psi_station_id = row['psi_station_id']
-        user_station_name = row['user_station_name']
-        psi_station_name = row['psi_station_name']
-        sms_to = row['user_phone']
-        sms_messageON = row['sms_on_message']
-        sms_messageOFF = row['sms_of_message']
-        psi_smsflag = row['psi_smsflag']
-        #
-        sql = """select bl_psi_stations.psi_station_sname as 'psi_station_sname' from bl_psi_stations 
-        JOIN bl_psi_user_stations on bl_psi_user_stations.psi_station_name = bl_psi_stations.psi_station_name 
-        where bl_psi_user_stations.psi_station_name=%s"""
-        sql_data = ( psi_station_name )
-        with con.cursor(DictCursor) as cursor:
-            try:
-                cursor.execute(sql, sql_data)
-            except:
-                print("DB access error for time-range")
-                exit(0)
-        #
-        print(cursor.rowcount)
-        if cursor.rowcount == 0:
-            # No results for the query, skip to next station.
-            continue
-        row = cursor.fetchone()
-        station_SName = row['psi_station_sname']
-        #
-        sql = """select timestamp,psi_value from bl_psi 
-        where location_id=%s order by timestamp DESC LIMIT 1"""
-        sql_data = (station_SName)
-        with con.cursor(DictCursor) as cursor:
-            try:
-                cursor.execute(sql, sql_data)
-            except:
-                print("DB access error for time-range")
-                exit(0)
-        #
-        print(cursor.rowcount)
-        if cursor.rowcount == 0:
-            # No results for the query, skip to next station.
-            continue
-        row = cursor.fetchone()
-        station_timestamp = row['timestamp']
-        station_psiValue = row['psi_value']
-        #
-        sql = """select trigger_cat from bl_psi_user_stations where psi_station_id=%s"""
-        sql_data = (psi_station_id)
-        with con.cursor(DictCursor) as cursor:
-            try:
-                cursor.execute(sql, sql_data)
-            except:
-                print("DB access error for time-range")
-                exit(0)
-        #
-        print(cursor.rowcount)
-        if cursor.rowcount == 0:
-            # No results for the query, skip to next station.
-            continue
-        row = cursor.fetchone()
-        trigger_category = row['trigger_cat']
-
-        #
-        sms_title = "Current PSI Value:"
-        sms_msg = ""
-        current_psi_status = ""
-        smsflag = 0
-        trigger_cat = 0
-        if psi_smsflag == 0:
-            if station_psiValue >= 56:
-                print(station_psiValue)
-                if (station_psiValue >= 56 and station_psiValue <=150):
-                    current_psi_status = "Band II / Elevated"
-                    trigger_cat = 1
-                elif (station_psiValue >= 151 and station_psiValue <= 250):
-                    current_psi_status = "Band III / High"
-                    trigger_cat = 2
-                elif station_psiValue >= 251:
-                    current_psi_status = "Band IV / Very High"
-                    trigger_cat = 3
-                #
-                smsflag =1
-                sms_msg = sms_messageON + "\r\n" \
-                          + sms_title + station_psiValue + "\r\n" \
-                          + current_psi_status + "\r\n" + dt
-                print("SMS Status - ON message: ")
-        else: # psi_smsflag
-            if station_psiValue >= 56:
-                if (station_psiValue >= 56 and station_psiValue <= 150):
-                    if trigger_category != 1:
-                        current_psi_status = "II / Elevated"
-                        trigger_cat = 1
-                        smsflag = 1
-                        sms_msg = sms_messageON + "\r\n" \
-                                  + sms_title + station_psiValue + "\r\n" \
-                                  + current_psi_status + "\r\n" + dt
-                        print("SMS Status - ON message: ")
-                if (station_psiValue >= 151 and station_psiValue <= 250):
-                    if trigger_category != 2:
-                        current_psi_status = "III / High"
-                        trigger_cat = 2
-                        smsflag = 1
-                        sms_msg = sms_messageON + "\r\n" \
-                                  + sms_title + station_psiValue + "\r\n" \
-                                  + current_psi_status + "\r\n" + dt
-                        print("SMS Status - ON message: ")
-
-                if station_psiValue >= 251:
-                    if trigger_category != 3:
-                        current_psi_status = "IV / Very High"
-                        smsflag = 1
-                        sms_msg = sms_messageON + "\r\n" \
-                                  + sms_title + station_psiValue + "\r\n" \
-                                  + current_psi_status + "\r\n" + dt
-                        trigger_cat = 3
-                        print("SMS Status - ON message: ")
-            else: # station_psiValue
-                current_psi_status = "I / Normal"
-                sms_msg = sms_messageOFF + "\r\n" \
-                          + sms_title + station_psiValue + "\r\n" \
-                          + current_psi_status + "\r\n" + dt
-                trigger_cat = 0
-                smsflag = 0
-                print("SMS Status - OFF message: ")
-        #
-        gw_send_sms(sms_to, sms_msg)
-        sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
-        sql_data = (smsflag, trigger_cat, id)
+    with con.cursor(DictCursor) as cursor:
+        # Get all stations for the region_id.
+        num_rows_station = 0
         try:
-            cursor = con.cursor(DictCursor)
-            # TODO: Enable after testing.
-            # cursor.execute(sql, sql_data)
-            # con.commit()
-        # except Error as error:
+            sql = """select bl_psi_user_stations.psi_station_id, bl_psi_user_stations.user_station_name, bl_psi_user_stations.psi_station_name,
+                bl_psi_user_stations.trigger_cat, bl_psi_user_stations.psi_smsflag,  
+                bl_psi_user_stations.user_phone, bl_psi_user_stations.sms_on_message, bl_psi_user_stations.sms_of_message   
+                from bl_psi_user_stations
+                JOIN bl_psi_stations on bl_psi_user_stations.psi_station_name = bl_psi_stations.psi_station_name 
+                where bl_psi_stations.psi_station_sname=%s"""
+            sql_data = (region_id)
+            num_rows_station = cursor.execute(sql)
+            con.commit()
         except:
-            print("DB update error")
+            print("DB access error for station details")
             exit(0)
+        # num_rows_station = cursor.rowcount
+        print(num_rows_station)
+        # For each station, evaluate event, act and update DB.
+        for x in range(0, num_rows_station):
+            row = cursor.fetchone()
+            id = row['id']
+            psi_station_id = row['psi_station_id']
+            user_station_name = row['user_station_name']
+            psi_station_name = row['psi_station_name']
+            sms_to = row['user_phone']
+            sms_messageON = row['sms_on_message']
+            sms_messageOFF = row['sms_of_message']
+            psi_smsflag = row['psi_smsflag']
+            trigger_category = row['trigger_cat']
+            #
+            sms_title = "Current PSI Value:"
+            sms_msg = ""
+            current_psi_status = ""
+            smsflag = 0
+            trigger_cat = 0
+            if psi_smsflag == 0:
+                if station_psiValue >= 56:
+                    print(station_psiValue)
+                    if (station_psiValue >= 56 and station_psiValue <= 150):
+                        current_psi_status = "Band II / Elevated"
+                        trigger_cat = 1
+                    elif (station_psiValue >= 151 and station_psiValue <= 250):
+                        current_psi_status = "Band III / High"
+                        trigger_cat = 2
+                    elif station_psiValue >= 251:
+                        current_psi_status = "Band IV / Very High"
+                        trigger_cat = 3
+                    #
+                    smsflag = 1
+                    sms_msg = sms_messageON + "\r\n" \
+                              + sms_title + station_psiValue + "\r\n" \
+                              + current_psi_status + "\r\n" + dt
+                    print("SMS Status - ON message: ")
+            else:  # psi_smsflag
+                if station_psiValue >= 56:
+                    if (station_psiValue >= 56 and station_psiValue <= 150):
+                        if trigger_category != 1:
+                            current_psi_status = "II / Elevated"
+                            trigger_cat = 1
+                            smsflag = 1
+                            sms_msg = sms_messageON + "\r\n" \
+                                      + sms_title + station_psiValue + "\r\n" \
+                                      + current_psi_status + "\r\n" + dt
+                            print("SMS Status - ON message: ")
+                    if (station_psiValue >= 151 and station_psiValue <= 250):
+                        if trigger_category != 2:
+                            current_psi_status = "III / High"
+                            trigger_cat = 2
+                            smsflag = 1
+                            sms_msg = sms_messageON + "\r\n" \
+                                      + sms_title + station_psiValue + "\r\n" \
+                                      + current_psi_status + "\r\n" + dt
+                            print("SMS Status - ON message: ")
 
+                    if station_psiValue >= 251:
+                        if trigger_category != 3:
+                            current_psi_status = "IV / Very High"
+                            smsflag = 1
+                            sms_msg = sms_messageON + "\r\n" \
+                                      + sms_title + station_psiValue + "\r\n" \
+                                      + current_psi_status + "\r\n" + dt
+                            trigger_cat = 3
+                            print("SMS Status - ON message: ")
+                else:  # station_psiValue
+                    current_psi_status = "I / Normal"
+                    sms_msg = sms_messageOFF + "\r\n" \
+                              + sms_title + station_psiValue + "\r\n" \
+                              + current_psi_status + "\r\n" + dt
+                    trigger_cat = 0
+                    smsflag = 0
+                    print("SMS Status - OFF message: ")
+            #
+            gw_send_sms(sms_to, sms_msg)
+            sql = """UPDATE bl_psi_user_stations SET psi_smsflag=%s, trigger_cat=%s where id=%s"""
+            sql_data = (smsflag, trigger_cat, id)
+            try:
+                cursor = con.cursor(DictCursor)
+                # TODO: Enable after testing.
+                # cursor.execute(sql, sql_data)
+                # con.commit()
+            # except Error as error:
+            except:
+                print("DB update error")
+                exit(0)
