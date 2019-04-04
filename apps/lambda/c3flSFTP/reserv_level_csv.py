@@ -91,7 +91,7 @@ def lambda_handler(event, context):
     sg_tz = pytz.timezone('Asia/Singapore')
     sg_time = utc_time.astimezone(sg_tz)
     tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
-    dest = tm + ".csv"
+    dest = "RL-" + tm + ".csv"
     csvfile=sftp.file(dest, "w", -1)
 
     # Write header

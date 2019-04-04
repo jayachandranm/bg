@@ -268,7 +268,7 @@ def lambda_handler(event, context):
     sg_tz = pytz.timezone('Asia/Singapore')
     sg_time = utc_time.astimezone(sg_tz)
     tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
-    dest = tm + ".xml"
+    dest = "RG-" + tm + ".xml"
     xmlfile = sftp.file(dest, "w", -1)
     #file.write("<?xml version=\"1.0\" ?>" + "<TimeSeries>")
 
