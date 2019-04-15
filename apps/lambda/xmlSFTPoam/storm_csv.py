@@ -45,6 +45,7 @@ config_dir = config['remote_dir']
 config_bucket = config['s3_bucket']
 config_folder = config['s3_folder']
 config_file = config['s3_file']
+config_station_name_flag = config['station_name_flag']
 
 def lambda_handler(event, context):
     #
@@ -55,6 +56,7 @@ def lambda_handler(event, context):
     ssh_dir = os.environ.get('SSH_DIR')
     ssh_port = int(os.environ.get('SSH_PORT', config_port))
     #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
+    station_name_flag = os.environ.get('STATION_NAME', config_station_name_flag)
     
     content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
     file_content = content_object.get()["Body"].read().decode('utf-8')
@@ -175,11 +177,18 @@ def lambda_handler(event, context):
         invert = jsonState["state"]["reported"]["invert_level"]
         offset_o = jsonState["state"]["reported"]["offset_o"]
         #
+        dev_state_sid = dev_state_s3["dev_state"][sid]
+        alias = dev_state_sid["alias"]
+        # Use alias name by default, or sid depending on the flag.
+        st_name = alias
+        if station_name_flag == 'SID':
+            st_name = sid
+        #
         if wa <= ( 0.08 + (offset_o / 100) ):
             wa = offset_o / 100
         mrl_val = decimal.Decimal(invert) + decimal.Decimal(wa)
         mrl_str = "{0:.3f}".format(mrl_val)
-        csv_to_write = str(sid) + "," \
+        csv_to_write = str(st_name) + "," \
                        + dt_hm1 + "," \
                        + mrl_str + "," \
                        + str(md_f) + "\n"

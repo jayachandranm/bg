@@ -46,6 +46,7 @@ config_dir = config['remote_dir']
 config_bucket = config['s3_bucket']
 config_folder = config['s3_folder']
 config_file = config['s3_file']
+config_station_name_flag = config['station_name_flag']
 
 #----------------------------------------------------------------------
 def create_series(data):
@@ -81,6 +82,7 @@ def lambda_handler(event, context):
     ssh_password = os.environ.get('SSH_PASSWORD', config_pass)
     ssh_dir = os.environ.get('SSH_DIR', config_dir)
     ssh_port = int(os.environ.get('SSH_PORT', config_port))
+    station_name_flag = os.environ.get('STATION_NAME', config_station_name_flag)
     #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
     
     content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
@@ -181,6 +183,11 @@ def lambda_handler(event, context):
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
+        alias = dev_state_sid["alias"]
+        # Use alias name by default, or sid depending on the flag.
+        st_name = alias
+        if station_name_flag == 'SID':
+            st_name = sid
         # Calibrate near zero.
         if wa <= ( 0.08 + (offset_o / 100) ):
             wa = offset_o / 100
@@ -194,7 +201,7 @@ def lambda_handler(event, context):
         desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
         appt = create_series({
-                        "locationId": sid,
+                        "locationId": st_name,
                         "dt": dt1,
                         "tm": hm1,
                         "x": lat_str,

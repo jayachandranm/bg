@@ -6,5 +6,6 @@
     "remote_dir" : "dir",
     "s3_bucket" : "bucket",
     "s3_folder" : "folder",
-    "s3_file" : "state.json"
+    "s3_file" : "state.json",
+    "station_name_flag" : "ALIAS"
 }

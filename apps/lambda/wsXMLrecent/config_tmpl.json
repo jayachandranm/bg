@@ -1,5 +1,6 @@
 {
     "s3_bucket" : "c5wl",
     "s3_folder" : "data",
-    "s3_file" : "devs_state.json"
+    "s3_file" : "devs_state.json",
+    "station_name_flag" : "ALIAS"
 }

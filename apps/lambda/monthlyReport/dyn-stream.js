@@ -11,7 +11,7 @@ dynDoc = new aws.DynamoDB.DocumentClient();
 
 module.exports = DynStream;
 
-function DynStream(tablename, sid, devState, start_t, end_t, options) {
+function DynStream(tablename, sid, config, devState, devs_s3_state, start_t, end_t, options) {
   if (!(this instanceof DynStream)) {
     return new DynStream(tablename, sid, devState, start_t, end_t, options);
   }
@@ -22,7 +22,9 @@ function DynStream(tablename, sid, devState, start_t, end_t, options) {
   this._count = 0;
   //this._sidSize = sids.length;
   this._sid = sid;
+  this._config = config;
   this._dev_state = devState;
+  this._dev_s3_state = devs_s3_state;
   this._end_t = end_t;
   this._start_t = start_t;
   if (!options) options = {};
@@ -55,13 +57,19 @@ DynStream.prototype._read = function read() {
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
       //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
+      var station_name_flag = self._config.station_name_flag;
+      var alias = devs_s3_state.dev_state[sid].alias;
       var sid = self._sid;
+      var st_name = alias;
+      if(station_name_flag == "SID") {
+        st_name = sid;
+      }
       var loc = self._dev_state.location;
       var inv_lvl = self._dev_state.invert_level;
       var op_lvl = (inv_lvl + (self._dev_state.offset_o / 100)).toFixed(3);
       inv_lvl = inv_lvl.toFixed(3);
       var cl = (self._dev_state.critical_level).toFixed(3);
-      var desc = { dt: "Station ID: ", wa: sid, mrl: '', md: '' }
+      var desc = { dt: "Station ID: ", wa: st_name, mrl: '', md: '' }
       self.push(desc);
       var desc = { dt: "Station Name: ", wa: loc, mrl: '', md: '' }
       self.push(desc);
@@ -81,7 +89,8 @@ DynStream.prototype._read = function read() {
       self.push(title);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
-      console.log(self._sid, self._start_t, self._end_t);
+      console.log(st_name, self._start_t, self._end_t);
+      // Query using sid and not alias.
       var params = {
         TableName: self._tablename,
         //IndexName: 'Index',

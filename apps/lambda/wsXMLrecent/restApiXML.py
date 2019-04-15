@@ -138,6 +138,13 @@ def lambda_handler(event, context):
         jsonState = json.loads(streamingBody.read())
         loc = (jsonState["state"]["reported"]["location"])
         offset_o = (jsonState["state"]["reported"]["offset_o"])
+        #
+        dev_state_sid = dev_state_s3["dev_state"][sid]
+        alias = dev_state_sid["alias"]
+        st_name = alias
+        if station_name_flag == 'SID':
+            st_name = sid
+        #       
         #print(loc)
         # Calibration near zero
         if wa <= ( 0.08 + (offset_o / 100) ):
@@ -147,7 +154,7 @@ def lambda_handler(event, context):
         series["waterlevel"] = str(wa)
         series["flag"] = str(flag)
         series["observation_time"] = dt1 + " " + hm1
-        series["station_id"] = sid
+        series["station_id"] = st_name
         series["desc"] = loc
 
         print (json.dumps(series))

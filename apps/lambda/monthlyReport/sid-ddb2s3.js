@@ -13,7 +13,7 @@ var config = require('./config.json');
 var iotdata = new aws.IotData({endpoint: config.endpointAddress, region: 'ap-southeast-1'});
 
 var sids; //sids_json.stations;
-var devs_b_state;
+var devs_s3_state;
 
 function sidRawToCsv(context) {
   //function backupTable(tablename, callback) {
@@ -24,6 +24,7 @@ function sidRawToCsv(context) {
   var dev_state_file = config.dev_file;
   //
   var iot_folder_name = config.folder_iot;
+  var station_name_flag = config.station_name_flag;
 
   //
   // moment().local();
@@ -69,9 +70,9 @@ function sidRawToCsv(context) {
 
   s3dev.getObject(params_dev, function(err, data) {
     var fileContents = data.Body.toString();
-    devs_b_state = JSON.parse(fileContents);
-    var dev_b_state_by_sids = devs_b_state.dev_state;
-    sids = Object.keys(dev_b_state_by_sids);
+    devs_s3_state = JSON.parse(fileContents);
+    var dev_s3_state_by_sids = devs_s3_state.dev_state;
+    sids = Object.keys(dev_s3_state_by_sids);
     //console.log(sids);
     //
     getMultiFileStream(sids);
@@ -97,9 +98,9 @@ function sidRawToCsv(context) {
           var jsonPayload = JSON.parse(data.payload);
           //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
           devState = jsonPayload.state.reported;
-          var cl = devs_b_state.dev_state[sid].critical_level;
+          var cl = devs_s3_state.dev_state[sid].critical_level;
           devState.critical_level = cl;
-          var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
+          var data_stream = DynStream(table_name, sid, devState, devs_s3_state, start_t, end_t);
           var gzip = zlib.createGzip();
           var csv = CSVTransform();
 
