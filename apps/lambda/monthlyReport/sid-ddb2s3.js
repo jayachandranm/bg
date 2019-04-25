@@ -24,7 +24,7 @@ function sidRawToCsv(context) {
   var dev_state_file = config.dev_file;
   //
   var iot_folder_name = config.folder_iot;
-  var station_name_flag = config.station_name_flag;
+  //var station_name_flag = config.station_name_flag;
 
   //
   // moment().local();
@@ -99,8 +99,11 @@ function sidRawToCsv(context) {
           //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
           devState = jsonPayload.state.reported;
           var cl = devs_s3_state.dev_state[sid].critical_level;
+          var alias = devs_s3_state.dev_state[sid].alias;
           devState.critical_level = cl;
-          var data_stream = DynStream(table_name, sid, devState, devs_s3_state, start_t, end_t);
+          devState.station_name_flag = config.station_name_flag;
+          devState.alias = alias;
+          var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
           var gzip = zlib.createGzip();
           var csv = CSVTransform();
 
@@ -109,7 +112,7 @@ function sidRawToCsv(context) {
           //var body = data_stream.pipe(csv).pipe(gzip);
           var body = data_stream.pipe(csv);
 
-          var filename = sid + '_' + file_dt_tag + '.csv';
+          var filename = alias + '_' + file_dt_tag + '.csv';
           //var abs_filename = folder_name + '/' + file_dt_tag + '/' + filename;
           //console.log("Filename=", abs_filename);
           archive.append(body, { name: filename });

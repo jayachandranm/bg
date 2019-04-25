@@ -4,14 +4,14 @@ var Readable = require('stream').Readable;
 var util = require('util');
 
 aws.config.update({ region: 'ap-southeast-1' });
-dynamo = new aws.DynamoDB();
-dynDoc = new aws.DynamoDB.DocumentClient();
+var dynamo = new aws.DynamoDB();
+var dynDoc = new aws.DynamoDB.DocumentClient();
 
 //
 
 module.exports = DynStream;
 
-function DynStream(tablename, sid, config, devState, devs_s3_state, start_t, end_t, options) {
+function DynStream(tablename, sid, devState, start_t, end_t, options) {
   if (!(this instanceof DynStream)) {
     return new DynStream(tablename, sid, devState, start_t, end_t, options);
   }
@@ -22,9 +22,7 @@ function DynStream(tablename, sid, config, devState, devs_s3_state, start_t, end
   this._count = 0;
   //this._sidSize = sids.length;
   this._sid = sid;
-  this._config = config;
   this._dev_state = devState;
-  this._dev_s3_state = devs_s3_state;
   this._end_t = end_t;
   this._start_t = start_t;
   if (!options) options = {};
@@ -52,13 +50,14 @@ DynStream.prototype._read = function read() {
     else {
       //console.log(data);
       //console.log(self._sid, self._start_t, self._end_t);
-      table = data.Table;
+      //var table = data.Table;
       // Write table metadata to first line
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
       //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
-      var station_name_flag = self._config.station_name_flag;
-      var alias = devs_s3_state.dev_state[sid].alias;
+      var station_name_flag = self._dev_state.station_name_flag;
+      var alias = self._dev_state.alias;
+      console.log("Alias: ", alias);
       var sid = self._sid;
       var st_name = alias;
       if(station_name_flag == "SID") {
