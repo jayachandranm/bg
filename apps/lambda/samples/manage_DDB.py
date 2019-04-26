@@ -5,14 +5,18 @@ from StringIO import StringIO
 import boto3
 
 import json
-import decimal
+#import decimal
+from decimal import Decimal
 from boto3.dynamodb.conditions import Key, Attr
+from botocore.exceptions import ClientError
 
 #import urllib2
 
 from datetime import datetime
 import time
 import pytz
+
+import random
 
 dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
 table = dynamodb.Table('pubc3fl-ddb')
@@ -25,10 +29,10 @@ with open("config.json") as config_json_file:
         config = json.load(config_json_file)
     except:
         print("Error loading config JSON file.")
-
+        
 config_bucket = config['s3_bucket']
 config_folder = config['s3_folder']
-config_file = config['s3_file']    
+config_file = config['s3_file'] 
 
 def lambda_handler(event, context):
 
@@ -57,6 +61,12 @@ def lambda_handler(event, context):
             # If no records found, skip this sid and continue.
             print("DB access error.")
             #continue
+        try:
+            ts_millis = data_row0['ts']
+        except:
+            print("No ts in DDB.")
+        #
+        print(sid, ts_millis)
         # Get Shadow.
         response = iot_client.get_thing_shadow(
             thingName=str(sid)
@@ -76,16 +86,17 @@ def lambda_handler(event, context):
 
 
     # Write entries to table
-    sid = "TVM_TEST"
-    start_time = 1556247840
-    end_time = 1556247840
+    sid_val = "TVM_TEST"
+    start_time = 1556247840 * 1000
+    end_time = 1556247850 * 1000
     ts_val = start_time
-    while (ts < end_time):
+    while (ts_val < end_time):
         jitter = random.randrange(0, 250, 1)
         ts_val = ts_val + 60000 + jitter
         #wa_val = 101.031
         #ts_r=2019-04-26 11:28:00
-        utc_dt = datetime.fromtimestamp(ts_val)
+        ts_secs = int(ts_val / 1000)
+        utc_dt = datetime.fromtimestamp(ts_secs)
         utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
         sg_tz = pytz.timezone('Asia/Singapore')
         sg_time = utc_dt.astimezone(sg_tz)
@@ -94,19 +105,19 @@ def lambda_handler(event, context):
         #
         ts_r_val =  dt1 + " " + hm1
         #
-        sid_val = "WHMC306"
-        bd_val = 10.7
-        bl_val = 10.7
+        #sid_val = "WHMC306"
+        bd_val = Decimal(str(10.7))
+        bl_val = Decimal(str(10.7))
         err_val = 0
         fl_val = 0
-        snr_val = 50 + random.randrange(0, 9, 1) / 10
-        ss_val = 20 + random.randrange(0, 8, 1)
+        snr_val = Decimal(str(50 + random.randrange(0, 9, 1) / 10))
+        ss_val = Decimal(str(20 + random.randrange(0, 8, 1)))
         ty_val = 2
         vl_val = 0
         #md_val = 1
         wh_val = 0
         wp_val = 0
-        wt_val = 26 + random.randrange(70, 75, 1) / 100
+        wt_val = Decimal(str(26 + random.randrange(70, 75, 1) / 100))
 
         flow_item = {
             "sid": sid_val,
@@ -125,12 +136,16 @@ def lambda_handler(event, context):
             "vl": vl_val
         }
         #    "md": md_val,
+        print(flow_item)
         #
         try:
             response = table.put_item(
                 Item = flow_item
             )
-        except:
+        except ClientError as ex:
+            print("Error in DDB write.")
+            print(ex.response['Error']['Message'])
+        else:
             print("PutItem succeeded:")
             #print(json.dumps(response, indent=4, cls=DecimalEncoder))
         
