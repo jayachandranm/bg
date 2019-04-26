@@ -26,6 +26,10 @@ with open("config.json") as config_json_file:
     except:
         print("Error loading config JSON file.")
 
+config_bucket = config['s3_bucket']
+config_folder = config['s3_folder']
+config_file = config['s3_file']    
+
 def lambda_handler(event, context):
 
     content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
@@ -35,8 +39,6 @@ def lambda_handler(event, context):
     stations = dev_state_by_sids.keys()
     stations.sort()
     print(stations)
-
-    sid = "TST"
 
     # Read all stations from the table.
     for sid in stations:
@@ -74,6 +76,7 @@ def lambda_handler(event, context):
 
 
     # Write entries to table
+    sid = "TVM_TEST"
     start_time = 1556247840
     end_time = 1556247840
     ts_val = start_time
