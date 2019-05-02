@@ -71,7 +71,7 @@ function getData(selectedSid, selectedType) {
 }
 
 //getData("CWS001", "wl");
-getData("CWS001", "wl");
+getData("WHKC206", "bl");
 
 chart.addListener("dataUpdated", zoomChart);
 // when we apply theme, the dataUpdated event is fired even before we add listener, so

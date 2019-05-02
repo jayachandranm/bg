@@ -1,0 +1,33 @@
+{
+"dev_state":
+    {
+        "WM_AL_1":{"critical_level":102.25,"latitude":1.295385,"longitude":103.803},
+        "WM_AL_2":{"critical_level":102.25,"latitude":1.286046,"longitude":103.8134},
+        "WM_BK_1A":{"critical_level":102.25,"latitude":1.327609,"longitude":103.8133},
+        "WM_BK_3B":{"critical_level":102.25,"latitude":1.310057,"longitude":103.8466},
+        "WM_G_1":{"critical_level":102.25,"latitude":1.328722,"longitude":103.9006},
+        "WM_G_2":{"critical_level":102.25,"latitude":1.317213,"longitude":103.9013},
+        "WM_Kal_1":{"critical_level":102.25,"latitude":1.365147,"longitude":103.8326},
+        "WM_Kal_1A":{"critical_level":102.25,"latitude":1.351371,"longitude":103.8364},
+        "WM_Kal_2":{"critical_level":102.25,"latitude":1.324633,"longitude":103.8608},
+        "WM_Kal_3B":{"critical_level":102.25,"latitude":1.32428,"longitude":103.8838},
+        "WM_Kal_4":{"critical_level":102.25,"latitude":1.334281,"longitude":103.8745},
+        "WM_Ro_Kal_4":{"critical_level":102.25,"latitude":1.310986,"longitude":103.86},
+        "WM_SC_3":{"critical_level":102.25,"latitude":1.296673,"longitude":103.8489},
+        "WM_SC_BK_4":{"critical_level":102.25,"latitude":1.311575,"longitude":103.8289},
+        "WM_SC_SR_1":{"critical_level":102.25,"latitude":1.298096,"longitude":103.8207},
+        "WM_SR_6":{"critical_level":102.25,"latitude":1.285654,"longitude":103.8368},
+        "WM_SR_4":{"critical_level":102.25,"latitude":1.287178,"longitude":103.8432},
+        "WM_SR_5":{"critical_level":102.25,"latitude":1.293047,"longitude":103.8482},
+        "WM_TP_DIV_2":{"critical_level":102.25,"latitude":1.330612,"longitude":103.8547},
+        "WP_1":{"critical_level":102.25,"latitude":1.371749,"longitude":103.8593},
+        "WP_2":{"critical_level":102.25,"latitude":1.390549,"longitude":103.8791},
+        "WP_3":{"critical_level":102.25,"latitude":1.422648,"longitude":103.887},
+        "WP_4":{"critical_level":102.25,"latitude":1.400324,"longitude":103.9075},
+        "WS_1":{"critical_level":102.25,"latitude":1.374879,"longitude":103.9018},
+        "WS_2":{"critical_level":102.25,"latitude":1.395437,"longitude":103.9231},
+        "WS_4":{"critical_level":102.25,"latitude":1.367621,"longitude":103.9277},
+        "WPT1":{"critical_level":102.25,"latitude":1.410652,"longitude":104.0416}
+
+    }
+}

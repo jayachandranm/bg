@@ -2,7 +2,7 @@ $(function() {
 
 var chartData1 = []; // = generateChartData();
 var chartData2 = []; 
-var attr = 'wl';
+var attr = 'bl';
 
 var chart1 = AmCharts.makeChart("chartdivbar", {
     "type": "serial",
@@ -140,7 +140,7 @@ function zoomChart() {
     updateDataAllDev("list1", selected); 
     updateDataAllDev("list2", selected);
     //getData2(selected);
-    getData("CWS001", selected);
+    getData("WHKC206", selected);
   });
 
   $('#na').on('change', function(){
