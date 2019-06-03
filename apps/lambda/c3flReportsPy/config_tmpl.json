@@ -1,0 +1,8 @@
+{
+    "ep": "EP.iot.ap-southeast-1.amazonaws.com",
+    "table" : "ddb",
+    "s3_bucket" : "bucket",
+    "s3_folder" : "monthly_report",
+    "s3_folder_iot" : "iot_data",
+    "dev_file" : "stations.json"
+}

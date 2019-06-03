@@ -1,0 +1,218 @@
+from __future__ import print_function
+
+import os
+from StringIO import StringIO
+import boto3
+
+import json
+import decimal
+from boto3.dynamodb.conditions import Key, Attr
+
+#import urllib2
+
+#import datetime
+from datetime import datetime
+import time
+import pytz
+
+#with open("station-ids.json") as json_file:
+#    try:
+#        json_data = json.load(json_file)
+#    except:
+#        print("Error loading JSON file.")
+
+#stations = json_data['stations'] 
+
+dynamodb = boto3.resource('dynamodb', region_name='ap-southeast-1')
+table = dynamodb.Table('pubc3fl-ddb')
+
+iot_client = boto3.client('iot-data', region_name='ap-southeast-1')
+s3dev_state = boto3.resource('s3')
+
+with open("config_flow.json") as config_json_file:
+    try:
+        config = json.load(config_json_file)
+    except:
+        print("Error loading config JSON file.")
+
+#config_host = config['host']
+#config_port = config['port']
+#config_user = config['user']
+#config_pass = config['pass']
+#config_dir = config['remote_dir']
+config_ep = config['ep']
+config_table = config['table']
+config_bucket = config['s3_bucket']
+config_folder = config['s3_folder']
+config_dev_file = config['dev_file']
+
+def lambda_handler(event, context):
+    #
+    ssh_host = os.environ.get('SSH_HOST', config_host)
+    #key_filename = os.environ.get('SSH_KEY_FILENAME', 'key.pem')
+    
+    content_object = s3dev_state.Object(config_bucket, config_folder + '/' + config_file)
+    file_content = content_object.get()["Body"].read().decode('utf-8')
+    dev_state_s3 = json.loads(file_content)
+    dev_state_by_sids = dev_state_s3["dev_state"]
+    stations = dev_state_by_sids.keys()
+    stations.sort()
+    print(stations)
+
+    try:
+        trans = paramiko.Transport(ssh_host, ssh_port)
+        trans.connect(username=ssh_username, password=ssh_password)
+        sftp = paramiko.SFTPClient.from_transport(trans)
+        print("Connected")
+    except:
+        print("Connect Error.")
+
+    #try:
+        #print(sftp)
+    #except paramiko.SSHException:
+    #    print("Connection Error")
+
+    try:
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
+    except:
+        print("chdir failure") 
+
+    #curr_t = int(time.time())
+    #tm = time.strftime('%Y-%m-%d_%H-%M-%S')
+    #tm = datetime.fromtimestamp(curr_t+28800).strftime('%Y-%m-%d_%H-%M-%S')
+    utc_time = datetime.utcnow()
+    utc_time = utc_time.replace(tzinfo=pytz.UTC)
+    sg_tz = pytz.timezone('Asia/Singapore')
+    sg_time = utc_time.astimezone(sg_tz)
+    tm = sg_time.strftime('%Y-%m-%d_%H-%M-%S')
+    dest = "F-" + tm + ".csv"
+    csvfile=sftp.file(dest, "w", -1)
+
+    # Write header
+    csv_to_write = "StationID," \
+                    + "Time," \
+                    + "Level (mRL)," \
+                    + "Depth (m)," \
+                    + "Velocity (m/s)," \
+                    + "Flow (m3/s)," \
+                    + "Status\n"
+    print(csv_to_write)
+    try:
+        csvfile.write(csv_to_write)  
+        #file.flush()
+    except:
+        print("File write error for title.")
+
+    for sid in stations:
+        #print("<-------------------->")
+        #print(x)
+        try:
+            response = table.query(
+                Limit=1,
+                ScanIndexForward=False,
+                KeyConditionExpression=Key('sid').eq(sid)
+            )
+        except:
+            print("DB access error.")
+        #
+        try:
+            data_row0 = response["Items"][0]
+        except:
+            # If no records found, skip this sid and continue.
+            continue
+
+        #print(data_row0)
+        wh = 0.0
+        ts_millis = 0.0
+        ts = 0
+        #
+        try:
+            ts_millis = data_row0['ts']
+        except:
+            print("No ts in DDB")
+        #
+        try:
+            wh = data_row0['wh']
+        except:
+            print("No wh in DDB")
+        #
+        try:
+            fl = data_row0['fl']
+        except:
+            print("No fl in DDB.")
+        #
+        try:
+            vel = data_row0['vl']
+        except:
+            print("No vl in DDB.")
+
+        #wa = wa/100
+        ts = int(ts_millis / 1000)
+        #dt1 = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+        #hm1 = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+        #dt1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d')
+        #hm1 = datetime.fromtimestamp(ts+28800).strftime('%H:%M:%S')
+        #dt_hm1 = datetime.fromtimestamp(ts+28800).strftime('%Y-%m-%d %H:%M:%S')
+        utc_dt = datetime.fromtimestamp(ts)
+        utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+        sg_time = utc_dt.astimezone(sg_tz)
+        dt1 = sg_time.strftime('%Y-%m-%d')
+        hm1 = sg_time.strftime('%H:%M:%S')
+        # ISO 8601
+        dt_hm1 = sg_time.strftime('%Y-%m-%dT%H:%M:%S')
+        #
+        #
+        md_f = 0
+        try:
+            if 'md' in data_row0:
+                #print("There is md here")
+                md = data_row0['md']
+                #print(md)
+                if md == "maintenance":
+                    md_f = 1
+            #else:
+            #    print("There is no md here")
+            #
+        except:
+            print("Exception in handling md.")
+
+        #print(flag)
+        #
+        response = iot_client.get_thing_shadow(
+            thingName=str(sid)
+        )
+        streamingBody = response["payload"]
+        jsonState = json.loads(streamingBody.read())
+        invert = jsonState["state"]["reported"]["invert_level"]
+        #offset_o = jsonState["state"]["reported"]["offset_o"]
+        offset = jsonState["state"]["reported"]["offset"]
+        #
+        #if wa <= ( 0.08 + (offset_o / 100) ):
+        #    wa = offset_o / 100
+        mrl_val = decimal.Decimal(invert) + decimal.Decimal(wh)
+        mrl_str = "{0:.3f}".format(mrl_val)
+        depth_str = "{0:.3f}".format(decimal.Decimal(wh))
+        vel_str = "{0:.3f}".format(vel)
+        fl_str = "{0:.3f}".format(fl)
+
+        csv_to_write = str(sid) + "," + dt_hm1 + "," \
+                       + mrl_str + "," + depth_str + "," \
+                       + vel_str + "," + fl_str + "," \
+                       + str(md_f) + "\n"
+        print(csv_to_write)
+        try:
+            csvfile.write(csv_to_write)  
+            #file.flush()
+        except:
+            print("File write error.")
+    #      print ("Print completed")
+    #    sftp.put(source, dest)
+    #      print ("Transfer completed")
+    try:
+        csvfile.flush()
+    except:
+        print("File write error.")
+
+    return "File uploaded."
+
