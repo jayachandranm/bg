@@ -1,6 +1,6 @@
 var Transform = require('stream').Transform;
 var inherits = require('util').inherits;
-var json2csv = require('json2csv');
+var json2csv = require('json2csv').parse;
 //var jsonexport = require('jsonexport');
 
 module.exports = CSVTransform;
@@ -21,7 +21,7 @@ CSVTransform.prototype._transform = function transform(JSONrecord, encoding, cal
   //console.log("transform", JSONrecord);
   //var fields = ['timestamp', 'gps_data.latitude', 'gps_data.longitude', 'obd_dev_id'];
   //var fields = ['sid', 'ts', 'wa', 'md'];
-  var fields = ['dt', 'sg', 'wa', 'vl', 'fl', 'md'];
+  var fields = ['dt', 'wh', 'wa', 'vl', 'fl', 'md'];
   //var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "\t" });
   var csv = json2csv({ data: JSONrecord, fields: fields, hasCSVColumnTitle: false, del: "," });
   this.push(csv);
