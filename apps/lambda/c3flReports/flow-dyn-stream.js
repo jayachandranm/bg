@@ -63,24 +63,32 @@ DynStream.prototype._read = function read() {
       inv_lvl = inv_lvl.toFixed(3);
       cope_lvl = cope_lvl.toFixed(3)
       //var cl = (self._dev_state.critical_level).toFixed(3);
-      var desc = { dt: "Station ID: ", wh: sid, wa: '', vl: '', fl: '', md: '' }
-      self.push(desc);
-      var desc = { dt: "Location ID: ", wh: sid, wa: '', vl: '', fl: '', md: '' }
-      self.push(desc);
-      var desc = { dt: "Station Name: ", wh: loc, wa: '', vl: '', fl: '', md: '' }
-      self.push(desc);
+      //var desc = { dt: "Station ID: ", wh: sid, wa: '', vl: '', fl: '', md: '' }
+      var desc_CSV = "Station ID: ," + sid;
+      //self.push(desc);
+      self.push(desc_CSV);
+      //var desc = { dt: "Location ID: ", wh: sid, wa: '', vl: '', fl: '', md: '' }
+      var desc_CSV = "Location ID: ," + sid;
+      self.push(desc_CSV);
+      //var desc = { dt: "Station Name: ", wh: loc, wa: '', vl: '', fl: '', md: '' }
+      var desc_CSV = "Station Name: ," + loc;
+      self.push(desc_CSV);
       desc = "";
       self.push(desc);
-      var desc = { dt: "Cope/Soffit level ", wh: cope_lvl, wa: '', vl: '', fl: '', md: '' }
-      self.push(desc);
-      var desc = { dt: "Sensor level ", wh: op_lvl, wa: '', vl: '', fl: '', md: '' }
-      self.push(desc);
-      var desc = { dt: "Invert level ", wh: inv_lvl, wa: '', vl: '', fl: '', md: '' }
-      self.push(desc);
+      //var desc = { dt: "Cope/Soffit level ", wh: cope_lvl, wa: '', vl: '', fl: '', md: '' }
+      var desc_CSV = "Cope/Soffit level ," + cope_lvl.toString();
+      self.push(desc_CSV);
+      //var desc = { dt: "Sensor level ", wh: op_lvl, wa: '', vl: '', fl: '', md: '' }
+      var desc_CSV = "Sensor level ," + op_lvl.toString();
+      self.push(desc_CSV);
+      //var desc = { dt: "Invert level ", wh: inv_lvl, wa: '', vl: '', fl: '', md: '' }
+      var desc_CSV = "Invert level ," + inv_lvl.toString();
+      self.push(desc_CSV);
       desc = "";
       self.push(desc);
-      var title = { dt: 'Time', wh: 'Depth', wa: 'Level', vl: 'Velocity', fl: 'Flow Rate', md: 'Status' }
-      self.push(title);
+      //var title = { dt: 'Time', wh: 'Depth', wa: 'Level', vl: 'Velocity', fl: 'Flow Rate', md: 'Status' }
+      var title_CSV = "Time,  Depth, Level, Velocity, Flow Rate, Status";
+      self.push(title_CSV);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
       console.log("Title added for, ", self._sid);
@@ -115,44 +123,48 @@ DynStream.prototype._query = function (params) {
     else {
       for (var idx = 0; idx < data.Items.length; idx++) {
         try {
-        var record = data.Items[idx];
-        //if(self._sid == 'WHKC402') {
-        // console.log(record);
-        //}
-        //var dt_local = moment(record.ts).utcOffset('+0800').format("DD-MMM-YYYY HH:mm:ss");
-        var dt_local = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-        //record.wh = record.wh / 100; 
-        //record.wa = record.wa / 100; 
-        //var offset = self._dev_state.offset_o / 100;
-        //if (record.wa <= (0.08 + offset)) {
-        //  record.wa = offset;
-        //}
-        record.mrl = Number(record.wh) + Number(self._dev_state.invert_level);
-        record.dt = dt_local;
-        
-        if (typeof (record.md) == 'undefined') {
-          record.md = "Normal";
-        }
-        else if ( record.md === 'maintenance') {
-          record.md = "Maintenance";
-        }
-        //record.wh = (record.wh).toFixed(3);
-        record.wh = Number((record.wh)).toFixed(3);
-        //record.wa = (record.wa).toFixed(3);
-        record.wa = (record.mrl).toFixed(3);
-        record.vl = Number((record.vl)).toFixed(3);
-	      //if (typeof (record.fl) != 'undefined') {
-        record.fl = Number((record.fl)).toFixed(3);
+          var record = data.Items[idx];
+          //if(self._sid == 'WHKC402') {
+          // console.log(record);
+          //}
+          //var dt_local = moment(record.ts).utcOffset('+0800').format("DD-MMM-YYYY HH:mm:ss");
+          var dt_local = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+          //record.wh = record.wh / 100; 
+          //record.wa = record.wa / 100; 
+          //var offset = self._dev_state.offset_o / 100;
+          //if (record.wa <= (0.08 + offset)) {
+          //  record.wa = offset;
+          //}
+          record.mrl = (Number(record.wh) + Number(self._dev_state.invert_level)).toFixed(3);
+          record.dt = dt_local;
+
+          if (typeof (record.md) == 'undefined') {
+            record.md = "Normal";
+          }
+          else if (record.md === 'maintenance') {
+            record.md = "Maintenance";
+          }
+          //record.wh = (record.wh).toFixed(3);
+          record.wh = Number((record.wh)).toFixed(3);
+          //record.wa = (record.wa).toFixed(3);
+          record.wa = (record.mrl).toFixed(3);
+          record.vl = Number((record.vl)).toFixed(3);
+          //if (typeof (record.fl) != 'undefined') {
+          record.fl = Number((record.fl)).toFixed(3);
         } catch (err) {
           console.log(err);
           console.log(record);
         }
-	      //} 
-	      //else {
+        //} 
+        //else {
         //  record.fl = 0;
-	      //}
+        //}
         //self.push(data.Items[idx]);
-        self.push(record);
+        var record_csv = dt_local + ',' + record.wh.toString() + ',' 
+             + record.wa.toString() + ',' + record.vl.toString() + ',' 
+             + record.fl.toString() + ',' + record.md;
+        //self.push(record);
+        self.push(record_csv);
         //self._count++;
       }
       //

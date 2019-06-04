@@ -51,7 +51,7 @@ function sidRawToCsv(context) {
   var s3obj = new aws.S3(
    { params:
      { Bucket: bucket_name,
-       Key: folder_name + '/' + file_dt_tag + '_flow.zip'
+       Key: folder_name + '/' + file_dt_tag + '_flow0.zip'
      }
    }
   );
@@ -88,7 +88,8 @@ function sidRawToCsv(context) {
     // repeated call  of this function.
     if(count < sids.length) {
       var sid = sids[count];
-      count++;
+      //count++;
+      count += 4;
       console.log("Processing, ", sid);
       var devState;
       iotdata.getThingShadow({

@@ -53,7 +53,7 @@ function sidRawToCsv(context) {
   var s3obj = new aws.S3(
    { params:
      { Bucket: bucket_name,
-       Key: folder_name + '/' + file_dt_tag + '_flow.zip'
+       Key: folder_name + '/' + file_dt_tag + '_rlevel0.zip'
      }
    }
   );
@@ -106,7 +106,7 @@ function sidRawToCsv(context) {
           var cl = devs_state.dev_state[sid].critical_level;
           devState.critical_level = cl;
           var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
-          var gzip = zlib.createGzip();
+          //var gzip = zlib.createGzip();
           var csv = CSVTransform();
 
           // body will contain the stream content to ship to s3
