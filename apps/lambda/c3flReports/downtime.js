@@ -48,37 +48,38 @@ exports.handler = function (event, context) {
   };
 
   s3dev.getObject(params_dev, function (err, data) {
-    if(err) {
+    if (err) {
       console.log("Error in S3 read of dev state.")
     }
     else {
-    var fileContents = data.Body.toString();
-    var devs_state = JSON.parse(fileContents);
-    var dev_state_by_sids = devs_state.dev_state;
-    var sids = Object.keys(dev_state_by_sids);
-    //console.log(sids);
-    //
-    processSids(sids, start_t, end_t, function (err, data) {
-      if (err) {
-        context.fail(err);
-        console.log("Error while processing sids.", err);
-      }
-      else {
-        console.log("processed all sids, start writing to S3");
-        var dtfile = folder_name + '/' + file_dt_tag + 'downtime.csv';
-        //console.log(data);
-        var s3obj = new aws.S3(
-          {
-            params:
+      var fileContents = data.Body.toString();
+      var devs_state = JSON.parse(fileContents);
+      var dev_state_by_sids = devs_state.dev_state;
+      var sids = Object.keys(dev_state_by_sids);
+      //console.log(sids);
+      //
+      processSids(sids, start_t, end_t, function (err, data) {
+        if (err) {
+          context.fail(err);
+          console.log("Error while processing sids.", err);
+        }
+        else {
+          console.log("processed all sids, start writing to S3");
+          var dtfile = folder_name + '/' + file_dt_tag + 'downtime.csv';
+          console.log(data.length);
+          console.log(data);
+          var s3obj = new aws.S3(
             {
-              Bucket: bucket_name,
-              Key: dtfile
+              params:
+              {
+                Bucket: bucket_name,
+                Key: dtfile
+              }
             }
-          }
-        );
-        //        
-      }
-    });
+          );
+          //        
+        }
+      });
     }
   });
 }
@@ -152,18 +153,44 @@ const findDownEntries = function (sid, params, downList, callback) {
           callback(err);
         }
         else {
+          var last_ts = -1;
+          var last_bl = -1;
+          var data_err_started = false;
+          var data_err_st = -1;
           for (var idx = 0; idx < data.Items.length; idx++) {
             var record = data.Items[idx];
             //var dt_local = moment(record.ts).utcOffset('+0800').format("DD-MMM-YYYY HH:mm:ss");
-            var dt_local = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+            // If no records for more than 30mts, add to the list.
+            if (last_ts > 0 && Math.abs(record.ts - last_ts) > 30 * 60 * 1000) {
+              var down_record = {}
+              var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+              var dt_start = moment(last_ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+              down_record.st = dt_start;
+              down_record.et = dt_end;
+              down_record.sid = sid;
+              down_record.reason = "DL failure.";
+              downList.push(down_record);
+            }
+            // If bl=0, data error. Just changed from non-zero to zero, start of error.
+            if ((!data_err_started) && (record.bl == 0)) {
+              //
+              data_err_started = true;
+              var data_err_st = record.ts;
+            }
+            // 
+            if (data_err_started && (record.bl > 0)) {
+              var down_record = {}
+              var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+              var dt_start = moment(data_err_st).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+              down_record.st = dt_start;
+              down_record.et = dt_end;
+              down_record.sid = sid;
+              down_record.reason = "Data error.";
+              downList.push(down_record);
+            }
 
-            var down_record = {}
-            down_record.dt = dt_local;
-
-            //var record_csv = dt_local + ',' + '_test';
-            //console.log('3 ', down_record);
-            downList.push(down_record);
-            //self.push(record_csv);
+            last_ts = record.ts;
+            last_bl = record.bl;
           }
           //
           if (typeof data.LastEvaluatedKey != "undefined") {
