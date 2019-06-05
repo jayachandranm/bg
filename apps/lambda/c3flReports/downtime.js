@@ -1,5 +1,5 @@
 var aws = require('aws-sdk');
-var stream = require('stream');
+//var stream = require('stream');
 //var MyStream = require('json2csv-stream');
 //var dateFormat = require('dateformat');
 var moment = require('moment');
@@ -8,6 +8,7 @@ var moment = require('moment');
 var config = require('./config_flow.json');
 
 var iotdata = new aws.IotData({ endpoint: config.endpointAddress, region: 'ap-southeast-1' });
+var dynDoc = new aws.DynamoDB.DocumentClient();
 
 //var sids; //sids_json.stations;
 //var devs_state;
@@ -37,16 +38,6 @@ exports.handler = function (event, context) {
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
   //
   //
-  var s3obj = new aws.S3(
-    {
-      params:
-      {
-        Bucket: bucket_name,
-        Key: folder_name + '/' + file_dt_tag + '_flow0.zip'
-      }
-    }
-  );
-  //
 
   //
   var s3dev = new aws.S3();
@@ -57,26 +48,43 @@ exports.handler = function (event, context) {
   };
 
   s3dev.getObject(params_dev, function (err, data) {
+    if(err) {
+      console.log("Error in S3 read of dev state.")
+    }
+    else {
     var fileContents = data.Body.toString();
-    devs_state = JSON.parse(fileContents);
+    var devs_state = JSON.parse(fileContents);
     var dev_state_by_sids = devs_state.dev_state;
     var sids = Object.keys(dev_state_by_sids);
     //console.log(sids);
     //
-    processSids(sids, function (err, data) {
+    processSids(sids, start_t, end_t, function (err, data) {
       if (err) {
         context.fail(err);
         console.log("Error while processing sids.", err);
       }
       else {
         console.log("processed all sids, start writing to S3");
+        var dtfile = folder_name + '/' + file_dt_tag + 'downtime.csv';
+        //console.log(data);
+        var s3obj = new aws.S3(
+          {
+            params:
+            {
+              Bucket: bucket_name,
+              Key: dtfile
+            }
+          }
+        );
+        //        
       }
     });
+    }
   });
 }
 
 
-const processSids = function (sids, callback) {
+const processSids = function (sids, start_t, end_t, callback) {
   let count = 0;
   let downList = [];
 
@@ -95,9 +103,9 @@ const processSids = function (sids, callback) {
       //IndexName: 'Index',
       KeyConditionExpression: 'sid = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
       ExpressionAttributeValues: {
-        ':hkey': self._sid,
-        ':rkey_l': self._start_t,
-        ':rkey_h': self._end_t
+        ':hkey': sid,
+        ':rkey_l': start_t,
+        ':rkey_h': end_t
       },
       ExpressionAttributeNames: {
         '#ts': 'ts',
@@ -107,16 +115,25 @@ const processSids = function (sids, callback) {
 
     return findDownEntries(sid, params, downList, (err, data) => {
       //sum += data;
+      if (err) {
+        context.fail(err);
+        console.log("Error while processing down Entries.", err);
+      }
+      else {
+        // TODO: append to downList?
+        downList = data;
+      }
       nextSid();
     });
   }
   // starts looping
-  nextSid(); 
+  nextSid();
 }
 
 
-const findDownEntries = function (sid, params, callback) {
+const findDownEntries = function (sid, params, downList, callback) {
   var devState;
+
   iotdata.getThingShadow({
     thingName: sid
   }, function (err, data) {
@@ -126,36 +143,37 @@ const findDownEntries = function (sid, params, callback) {
     } else {
       var jsonPayload = JSON.parse(data.payload);
       //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
+      console.log('2. Shadow: ');
       devState = jsonPayload.state.reported;
 
-      var filename = sid + '_' + file_dt_tag + '.csv';
-      //send(function(err, data) { console.log(err, data); callback(); });
-      //setTimeout(getMultiFileStream, config.pause);
       dynDoc.query(params, function (err, data) {
         if (err) {
           console.log(err, err.stack);
-          //callback(err);
+          callback(err);
         }
         else {
           for (var idx = 0; idx < data.Items.length; idx++) {
             var record = data.Items[idx];
             //var dt_local = moment(record.ts).utcOffset('+0800').format("DD-MMM-YYYY HH:mm:ss");
             var dt_local = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-            record.dt = dt_local;
 
-            var record_csv = dt_local + ',' + record.ra.toString() + ',' + record.md;
-            self.push(record_csv);
+            var down_record = {}
+            down_record.dt = dt_local;
+
+            //var record_csv = dt_local + ',' + '_test';
+            //console.log('3 ', down_record);
+            downList.push(down_record);
+            //self.push(record_csv);
           }
           //
           if (typeof data.LastEvaluatedKey != "undefined") {
             params.ExclusiveStartKey = data.LastEvaluatedKey;
-            //dynamo.scan(params, onScan);
             // TODO: Check this. 
-            findDownEntries(sid, params, callback);
+            console.log('DDB, not all record in single query.');
+            findDownEntries(sid, params, downList, callback);
           }
           else {
-            //data_stream.end()
-            //self.push(null);
+            console.log("4. Finished processing, ", sid);
             callback(null, downList);
           }
 
