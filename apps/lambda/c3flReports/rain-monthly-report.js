@@ -105,6 +105,9 @@ function sidRawToCsv(context) {
           devState = jsonPayload.state.reported;
           var cl = devs_state.dev_state[sid].critical_level;
           devState.critical_level = cl;
+          // Station name.
+          var loc_id = devs_state.dev_state[sid].sn;
+          devState.loc_id = loc_id;
           var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
           //var gzip = zlib.createGzip();
           var csv = CSVTransform();

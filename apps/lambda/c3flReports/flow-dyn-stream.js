@@ -4,8 +4,8 @@ var Readable = require('stream').Readable;
 var util = require('util');
 
 aws.config.update({ region: 'ap-southeast-1' });
-dynamo = new aws.DynamoDB();
-dynDoc = new aws.DynamoDB.DocumentClient();
+var dynamo = new aws.DynamoDB();
+var dynDoc = new aws.DynamoDB.DocumentClient();
 
 //
 
@@ -50,13 +50,14 @@ DynStream.prototype._read = function read() {
     else {
       //console.log(data);
       //console.log(self._sid, self._start_t, self._end_t);
-      table = data.Table;
+      var table = data.Table;
       // Write table metadata to first line
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
       //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
       var sid = self._sid;
       var loc = self._dev_state.location;
+      var loc_id = self._dev_state.loc_id;
       var inv_lvl = Number(self._dev_state.invert_level);
       var cope_lvl = Number(self._dev_state.cope_level);
       var op_lvl = (inv_lvl + Number(self._dev_state.offset)).toFixed(3);
@@ -64,30 +65,30 @@ DynStream.prototype._read = function read() {
       cope_lvl = cope_lvl.toFixed(3)
       //var cl = (self._dev_state.critical_level).toFixed(3);
       //var desc = { dt: "Station ID: ", wh: sid, wa: '', vl: '', fl: '', md: '' }
-      var desc_CSV = "Station ID: ," + sid;
+      var desc_CSV = "Station ID: ," + sid + ',,,,';
       //self.push(desc);
       self.push(desc_CSV);
       //var desc = { dt: "Location ID: ", wh: sid, wa: '', vl: '', fl: '', md: '' }
-      var desc_CSV = "Location ID: ," + sid;
+      var desc_CSV = "Location ID: ," + loc_id + ',,,,';
       self.push(desc_CSV);
       //var desc = { dt: "Station Name: ", wh: loc, wa: '', vl: '', fl: '', md: '' }
-      var desc_CSV = "Station Name: ," + loc;
+      var desc_CSV = "Station Name: ," + loc + ',,,,';
       self.push(desc_CSV);
-      desc = "";
+      var desc = "";
       self.push(desc);
       //var desc = { dt: "Cope/Soffit level ", wh: cope_lvl, wa: '', vl: '', fl: '', md: '' }
-      var desc_CSV = "Cope/Soffit level ," + cope_lvl.toString();
+      var desc_CSV = "Cope/Soffit level ," + cope_lvl.toString() + ',mRL,,,';
       self.push(desc_CSV);
       //var desc = { dt: "Sensor level ", wh: op_lvl, wa: '', vl: '', fl: '', md: '' }
-      var desc_CSV = "Sensor level ," + op_lvl.toString();
+      var desc_CSV = "Sensor level ," + op_lvl.toString() + ',mRL,,,';
       self.push(desc_CSV);
       //var desc = { dt: "Invert level ", wh: inv_lvl, wa: '', vl: '', fl: '', md: '' }
-      var desc_CSV = "Invert level ," + inv_lvl.toString();
+      var desc_CSV = "Invert level ," + inv_lvl.toString() + ',mRL,,,';
       self.push(desc_CSV);
       desc = "";
       self.push(desc);
       //var title = { dt: 'Time', wh: 'Depth', wa: 'Level', vl: 'Velocity', fl: 'Flow Rate', md: 'Status' }
-      var title_CSV = "Time,  Depth, Level, Velocity, Flow Rate, Status";
+      var title_CSV = "Time,  Depth(m), Level(mRL), Velocity(m/s), Flow Rate(m3/s), Status";
       self.push(title_CSV);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
@@ -147,7 +148,7 @@ DynStream.prototype._query = function (params) {
           //record.wh = (record.wh).toFixed(3);
           record.wh = Number((record.wh)).toFixed(3);
           //record.wa = (record.wa).toFixed(3);
-          record.wa = (record.mrl).toFixed(3);
+          record.wa = Number((record.mrl)).toFixed(3);
           record.vl = Number((record.vl)).toFixed(3);
           //if (typeof (record.fl) != 'undefined') {
           record.fl = Number((record.fl)).toFixed(3);

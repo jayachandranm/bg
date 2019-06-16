@@ -4,8 +4,8 @@ var Readable = require('stream').Readable;
 var util = require('util');
 
 aws.config.update({ region: 'ap-southeast-1' });
-dynamo = new aws.DynamoDB();
-dynDoc = new aws.DynamoDB.DocumentClient();
+var dynamo = new aws.DynamoDB();
+var dynDoc = new aws.DynamoDB.DocumentClient();
 
 //
 
@@ -50,29 +50,30 @@ DynStream.prototype._read = function read() {
     else {
       //console.log(data);
       //console.log(self._sid, self._start_t, self._end_t);
-      table = data.Table;
+      var table = data.Table;
       // Write table metadata to first line
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
       //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
       var sid = self._sid;
       var loc = self._dev_state.location;
+      var loc_id = self._dev_state.loc_id;
       //var inv_lvl = self._dev_state.invert_level;
       //var op_lvl = (inv_lvl + (self._dev_state.offset_o / 100)).toFixed(3);
       //inv_lvl = inv_lvl.toFixed(3);
       //var cl = (self._dev_state.critical_level).toFixed(3);
       //var desc = { dt: "Station ID: ", ra: sid, md: '' }
-      var desc_CSV = "Station ID: ," + sid;
+      var desc_CSV = "Station ID: ," + sid + ',';
       //self.push(desc);
       self.push(desc_CSV);
-      var desc_CSV = "Location ID: ," + sid
+      var desc_CSV = "Location ID: ," + loc_id + ','
       self.push(desc_CSV);
-      var desc_CSV = "Station Name: ," + loc
+      var desc_CSV = "Station Name: ," + loc + ','
       self.push(desc_CSV);
-      desc = "";
+      var desc = "";
       self.push(desc);
       //var title = { dt: 'Time', ra: 'Rainfall', md: 'Status' }
-      var title_CSV = "Time, Rainfall, Status";
+      var title_CSV = "Time, Rainfall(mm), Status";
       self.push(title_CSV);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
