@@ -206,6 +206,7 @@ def lambda_handler(event, context):
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
+        sid_alias = dev_state_sid["alias"]
         # Calibrate near zero.
         #if wa <= ( 0.08 + (offset_o / 100) ):
         #    wa = offset_o / 100
@@ -221,7 +222,7 @@ def lambda_handler(event, context):
         rf_str = "{0:.3f}".format(ra)
 
         appt1 = create_series({
-                        "locationId": sid,
+                        "locationId": sid_alias,
                         "dt": dt1,
                         "tm": hm1,
                         "x": lat_str,

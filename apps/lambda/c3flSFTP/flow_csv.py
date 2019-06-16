@@ -133,22 +133,22 @@ def lambda_handler(event, context):
         ts = 0
         #
         try:
-            ts_millis = data_row0['ts']
+            ts_millis = int(data_row0['ts'])
         except:
             print("No ts in DDB")
         #
         try:
-            wh = data_row0['wh']
+            wh = float(data_row0['wh'])
         except:
             print("No wh in DDB")
         #
         try:
-            fl = data_row0['fl']
+            fl = float(data_row0['fl'])
         except:
             print("No fl in DDB.")
         #
         try:
-            vel = data_row0['vl']
+            vel = float(data_row0['vl'])
         except:
             print("No vl in DDB.")
 
@@ -201,7 +201,10 @@ def lambda_handler(event, context):
         vel_str = "{0:.3f}".format(vel)
         fl_str = "{0:.3f}".format(fl)
 
-        csv_to_write = str(sid) + "," + dt_hm1 + "," \
+        dev_state_sid = dev_state_s3["dev_state"][sid]
+        sid_alias = dev_state_sid["alias"]
+
+        csv_to_write = str(sid_alias) + "," + dt_hm1 + "," \
                        + mrl_str + "," + depth_str + "," \
                        + vel_str + "," + fl_str + "," \
                        + str(md_f) + "\n"
