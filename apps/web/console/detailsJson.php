@@ -1,5 +1,6 @@
 <?php
 include 'dynDB.php';
+header('Access-Control-Allow-Origin: *');
 
 $sid =  $_GET['sid'];
 $type =  $_GET['type'];
@@ -18,8 +19,8 @@ $type =  $_GET['type'];
                 //print_r($row);
                 $time = $row['ts'];
                 $val = 0.0;
-                if($type === 'wl') {
-                    $val = $row['wl'];
+                if($type === 'wa') {
+                    $val = $row['wa'];
                 } elseif ($type === 'bl') {
                     $val = $row['bl'];
                 } elseif ($type === 'ss') {

@@ -21,7 +21,7 @@ function _getdata_dyndb($reqtype, $filter)
     }
 
     $marshaler = new Marshaler();
-    $tableName = 'pubc5wl-ddb';
+    $tableName = 'pubc3fl-ddb';
     //global $dynamodb, $marshaler, $tableName;
     //$sid_list = $filter[sidList];
     //$sid_list = $filter->sidList;
@@ -35,7 +35,7 @@ function _getdata_dyndb($reqtype, $filter)
         //$type = $filter->attr;
         $params = [
             'TableName' => $tableName,
-            'ProjectionExpression' => 'sid, #ts, wl, ss, bl, md',
+            'ProjectionExpression' => 'sid, #ts, ss, bl, md',
             'KeyConditionExpression' =>
                 'sid = :o_id',
             'ScanIndexForward' => false,
@@ -93,7 +93,7 @@ function _getdata_dyndb($reqtype, $filter)
 */
         $params = [
             'TableName' => $tableName,
-            'ProjectionExpression' => '#ts, wl, ss, bl',
+            'ProjectionExpression' => '#ts, wa, ss, bl',
             'KeyConditionExpression' =>
                 'sid = :o_id and #ts between :begin and :end',
             'ScanIndexForward' => true,

@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="mystyles.css" media="screen" />
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <!-- <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script> -->
@@ -21,6 +22,7 @@
     <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
     <script type="text/javascript" src="detailsChart.js" ></script>  
     <script type="text/javascript" src="currStatus.js" ></script> 
+    <script type="text/javascript" src="currStatusTable.js" ></script> 
     <!-- <script type="text/javascript" src="battsBar.js" ></script> 
     <script type="text/javascript" src="battsBar2.js" ></script> -->
 
@@ -36,9 +38,9 @@
 <div class="row">
   <div class="col-md-4">
     <select class="form-control select-val">
-      <option value="wl">Water Level</option>
       <option value="bl">Battery Level</option>
       <option value="ss">3G Signal Strenth</option>
+      <!-- <option value="wh">Water Level</option> -->
     </select>
   </div>
   <div class="col-md-6">
@@ -57,11 +59,38 @@
 </div>
     <div id="chartdivbar"></div>
     <div id="chartdivbar2"></div>
-    <div id="sid">CWS001</div>
+    <div id="sid">WHKC206</div>
     <div id="chartdiv"></div>
+<div class="row">
+	<h2>Status tables</h2>
+  <div class="col-md-6">
+    <table id="statustable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Station-ID</th>
+                <th>Battery-Level</th>
+                <th>Signal-Level</th>
+            </tr>
+        </thead>
+    </table>
+  </div>
+  <div class="col-md-6">
+    <table id="statustable2" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>Station-ID</th>
+                <th>Battery-Level</th>
+                <th>Signal-Level</th>
+            </tr>
+        </thead>
+    </table>
+  </div>
+</div>
 
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <!-- <script src="js/bootstrap.min.js"></script> -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
   </body>
 </html>

@@ -4,8 +4,8 @@ var Readable = require('stream').Readable;
 var util = require('util');
 
 aws.config.update({ region: 'ap-southeast-1' });
-dynamo = new aws.DynamoDB();
-dynDoc = new aws.DynamoDB.DocumentClient();
+var dynamo = new aws.DynamoDB();
+var dynDoc = new aws.DynamoDB.DocumentClient();
 
 //
 
@@ -50,27 +50,31 @@ DynStream.prototype._read = function read() {
     else {
       //console.log(data);
       //console.log(self._sid, self._start_t, self._end_t);
-      table = data.Table;
+      var table = data.Table;
       // Write table metadata to first line
       //self.push(table);
       // Create one dummy row of data, where the values goes for title.
       //var title = { sid: 'STATION-ID', ts: 'DATE-TIME', wa: 'WATER-LVL(cm)', md: 'STATUS' }
       var sid = self._sid;
       var loc = self._dev_state.location;
+      var loc_id = self._dev_state.loc_id;
       var inv_lvl = self._dev_state.invert_level;
       var op_lvl = (inv_lvl + (self._dev_state.offset_o / 100)).toFixed(3);
       inv_lvl = inv_lvl.toFixed(3);
-      var cl = (self._dev_state.critical_level).toFixed(3);
-      var desc = { dt: "Station ID: ", wa: sid, md: '' }
+      //var cl = (self._dev_state.critical_level).toFixed(3);
+      //var desc = { dt: "Station ID: ", wa: sid, md: '' }
+      var desc_CSV = "Station ID: ," + sid + ',';
+      //self.push(desc);
+      self.push(desc_CSV);
+      var desc_CSV = "Location ID: ," + loc_id + ',';
+      self.push(desc_CSV);
+      var desc_CSV = "Station Name: ," + loc + ',';
+      self.push(desc_CSV);
+      var desc = "";
       self.push(desc);
-      var desc = { dt: "Location ID: ", wa: sid, md: '' }
-      self.push(desc);
-      var desc = { dt: "Station Name: ", wa: loc, md: '' }
-      self.push(desc);
-      desc = "";
-      self.push(desc);
-      var title = { dt: 'Time', ra: 'Level', md: 'Status' }
-      self.push(title);
+      //var title = { dt: 'Time', ra: 'Level', md: 'Status' }
+      var title_CSV = "Time,  Level(mRL), Status";
+      self.push(title_CSV);
       // limit the the number or reads to match our capacity
       //params.Limit = table.ProvisionedThroughput.ReadCapacityUnits
       console.log(self._sid, self._start_t, self._end_t);
@@ -115,9 +119,13 @@ DynStream.prototype._query = function (params) {
         else if ( record.md === 'maintenance') {
           record.md = "Maintenance";
         }
-        record.wa = (record.wa).toFixed(3);
+        //record.wa = (record.wa).toFixed(3);
+        record.mrl = Number(record.wh) + Number(self._dev_state.invert_level);
+        record.wa = (record.mrl).toFixed(3);
         //self.push(data.Items[idx]);
-        self.push(record);
+        var record_csv = dt_local + ',' + record.wa.toString() + ',' + record.md;
+        //self.push(record);
+        self.push(record_csv);
         //self._count++;
       }
       //

@@ -1,0 +1,24 @@
+{
+"dev_state":
+    {
+        "WBD01":{"critical_level":102.25,"latitude":1.343246,"longitude":103.9204},
+        "WSR02":{"critical_level":102.25,"latitude":1.400135,"longitude":103.9296},
+        "WPG03":{"critical_level":102.25,"latitude":1.414687,"longitude":103.8963},
+        "WLS04":{"critical_level":102.25,"latitude":1.424256,"longitude":103.8579},
+        "WTG05":{"critical_level":102.25,"latitude":1.3384,"longitude":103.6627},
+        "WSS06":{"critical_level":102.25,"latitude":1.400371,"longitude":103.9304},
+        "WMR07":{"critical_level":102.25,"latitude":1.40457,"longitude":103.669},
+        "WMC08":{"critical_level":102.25,"latitude":1.343375,"longitude":103.8353},
+        "WSB09":{"critical_level":102.25,"latitude":1.421493,"longitude":103.6811},
+        "WLP10":{"critical_level":102.25,"latitude":1.370017,"longitude":103.8258},
+        "WUP11":{"critical_level":102.25,"latitude":1.368952,"longitude":103.8044},
+        "WMB12":{"critical_level":102.25,"latitude":1.282772,"longitude":103.873},
+        "WPD13":{"critical_level":102.25,"latitude":1.31844,"longitude":103.7425},
+        "WKJ14":{"critical_level":102.25,"latitude":1.415514,"longitude":103.729},
+        "WJL15":{"critical_level":102.25,"latitude":1.344184,"longitude":103.7225},
+        "WUS16":{"critical_level":102.25,"latitude":1.402051,"longitude":103.8065},
+        "WPT17":{"critical_level":102.25,"latitude":1.411246,"longitude":104.0414},
+        "WMS18":{"critical_level":102.25,"latitude":1.281689,"longitude":103.8743}
+
+    }
+}

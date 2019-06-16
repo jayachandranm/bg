@@ -22,8 +22,6 @@ exports.handler = function (event, context) {
 };
 
 function sidRawToCsv(context) {
-  //function backupTable(tablename, callback) {
-  //console.log("backup..");
   var table_name = config.table;
   var bucket_name = config.bucket;
   var folder_name = config.folder;
@@ -53,7 +51,7 @@ function sidRawToCsv(context) {
   var s3obj = new aws.S3(
    { params:
      { Bucket: bucket_name,
-       Key: folder_name + '/' + file_dt_tag + '_flow.zip'
+       Key: folder_name + '/' + file_dt_tag + '_flow0.zip'
      }
    }
   );
@@ -90,7 +88,8 @@ function sidRawToCsv(context) {
     // repeated call  of this function.
     if(count < sids.length) {
       var sid = sids[count];
-      count++;
+      //count++;
+      count += 4;
       console.log("Processing, ", sid);
       var devState;
       iotdata.getThingShadow({
@@ -103,10 +102,12 @@ function sidRawToCsv(context) {
           var jsonPayload = JSON.parse(data.payload);
           //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
           devState = jsonPayload.state.reported;
-          var cl = devs_state.dev_state[sid].critical_level;
-          devState.critical_level = cl;
+          //var cl = devs_state.dev_state[sid].critical_level;
+          //devState.critical_level = cl;
+          var loc_id = devs_state.dev_state[sid].sn;
+          devState.loc_id = loc_id;
           var data_stream = DynStream(table_name, sid, devState, start_t, end_t);
-          var gzip = zlib.createGzip();
+          //var gzip = zlib.createGzip();
           var csv = CSVTransform();
 
           // body will contain the stream content to ship to s3
@@ -131,4 +132,4 @@ function sidRawToCsv(context) {
   //getMultiFileStream();
 } // sidRawToCsv
 
-module.exports.sidRawToCsv = sidRawToCsv;
+//module.exports.sidRawToCsv = sidRawToCsv;
