@@ -186,7 +186,10 @@ def lambda_handler(event, context):
         # TODO:
         rf_str = "{0:.3f}".format(ra)
 
-        csv_to_write = str(sid) + "," \
+        dev_state_sid = dev_state_s3["dev_state"][sid]
+        sid_alias = dev_state_sid["alias"]
+
+        csv_to_write = str(sid_alias) + "," \
                        + dt_hm1 + "," \
                        + rf_str + "," \
                        + str(md_f) + "\n"

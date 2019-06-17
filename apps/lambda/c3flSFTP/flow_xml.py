@@ -151,7 +151,7 @@ def lambda_handler(event, context):
         ts = 0
         #
         try:
-            ts_millis = data_row0['ts']
+            ts_millis = int(data_row0['ts'])
         except:
             print("No ts in DDB.")
         #
@@ -161,12 +161,12 @@ def lambda_handler(event, context):
             print("No wh in DDB.")
         #
         try:
-            fl = data_row0['fl']
+            fl = float(data_row0['fl'])
         except:
             print("No fl in DDB.")
         #
         try:
-            vel = data_row0['vl']
+            vel = float(data_row0['vl'])
         except:
             print("No vl in DDB.")
 
@@ -227,6 +227,7 @@ def lambda_handler(event, context):
         #lon_str = float("{0:.7f}".format(lon))
         lat_str = "{0:.7f}".format(lat)
         lon_str = "{0:.7f}".format(lon)
+        sid_alias = dev_state_sid["alias"]
         # Calibrate near zero.
         #if wa <= ( 0.08 + (offset_o / 100) ):
         #    wa = offset_o / 100
@@ -242,7 +243,7 @@ def lambda_handler(event, context):
         desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
 
         appt1 = create_series({
-                        "locationId": sid,
+                        "locationId": sid_alias,
                         "dt": dt1,
                         "tm": hm1,
                         "x": lat_str,
@@ -257,7 +258,7 @@ def lambda_handler(event, context):
 
         wa_str = "{0:.3f}".format(wh)
         appt2 = create_series({
-                        "locationId": sid,
+                        "locationId": sid_alias,
                         "dt": dt1,
                         "tm": hm1,
                         "x": lat_str,
@@ -273,7 +274,7 @@ def lambda_handler(event, context):
 
         fl_str = "{0:.3f}".format(fl)
         appt3 = create_series({
-                        "locationId": sid,
+                        "locationId": sid_alias,
                         "dt": dt1,
                         "tm": hm1,
                         "x": lat_str,
@@ -288,7 +289,7 @@ def lambda_handler(event, context):
 
         vel_str = "{0:.3f}".format(vel)
         appt4 = create_series({
-                        "locationId": sid,
+                        "locationId": sid_alias,
                         "dt": dt1,
                         "tm": hm1,
                         "x": lat_str,
