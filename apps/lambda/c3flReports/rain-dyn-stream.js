@@ -70,7 +70,7 @@ DynStream.prototype._read = function read() {
       self.push(desc_CSV);
       var desc_CSV = "Station Name: ," + loc + ','
       self.push(desc_CSV);
-      var desc = "";
+      var desc = ",,";
       self.push(desc);
       //var title = { dt: 'Time', ra: 'Rainfall', md: 'Status' }
       var title_CSV = "Time, Rainfall(mm), Status";
