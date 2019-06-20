@@ -74,7 +74,7 @@ DynStream.prototype._read = function read() {
       //var desc = { dt: "Station Name: ", wh: loc, wa: '', vl: '', fl: '', md: '' }
       var desc_CSV = "Station Name: ," + loc + ',,,,';
       self.push(desc_CSV);
-      var desc = "";
+      var desc = ",,,,,";
       self.push(desc);
       //var desc = { dt: "Cope/Soffit level ", wh: cope_lvl, wa: '', vl: '', fl: '', md: '' }
       var desc_CSV = "Cope/Soffit level ," + cope_lvl.toString() + ',mRL,,,';
@@ -85,7 +85,7 @@ DynStream.prototype._read = function read() {
       //var desc = { dt: "Invert level ", wh: inv_lvl, wa: '', vl: '', fl: '', md: '' }
       var desc_CSV = "Invert level ," + inv_lvl.toString() + ',mRL,,,';
       self.push(desc_CSV);
-      desc = "";
+      desc = ",,,,,";
       self.push(desc);
       //var title = { dt: 'Time', wh: 'Depth', wa: 'Level', vl: 'Velocity', fl: 'Flow Rate', md: 'Status' }
       var title_CSV = "Time,  Depth(m), Level(mRL), Velocity(m/s), Flow Rate(m3/s), Status";

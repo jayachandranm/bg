@@ -8,7 +8,7 @@ var moment = require('moment');
 //var os = require('os');
 //var archiver = require('archiver');
 //var sids_json = require('./station-B-ids.json');
-var config = require('./config_flow.json');
+var config = require('./config_rlevel.json');
 
 var iotdata = new aws.IotData({ endpoint: config.endpointAddress, region: 'ap-southeast-1' });
 var dynDoc = new aws.DynamoDB.DocumentClient();
@@ -22,6 +22,12 @@ var folder_name = config.folder;
 var dev_state_file = config.dev_file;
 //
 var iot_folder_name = config.folder_iot;
+
+// Declared global.
+var dev_state_by_sids;
+
+// Global. Because of multiple calls of same function for DDB access. Init outside the function.
+var total_down_mts;
 
 exports.handler = function (event, context) {
   //
@@ -65,12 +71,15 @@ exports.handler = function (event, context) {
     else {
       var fileContents = data.Body.toString();
       var devs_state = JSON.parse(fileContents);
-      var dev_state_by_sids = devs_state.dev_state;
+      //var dev_state_by_sids = devs_state.dev_state;
+      dev_state_by_sids = devs_state.dev_state;
       var sids = Object.keys(dev_state_by_sids);
       //console.log(sids);
       //
 
-      const fields = ['sid', 'loc', 'st', 'et', 'remarks', 'dur_days', 'dur_hrs', 'dur_mts'];
+      const fields = ['sid', 'loc', 'st', 'et', 'remarks', 'dur_days', 'dur_hrs',
+                'dur_trunc_hrs', 'dur_mts', 'dur_txt', 
+                'total_days', 'total_hrs', 'total_tr_hrs', 'total_mts', 'total_txt'];
       const opts = { fields };
       //const transformOpts = { highWaterMark: 16384, encoding: 'utf-8' };
       const transformOpts = { objectMode: true };
@@ -87,8 +96,8 @@ exports.handler = function (event, context) {
         else {
           console.log("processed all sids, start writing to S3");
           var dtfile = folder_name + '/' + file_dt_tag + '_downtime.csv';
-          console.log(data.length);
-          console.log(data);
+          //console.log(data.length);
+          //console.log(data);
 
           //input = streamify(['1', '2', '3', os.EOL])
           const input = streamify(data);
@@ -111,7 +120,7 @@ const processSids = function (sids, start_t, end_t, callback) {
   function nextSid() {
     //const x = data[i++];
     const sid = sids[count];
-    count += 10;
+    count += 1;
     console.log("Processing, ", sid);
     if (!sid) {
       return callback(null, downList);
@@ -132,6 +141,7 @@ const processSids = function (sids, start_t, end_t, callback) {
       ScanIndexForward: true,
     };
 
+    total_down_mts = 0;
     return findDownEntries(sid, params, downList, (err, data) => {
       //sum += data;
       if (err) {
@@ -152,6 +162,11 @@ const processSids = function (sids, start_t, end_t, callback) {
 
 const findDownEntries = function (sid, params, downList, callback) {
   var devState;
+
+  var loc_id = sid;
+  if(dev_state_by_sids) {
+    loc_id = dev_state_by_sids[sid].sn;
+  }
 
   iotdata.getThingShadow({
     thingName: sid
@@ -183,12 +198,13 @@ const findDownEntries = function (sid, params, downList, callback) {
               var down_record = {}
               var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
               var dt_start = moment(last_ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-              down_record.sid = sid;
+              //down_record.sid = sid;
+              down_record.sid = loc_id;
               var loc = devState.location;
               down_record.loc = loc;
               down_record.st = dt_start;
               down_record.et = dt_end;
-              down_record.remarks = "DL failure.";
+              down_record.remarks = "No network for >30mts";
               // In minutes
               var dur_secs = (record.ts - last_ts)/1000;
               var dur_days = (dur_secs / 86400).toFixed(2);
@@ -198,39 +214,72 @@ const findDownEntries = function (sid, params, downList, callback) {
               //
               var dur_trunc_hrs = Math.trunc(dur_hrs);
               var dur_mts = Math.round(dur_secs / 60);
+              //
+              total_down_mts += dur_mts;
+              //console.log("1. Total down time, incr: ", total_down_mts)
+              //
               var bal_mts = dur_mts - (dur_trunc_hrs * 60);
+              down_record.dur_trunc_hrs = dur_trunc_hrs;
               down_record.dur_mts = bal_mts;
+              down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';
+              //
+              down_record.total_days = '';
+              down_record.total_hrs = '';
+              down_record.total_tr_hrs = '';
+              down_record.total_mts = '';
+              down_record.total_txt = '';
               //
               downList.push(down_record);
             }
-            // If bl=0, data error. Just changed from non-zero to zero, start of error.
-            if ((!data_err_started) && (record.bl == 0)) {
+            // If very low bl, data error. Just changed from normal to very low, start of error.
+            if ((!data_err_started) && (record.bl <= 8)) {
               //
               data_err_started = true;
               var data_err_st = record.ts;
             }
             // 
-            if (data_err_started && (record.bl > 0)) {
+            if (data_err_started && (record.bl > 8)) {
               var down_record = {}
               var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
               var dt_start = moment(data_err_st).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-              down_record.sid = sid;
+              //down_record.sid = sid;
+              down_record.sid = loc_id;
               var loc = devState.location;
               down_record.loc = loc;
               down_record.st = dt_start;
               down_record.et = dt_end;
-              down_record.reason = "Data error.";
+              down_record.remarks = "Invalid data";
               //
               var dur_secs = (record.ts - last_ts)/1000;
               var dur_mts = Math.round(dur_secs / 60);
-              down_record.du_mts = dur_mts;
+              //
+              total_down_mts += dur_mts;
+              //console.log("2. Total down time, incr: ", total_down_mts)
+              //
+              //down_record.du_mts = dur_mts;
               var dur_days = (dur_secs / 86400).toFixed(2);
               down_record.dur_days = dur_days;
               var dur_hrs = (dur_secs / 3600).toFixed(2);
               down_record.dur_hrs = dur_hrs;
+
+              var dur_trunc_hrs = Math.trunc(dur_hrs);
+              var dur_mts = Math.round(dur_secs / 60);
+              //
+              var bal_mts = dur_mts - (dur_trunc_hrs * 60);
+              down_record.dur_trunc_hrs = dur_trunc_hrs;
+              down_record.dur_mts = bal_mts;
+              down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';              
+              
               //
               data_err_started = false; 
-              //downList.push(down_record);
+              //
+              down_record.total_days = '';
+              down_record.total_hrs = '';
+              down_record.total_tr_hrs = '';
+              down_record.total_mts = '';
+              down_record.total_txt = '';
+              //
+              downList.push(down_record);
             }
 
             last_ts = record.ts;
@@ -244,7 +293,38 @@ const findDownEntries = function (sid, params, downList, callback) {
             findDownEntries(sid, params, downList, callback);
           }
           else {
-            console.log("4. Finished processing, ", sid);
+            console.log("Finished processing, ", sid, " : total=", total_down_mts);
+
+            var down_record = {}
+
+            down_record.sid = loc_id;
+            down_record.loc = loc;
+            down_record.st = '';
+            down_record.et = '';
+            down_record.remarks = "Cumulative";
+
+            down_record.dur_days = '';
+            down_record.dur_hrs = '';
+            down_record.dur_trunc_hrs = '';
+            down_record.dur_mts = '';
+            down_record.dur_txt = '';
+
+            var total_days = (total_down_mts / 1440).toFixed(2);
+            var total_hrs = (total_down_mts / 60).toFixed(2);
+
+            var total_trunc_hrs = Math.trunc(total_hrs);
+            //var dur_mts = Math.round(dur_secs / 60);
+            //
+            var total_bal_mts = total_down_mts - (total_trunc_hrs * 60);
+
+            down_record.total_days = total_days;
+            down_record.total_hrs = total_hrs;
+            down_record.total_tr_hrs = total_trunc_hrs;
+            down_record.total_mts = total_bal_mts;
+            down_record.total_txt = total_trunc_hrs.toString() + 'h ' + total_bal_mts.toString() + 'min'; ;
+
+            downList.push(down_record);
+            
             callback(null, downList);
           }
 
