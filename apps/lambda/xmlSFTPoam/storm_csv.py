@@ -69,16 +69,20 @@ def lambda_handler(event, context):
     try:
         trans = paramiko.Transport(ssh_host, ssh_port)
         trans.connect(username=ssh_username, password=ssh_password)
-        sftp = paramiko.SFTPClient.from_transport(trans)
         print("Connected")
     except:
         print("Connect Error.")
+    try:
+        sftp = paramiko.SFTPClient.from_transport(trans)
+        print(sftp)
+    except paramiko.SSHException:
+        print("Connection Error")
 
-#    try:
-#        sftp.chdir(ssh_dir)
-#        print("Changed remote to: " + ssh_dir)
-#    except:
-#        print("chdir failure") 
+    try:
+        sftp.chdir(ssh_dir)
+        print("Changed remote to: " + ssh_dir)
+    except:
+        print("chdir failure") 
 
     #curr_t = int(time.time())
     #tm = time.strftime('%Y-%m-%d_%H-%M-%S')
