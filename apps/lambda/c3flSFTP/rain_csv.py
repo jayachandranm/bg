@@ -184,7 +184,7 @@ def lambda_handler(event, context):
         #mrl_str = "{0:.3f}".format(mrl_val)
 
         # TODO:
-        rf_str = "{0:.3f}".format(ra)
+        rf_str = "{0:.1f}".format(ra)
 
         dev_state_sid = dev_state_s3["dev_state"][sid]
         sid_alias = dev_state_sid["alias"]

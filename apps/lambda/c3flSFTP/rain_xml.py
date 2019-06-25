@@ -219,7 +219,7 @@ def lambda_handler(event, context):
         #op_str = "{0:.3f}".format(op_level)
 
         #desc = "cope_level=\"" + cope_str + "\" invert_level=\"" + invert_str + "\" operation_level=\"" + op_str + "\""
-        rf_str = "{0:.3f}".format(ra)
+        rf_str = "{0:.1f}".format(ra)
 
         appt1 = create_series({
                         "locationId": sid_alias,
