@@ -110,7 +110,9 @@ function transformFlow(event, context, callback) {
         if (msg.md == 0) {
             var logMsg = sid + ": maintenance mode."
             console.log(logMsg, eventText);
+            // TODO: tmp
             newmsg.md = "maintenance";
+            //newmsg.md = undefined;
             // Continue to process rest of the data before writing to DDB.
             //addToDDBexit(tablename, newmsg, callback);
         }
@@ -208,7 +210,7 @@ function transformFlow(event, context, callback) {
                 if (sensorType == 1) { 
                     var logMsg = "Sensor Type is SL-500, adjust fl and write to DDB.";
                     console.log(logMsg);
-                    // vl already divided by 1000.
+                    // vl already divided by 100.
                     newmsg.vl = vl;
                     newmsg.fl = fl;
                     if(Math.abs(newmsg.vl) < 0.001) {
@@ -227,8 +229,8 @@ function transformFlow(event, context, callback) {
                 else if (sensorType == 5) {
                     var logMsg = "Sensor Type is SL-1500, adjust fl and write to DDB.";
                     console.log(logMsg);
-                    // vl already divided by 1000.
-                    newmsg.vl = vl/100;
+                    // vl already divided by 100.
+                    newmsg.vl = vl;
                     newmsg.fl = fl;
                     if(Math.abs(newmsg.vl) < 0.001) {
                         newmsg.fl = 0;
