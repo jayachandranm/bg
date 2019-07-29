@@ -45,18 +45,16 @@ function transformFlow(event, context, callback) {
         return;
     }
     //var thingName = sid;
+    // TODO: Possible error if fields are not numbers, but string?
     var sensorType = msg.ty;
-    // TODO: Check default value.
-    // TODO: For now all values are received as string.
-    // TODO: test.
-    var fl = msg.fl === undefined ? undefined : msg.fl;
+    var fl = msg.fl === undefined ? undefined : Number(msg.fl);
     if (sensorType == 1 || sensorType == 5) {
-        var vl = msg.vl === undefined ? undefined : msg.vl / 100;
-        var wa = msg.wa === undefined ? undefined : msg.wa
+        var vl = msg.vl === undefined ? undefined : Number(msg.vl) / 100;
+        var wa = msg.wa === undefined ? undefined : Number(msg.wa)
     }
     else {
-        var vl = msg.vl === undefined ? undefined : msg.vl / 1000;
-        var wa = msg.wa === undefined ? undefined : msg.wa / 1000;
+        var vl = msg.vl === undefined ? undefined : Number(msg.vl) / 1000;
+        var wa = msg.wa === undefined ? undefined : Number(msg.wa) / 1000;
     }
 
     // TODO: test
@@ -64,7 +62,7 @@ function transformFlow(event, context, callback) {
 
     var newmsg = {};
     newmsg.sid = sid;
-    newmsg.ts = msg.ts;
+    newmsg.ts = Number(msg.ts);
     newmsg.ts_r = msg.ts_r;
     newmsg.ty = sensorType;
     //
@@ -74,6 +72,7 @@ function transformFlow(event, context, callback) {
     //newmsg.wa = wa;
     newmsg.fl = fl;
     newmsg.vl = vl;
+    // TODO: Handle non-number types?
     newmsg.snr = msg.snr === undefined ? undefined : msg.snr;
     newmsg.ss = msg.ss === undefined ? undefined : msg.ss;
     newmsg.sp = msg.sp === undefined ? undefined : msg.sp;
@@ -144,7 +143,7 @@ function transformFlow(event, context, callback) {
             //record_1 = data.Items[0]; 
             try {
                 record_0 = data.Items[0];
-                ts_0 = record_0.ts;
+                ts_0 = Number(record_0.ts);
 
                 // TODO: Adjust sampling rate.
                 var ts_diff = ts - ts_0;
@@ -167,14 +166,14 @@ function transformFlow(event, context, callback) {
                         var invert = devState.invert_level === undefined ? 0 : Number(devState.invert_level);
 
                         var wh = undefined;
-                        var wh_0 = record_0.wh === undefined ? undefined : record_0.wh;
+                        var wh_0 = record_0.wh === undefined ? undefined : Number(record_0.wh);
                         if (sensorType == 2) {
                             wh = wa + offset;
                         } else if (sensorType == 1 || sensorType == 5) {
                             // SL500/ SL1500, wa already divided by 1000.
                             var wa_mrl = wa; //wa/10;
                             //wh = wa_mrl - invert;
-                            wh = newmsg.wp + offset;
+                            wh = Number(newmsg.wp) + offset;
                             wh = wh.toFixed(5);
                         } else if (sensorType == 3) {
                             // TODO: delete, feet instead of meter.
@@ -183,7 +182,7 @@ function transformFlow(event, context, callback) {
                             }
                             // Depth sensor.
                             //console.log("calc wh, ", cope, offset, invert, newmsg.wr);
-                            wh = (cope - invert) + offset - newmsg.wr;
+                            wh = (cope - invert) + offset - Number(newmsg.wr);
                             wh = wh.toFixed(5);
                             console.log(sid + " Radar, wh=", wh);
                         }
