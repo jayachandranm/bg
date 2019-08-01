@@ -5,5 +5,7 @@
     "folder" : "monthly_report",
     "folder_iot" : "iot_data",
     "dev_file" : "devs_B_state.json",
+    "batch" : 0,
+    "rel_month" : 1,
     "pause" : 250
 }
