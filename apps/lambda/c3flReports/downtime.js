@@ -8,7 +8,9 @@ var moment = require('moment');
 //var os = require('os');
 //var archiver = require('archiver');
 //var sids_json = require('./station-B-ids.json');
-var config = require('./config_rlevel.json');
+//var config = require('./config_flow.json');
+var config = require('./config_rain.json');
+//var config = require('./config_rlevel.json');
 
 var iotdata = new aws.IotData({ endpoint: config.endpointAddress, region: 'ap-southeast-1' });
 var dynDoc = new aws.DynamoDB.DocumentClient();
@@ -29,13 +31,15 @@ var dev_state_by_sids;
 // Global. Because of multiple calls of same function for DDB access. Init outside the function.
 var total_down_mts;
 
-exports.handler = function (event, context) {
+exports.handler = function(event, context) {
   //
   console.log("Loading..");
   //
   // moment().local();
   //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
   var currMonthStart = moment().utcOffset('+0800').startOf('month');
+  //var currMonthStart = moment().utcOffset('+0800').startOf('month').subtract(1, 'months');
+  //var currMonthStart = moment().utcOffset('+0800').startOf('month').subtract(3, 'months').add(10, 'days');
   var lastMonthStart = moment(currMonthStart).subtract(1, 'months');
   var lastMonthEnd = moment(lastMonthStart).endOf('month');
   //console.log(currMonthStart.format(), lastMonthStart.format(), lastMonthEnd.format());
@@ -58,13 +62,12 @@ exports.handler = function (event, context) {
     */
   //
   var s3dev = new aws.S3();
-  var params_dev =
-  {
+  var params_dev = {
     Bucket: bucket_name,
     Key: iot_folder_name + '/' + dev_state_file
   };
 
-  s3dev.getObject(params_dev, function (err, data) {
+  s3dev.getObject(params_dev, function(err, data) {
     if (err) {
       console.log("Error in S3 read of dev state.")
     }
@@ -78,17 +81,18 @@ exports.handler = function (event, context) {
       //
 
       const fields = ['sid', 'loc', 'st', 'et', 'remarks', 'dur_days', 'dur_hrs',
-                'dur_trunc_hrs', 'dur_mts', 'dur_txt', 
-                'total_days', 'total_hrs', 'total_tr_hrs', 'total_mts', 'total_txt'];
+        'dur_trunc_hrs', 'dur_mts', 'dur_txt',
+        'total_days', 'total_hrs', 'total_tr_hrs', 'total_mts', 'total_txt'
+      ];
       const opts = { fields };
       //const transformOpts = { highWaterMark: 16384, encoding: 'utf-8' };
       const transformOpts = { objectMode: true };
-       
+
       //const input = createReadStream(inputPath, { encoding: 'utf8' });
       //const output = createWriteStream(outputPath, { encoding: 'utf8' });
       const json2csv = new Transform(opts, transformOpts);
 
-      processSids(sids, start_t, end_t, function (err, data) {
+      processSids(sids, start_t, end_t, function(err, data) {
         if (err) {
           context.fail(err);
           console.log("Error while processing sids.", err);
@@ -112,7 +116,7 @@ exports.handler = function (event, context) {
 } // handler
 
 
-const processSids = function (sids, start_t, end_t, callback) {
+const processSids = function(sids, start_t, end_t, callback) {
   let count = 0;
   let downList = [];
 
@@ -160,27 +164,28 @@ const processSids = function (sids, start_t, end_t, callback) {
 }
 
 
-const findDownEntries = function (sid, params, downList, callback) {
+const findDownEntries = function(sid, params, downList, callback) {
   var devState;
 
   var loc_id = sid;
-  if(dev_state_by_sids) {
+  if (dev_state_by_sids) {
     loc_id = dev_state_by_sids[sid].sn;
   }
 
   iotdata.getThingShadow({
     thingName: sid
-  }, function (err, data) {
+  }, function(err, data) {
     if (err) {
       context.fail(err);
       console.log("Error in getting Shadow.", err);
-    } else {
+    }
+    else {
       var jsonPayload = JSON.parse(data.payload);
       //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
       //console.log('2. Shadow: ');
       devState = jsonPayload.state.reported;
 
-      dynDoc.query(params, function (err, data) {
+      dynDoc.query(params, function(err, data) {
         if (err) {
           console.log(err, err.stack);
           callback(err);
@@ -190,11 +195,31 @@ const findDownEntries = function (sid, params, downList, callback) {
           var last_bl = -1;
           var data_err_started = false;
           var data_err_st = -1;
+
           for (var idx = 0; idx < data.Items.length; idx++) {
             var record = data.Items[idx];
             //var dt_local = moment(record.ts).utcOffset('+0800').format("DD-MMM-YYYY HH:mm:ss");
+            
+            // -- Only for Flow stations.
+            /*
+            var wh = record.wh;
+            var cope = devState.cope_level;
+            var invert = devState.invert_level;
+            var total_height = cope - invert;
+            var ratio = wh * 100 / total_height;
+            */
+            // If level < 50%, expected sampling is 10mts. Add 2mts extra.
+            var max_period = 4 * 60; // in secs
+            /*
+            if (ratio > 50) {
+              max_period = 2 * 60;
+            }
+            */
+            // -- end flow stations.
+
+
             // If no records for more than 30mts, add to the list.
-            if (last_ts > 0 && Math.abs(record.ts - last_ts) > 30 * 60 * 1000) {
+            if (last_ts > 0 && Math.abs(record.ts - last_ts) > max_period * 1000) {
               var down_record = {}
               var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
               var dt_start = moment(last_ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
@@ -206,7 +231,7 @@ const findDownEntries = function (sid, params, downList, callback) {
               down_record.et = dt_end;
               down_record.remarks = "No network for >30mts";
               // In minutes
-              var dur_secs = (record.ts - last_ts)/1000;
+              var dur_secs = (record.ts - last_ts) / 1000;
               var dur_days = (dur_secs / 86400).toFixed(2);
               down_record.dur_days = dur_days;
               var dur_hrs = (dur_secs / 3600).toFixed(2);
@@ -216,7 +241,7 @@ const findDownEntries = function (sid, params, downList, callback) {
               var dur_mts = Math.round(dur_secs / 60);
               //
               total_down_mts += dur_mts;
-              //console.log("1. Total down time, incr: ", total_down_mts)
+              console.log("1. Total down time, incr: ", total_down_mts)
               //
               var bal_mts = dur_mts - (dur_trunc_hrs * 60);
               down_record.dur_trunc_hrs = dur_trunc_hrs;
@@ -250,36 +275,38 @@ const findDownEntries = function (sid, params, downList, callback) {
               down_record.et = dt_end;
               down_record.remarks = "Invalid data";
               //
-              var dur_secs = (record.ts - last_ts)/1000;
+              var dur_secs = (record.ts - last_ts) / 1000;
               var dur_mts = Math.round(dur_secs / 60);
               //
-              total_down_mts += dur_mts;
-              //console.log("2. Total down time, incr: ", total_down_mts)
-              //
-              //down_record.du_mts = dur_mts;
-              var dur_days = (dur_secs / 86400).toFixed(2);
-              down_record.dur_days = dur_days;
-              var dur_hrs = (dur_secs / 3600).toFixed(2);
-              down_record.dur_hrs = dur_hrs;
+              if (dur_secs > max_period) {
+                total_down_mts += dur_mts;
+                console.log("2. Total down time, incr: ", total_down_mts)
+                //
+                //down_record.du_mts = dur_mts;
+                var dur_days = (dur_secs / 86400).toFixed(2);
+                down_record.dur_days = dur_days;
+                var dur_hrs = (dur_secs / 3600).toFixed(2);
+                down_record.dur_hrs = dur_hrs;
 
-              var dur_trunc_hrs = Math.trunc(dur_hrs);
-              var dur_mts = Math.round(dur_secs / 60);
-              //
-              var bal_mts = dur_mts - (dur_trunc_hrs * 60);
-              down_record.dur_trunc_hrs = dur_trunc_hrs;
-              down_record.dur_mts = bal_mts;
-              down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';              
-              
-              //
-              data_err_started = false; 
-              //
-              down_record.total_days = '';
-              down_record.total_hrs = '';
-              down_record.total_tr_hrs = '';
-              down_record.total_mts = '';
-              down_record.total_txt = '';
-              //
-              downList.push(down_record);
+                var dur_trunc_hrs = Math.trunc(dur_hrs);
+                var dur_mts = Math.round(dur_secs / 60);
+                //
+                var bal_mts = dur_mts - (dur_trunc_hrs * 60);
+                down_record.dur_trunc_hrs = dur_trunc_hrs;
+                down_record.dur_mts = bal_mts;
+                down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';
+
+                //
+                data_err_started = false;
+                //
+                down_record.total_days = '';
+                down_record.total_hrs = '';
+                down_record.total_tr_hrs = '';
+                down_record.total_mts = '';
+                down_record.total_txt = '';
+                //
+                downList.push(down_record);
+              }
             }
 
             last_ts = record.ts;
@@ -321,10 +348,10 @@ const findDownEntries = function (sid, params, downList, callback) {
             down_record.total_hrs = total_hrs;
             down_record.total_tr_hrs = total_trunc_hrs;
             down_record.total_mts = total_bal_mts;
-            down_record.total_txt = total_trunc_hrs.toString() + 'h ' + total_bal_mts.toString() + 'min'; ;
+            down_record.total_txt = total_trunc_hrs.toString() + 'h ' + total_bal_mts.toString() + 'min';;
 
             downList.push(down_record);
-            
+
             callback(null, downList);
           }
 
@@ -340,7 +367,7 @@ const findDownEntries = function (sid, params, downList, callback) {
 function uploadFromStream(s3, BUCKET, KEY) {
   var pass = new stream.PassThrough();
 
-  var params = {Bucket: BUCKET, Key: KEY, Body: pass};
+  var params = { Bucket: BUCKET, Key: KEY, Body: pass };
   s3.upload(params, function(err, data) {
     console.log(err, data);
   });
