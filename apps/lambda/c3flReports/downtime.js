@@ -37,17 +37,18 @@ exports.handler = function(event, context) {
   //
   // moment().local();
   //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
-  var currMonthStart = moment().utcOffset('+0800').startOf('month');
+  //var currMonthStart = moment().utcOffset('+0800').startOf('month');
+  //var monthStart = moment(currMonthStart).subtract(1, 'months');
   //var currMonthStart = moment().utcOffset('+0800').startOf('month').subtract(1, 'months');
   //var currMonthStart = moment().utcOffset('+0800').startOf('month').subtract(3, 'months').add(10, 'days');
-  var lastMonthStart = moment(currMonthStart).subtract(1, 'months');
-  var lastMonthEnd = moment(lastMonthStart).endOf('month');
+  var monthStart = moment().utcOffset('+0800').startOf('month').subtract(rel_month, 'months');
+  var monthEnd = moment(monthStart).endOf('month');
   //console.log(currMonthStart.format(), lastMonthStart.format(), lastMonthEnd.format());
   //console.log(currMonthStart.valueOf(), lastMonthStart.valueOf(), lastMonthEnd.valueOf())
-  var end_t = lastMonthEnd.valueOf();
-  var start_t = lastMonthStart.valueOf();
+  var end_t = monthEnd.valueOf();
+  var start_t = monthStart.valueOf();
   //self._start_t = start_t;
-  var file_dt_tag = lastMonthStart.format("YYYYMM");
+  var file_dt_tag = monthStart.format("YYYYMM");
   console.log("Start/end times..", start_t, end_t, file_dt_tag);
   //
   //
