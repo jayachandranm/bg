@@ -90,7 +90,7 @@ exports.handler = function (event, context) {
         'dur_trunc_hrs', 'dur_mts', 'dur_txt',
         'total_days', 'total_hrs', 'total_tr_hrs', 'total_mts', 'total_txt'
       ];
-      const opts = { fields };
+      const opts = { fields, header: false };
       //const transformOpts = { highWaterMark: 16384, encoding: 'utf-8' };
       const transformOpts = { objectMode: true };
 
@@ -137,6 +137,8 @@ function compareSN(sn1, sn2) {
 const processStations = function (dev_state_arr, start_t, end_t, callback) {
   let count = 0;
   let downList = [];
+
+  downList = addHeader(downList);
 
   // loop function
   function nextStation() {
@@ -438,6 +440,36 @@ const findDownEntries = function (sid, params, downList, callback) {
     }
   }); // getThingShadow
   // TODO: Will the function wait for callbacks before return?
+}
+
+function addHeader(downList) {
+  var down_record = {}
+  var dt_end = "End";
+  var dt_start = "Start";
+  down_record.sid = "Station ID";
+  down_record.loc = "Location";
+  down_record.st = dt_start;
+  down_record.et = dt_end;
+  down_record.remarks = "Remarks";
+  //
+  down_record.dur_days = "Duration (days)";
+  down_record.dur_hrs = "Duration (hrs)";
+
+  down_record.dur_trunc_hrs = "Durarion (hrs+mins)";
+  down_record.dur_mts = "";
+  down_record.dur_txt = "Durarion (hrs+mins)";
+
+  //
+  data_err_started = false;
+  //
+  down_record.total_days = 'Duration (days)';
+  down_record.total_hrs = 'Duration (hrs)';
+  down_record.total_tr_hrs = 'Durarion (hrs+mins)';
+  down_record.total_mts = '';
+  down_record.total_txt = 'Durarion (hrs+mins)';
+  //
+  downList.push(down_record);
+  return downList;
 }
 
 //inputStream.pipe(uploadFromStream(s3));
