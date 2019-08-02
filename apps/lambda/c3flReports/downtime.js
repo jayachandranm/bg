@@ -22,8 +22,9 @@ var table_name = config.table;
 var bucket_name = config.bucket;
 var folder_name = config.folder;
 var dev_state_file = config.dev_file;
-//
 var iot_folder_name = config.folder_iot;
+var rel_month = config.rel_month;
+var batch = config.batch;
 
 // Declared global.
 var dev_state_by_sids;
@@ -31,7 +32,7 @@ var dev_state_by_sids;
 // Global. Because of multiple calls of same function for DDB access. Init outside the function.
 var total_down_mts;
 
-exports.handler = function(event, context) {
+exports.handler = function (event, context) {
   //
   console.log("Loading..");
   //
@@ -68,7 +69,7 @@ exports.handler = function(event, context) {
     Key: iot_folder_name + '/' + dev_state_file
   };
 
-  s3dev.getObject(params_dev, function(err, data) {
+  s3dev.getObject(params_dev, function (err, data) {
     if (err) {
       console.log("Error in S3 read of dev state.")
     }
@@ -77,9 +78,13 @@ exports.handler = function(event, context) {
       var devs_state = JSON.parse(fileContents);
       //var dev_state_by_sids = devs_state.dev_state;
       dev_state_by_sids = devs_state.dev_state;
-      var sids = Object.keys(dev_state_by_sids);
+      //var sids = Object.keys(dev_state_by_sids);
       //console.log(sids);
       //
+
+      var dev_state_arr = Object.keys(dev_state_by_sids)
+        .map(c => ({ key: c, value: dev_state_by_sids[c] }))
+        .sort((a, b) => (compareSN(a.value.sn, b.value.sn)) ? 1 : -1);
 
       const fields = ['sid', 'loc', 'st', 'et', 'remarks', 'dur_days', 'dur_hrs',
         'dur_trunc_hrs', 'dur_mts', 'dur_txt',
@@ -92,8 +97,9 @@ exports.handler = function(event, context) {
       //const input = createReadStream(inputPath, { encoding: 'utf8' });
       //const output = createWriteStream(outputPath, { encoding: 'utf8' });
       const json2csv = new Transform(opts, transformOpts);
-
-      processSids(sids, start_t, end_t, function(err, data) {
+      
+      processStations(dev_state_arr, start_t, end_t, function (err, data) {
+      //processSids(sids, start_t, end_t, function (err, data) {
         if (err) {
           context.fail(err);
           console.log("Error while processing sids.", err);
@@ -116,8 +122,76 @@ exports.handler = function(event, context) {
   });
 } // handler
 
+function compareSN(sn1, sn2) {
+  var letter2NumPos = 2;
+  // If flow station, eg F23, only one letter before number.
+  // Otherwise two letters, eg. RG23, RL23.
+  if(dev_state_file === "flow_stations.json") {
+    letter2NumPos = 1;
+  }
+  snum1 = Number(sn1.slice(letter2NumPos));
+  snum2 = Number(sn2.slice(letter2NumPos));
+  return (snum1 > snum2);
+}
 
-const processSids = function(sids, start_t, end_t, callback) {
+const processStations = function (dev_state_arr, start_t, end_t, callback) {
+  let count = 0;
+  let downList = [];
+
+  // loop function
+  function nextStation() {
+    //const x = data[i++];
+    const dev_state = dev_state_arr[count];
+    if (!dev_state) {
+      return callback(null, downList);
+    }
+    const sid = dev_state.key;
+    count += 1;
+    console.log("Processing, ", sid);
+
+    var params = {
+      TableName: table_name,
+      //IndexName: 'Index',
+      KeyConditionExpression: 'sid = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
+      ExpressionAttributeValues: {
+        ':hkey': sid,
+        ':rkey_l': start_t,
+        ':rkey_h': end_t
+      },
+      ExpressionAttributeNames: {
+        '#ts': 'ts',
+      },
+      ScanIndexForward: true,
+    };
+
+    total_down_mts = 0;
+    return findDownEntries(sid, params, downList, (err, data) => {
+      //sum += data;
+      if (err) {
+        context.fail(err);
+        console.log("Error while processing down Entries.", err);
+      }
+      else {
+        // TODO: append to downList?
+        downList = data;
+      }
+      nextStation();
+    });
+  }
+  // starts looping
+  nextStation();
+
+  /*
+  dev_state_arr.forEach(function(dev_state) {
+    //console.log(dev_state);
+    // Slower processing. forEach will move to next element before completing.
+    //findDownEntries(...);
+  }); // foreach.
+  */
+}
+
+/*
+const processSids = function (sids, start_t, end_t, callback) {
   let count = 0;
   let downList = [];
 
@@ -163,9 +237,9 @@ const processSids = function(sids, start_t, end_t, callback) {
   // starts looping
   nextSid();
 }
+*/
 
-
-const findDownEntries = function(sid, params, downList, callback) {
+const findDownEntries = function (sid, params, downList, callback) {
   var devState;
 
   var loc_id = sid;
@@ -175,7 +249,7 @@ const findDownEntries = function(sid, params, downList, callback) {
 
   iotdata.getThingShadow({
     thingName: sid
-  }, function(err, data) {
+  }, function (err, data) {
     if (err) {
       context.fail(err);
       console.log("Error in getting Shadow.", err);
@@ -186,7 +260,7 @@ const findDownEntries = function(sid, params, downList, callback) {
       //console.log('2. Shadow: ');
       devState = jsonPayload.state.reported;
 
-      dynDoc.query(params, function(err, data) {
+      dynDoc.query(params, function (err, data) {
         if (err) {
           console.log(err, err.stack);
           callback(err);
@@ -200,26 +274,25 @@ const findDownEntries = function(sid, params, downList, callback) {
           for (var idx = 0; idx < data.Items.length; idx++) {
             var record = data.Items[idx];
             //var dt_local = moment(record.ts).utcOffset('+0800').format("DD-MMM-YYYY HH:mm:ss");
-            
-            // -- Only for Flow stations.
-            /*
-            var wh = record.wh;
-            var cope = devState.cope_level;
-            var invert = devState.invert_level;
-            var total_height = cope - invert;
-            var ratio = wh * 100 / total_height;
-            */
-            // If level < 50%, expected sampling is 10mts. Add 2mts extra.
+
+            // Expected rate is 3mts for rain and reservoir.
             var max_period = 4 * 60; // in secs
-            /*
-            if (ratio > 50) {
-              max_period = 2 * 60;
+            // -- Only for Flow stations.
+            if (dev_state_file === "flow_stations.json") {
+              var wh = record.wh;
+              var cope = devState.cope_level;
+              var invert = devState.invert_level;
+              var total_height = cope - invert;
+              var ratio = wh * 100 / total_height;
+              // If level < 50%, expected sampling is 10mts, else 1mts. Add 2mts extra.
+              max_period = 12 * 60; // in secs
+              if (ratio > 50) {
+                max_period = 2 * 60;
+              }
             }
-            */
             // -- end flow stations.
 
-
-            // If no records for more than 30mts, add to the list.
+            // If no records for more than max_period, add to the list.
             if (last_ts > 0 && Math.abs(record.ts - last_ts) > max_period * 1000) {
               var down_record = {}
               var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
@@ -230,7 +303,7 @@ const findDownEntries = function(sid, params, downList, callback) {
               down_record.loc = loc;
               down_record.st = dt_start;
               down_record.et = dt_end;
-              down_record.remarks = "No network for >30mts";
+              down_record.remarks = "Network delay";
               // In minutes
               var dur_secs = (record.ts - last_ts) / 1000;
               var dur_days = (dur_secs / 86400).toFixed(2);
@@ -323,35 +396,38 @@ const findDownEntries = function(sid, params, downList, callback) {
           else {
             console.log("Finished processing, ", sid, " : total=", total_down_mts);
 
-            var down_record = {}
+            // Add cumulative if downtime is non-zero.
+            if (total_down_mts > 0) {
+              var down_record = {}
 
-            down_record.sid = loc_id;
-            down_record.loc = loc;
-            down_record.st = '';
-            down_record.et = '';
-            down_record.remarks = "Cumulative";
+              down_record.sid = loc_id;
+              down_record.loc = loc;
+              down_record.st = '';
+              down_record.et = '';
+              down_record.remarks = "Cumulative";
 
-            down_record.dur_days = '';
-            down_record.dur_hrs = '';
-            down_record.dur_trunc_hrs = '';
-            down_record.dur_mts = '';
-            down_record.dur_txt = '';
+              down_record.dur_days = '';
+              down_record.dur_hrs = '';
+              down_record.dur_trunc_hrs = '';
+              down_record.dur_mts = '';
+              down_record.dur_txt = '';
 
-            var total_days = (total_down_mts / 1440).toFixed(2);
-            var total_hrs = (total_down_mts / 60).toFixed(2);
+              var total_days = (total_down_mts / 1440).toFixed(2);
+              var total_hrs = (total_down_mts / 60).toFixed(2);
 
-            var total_trunc_hrs = Math.trunc(total_hrs);
-            //var dur_mts = Math.round(dur_secs / 60);
-            //
-            var total_bal_mts = total_down_mts - (total_trunc_hrs * 60);
+              var total_trunc_hrs = Math.trunc(total_hrs);
+              //var dur_mts = Math.round(dur_secs / 60);
+              //
+              var total_bal_mts = total_down_mts - (total_trunc_hrs * 60);
 
-            down_record.total_days = total_days;
-            down_record.total_hrs = total_hrs;
-            down_record.total_tr_hrs = total_trunc_hrs;
-            down_record.total_mts = total_bal_mts;
-            down_record.total_txt = total_trunc_hrs.toString() + 'h ' + total_bal_mts.toString() + 'min';;
+              down_record.total_days = total_days;
+              down_record.total_hrs = total_hrs;
+              down_record.total_tr_hrs = total_trunc_hrs;
+              down_record.total_mts = total_bal_mts;
+              down_record.total_txt = total_trunc_hrs.toString() + 'h ' + total_bal_mts.toString() + 'min';;
 
-            downList.push(down_record);
+              downList.push(down_record);
+            }
 
             callback(null, downList);
           }
@@ -369,7 +445,7 @@ function uploadFromStream(s3, BUCKET, KEY) {
   var pass = new stream.PassThrough();
 
   var params = { Bucket: BUCKET, Key: KEY, Body: pass };
-  s3.upload(params, function(err, data) {
+  s3.upload(params, function (err, data) {
     console.log(err, data);
   });
 
