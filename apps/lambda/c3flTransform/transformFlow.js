@@ -21,7 +21,7 @@ var sns = new AWS.SNS({ region: 'ap-southeast-1' });
 var tablename = 'pubc3fl-ddb';
 
 //module.exports.transformFlow = transformFlow;
-exports.handler = function (event, context, callback) {
+exports.handler = function(event, context, callback) {
     transformFlow(event, context, callback);
     //callback(null, "WL processed.");
 };
@@ -105,7 +105,7 @@ function transformFlow(event, context, callback) {
     // If md is defined, keep it in the DDB, else no field in the DDB.
     //if (msg.hasOwnProperty(md) ) { // && msg.md !== null) {
     //var md = msg.md === undefined ? undefined : msg.md;
-    if (typeof (msg.md) !== 'undefined') { // && msg.md !== null) {
+    if (typeof(msg.md) !== 'undefined') { // && msg.md !== null) {
         if (msg.md == 0) {
             var logMsg = sid + ": maintenance mode."
             console.log(logMsg, eventText);
@@ -133,7 +133,7 @@ function transformFlow(event, context, callback) {
     var record_0;
     var ts_0 = -1;
     console.log("Get previous record from DDB.");
-    dynDoc.query(ddb_params, function (err, data) {
+    dynDoc.query(ddb_params, function(err, data) {
         if (err) {
             console.log(err, err.stack);
             // Something wrong with DDB, will not try to write the new msg.
@@ -152,11 +152,12 @@ function transformFlow(event, context, callback) {
                 var devState;
                 iotdata.getThingShadow({
                     thingName: sid
-                }, function (err, data) {
+                }, function(err, data) {
                     if (err) {
                         context.fail(err);
                         console.log("Error in getting Shadow.", err);
-                    } else {
+                    }
+                    else {
                         // TODO: check that shadow is not empty.
                         var jsonPayload = JSON.parse(data.payload);
                         console.log(sid + ' shadow: ' + JSON.stringify(jsonPayload, null, 2));
@@ -169,13 +170,15 @@ function transformFlow(event, context, callback) {
                         var wh_0 = record_0.wh === undefined ? undefined : Number(record_0.wh);
                         if (sensorType == 2) {
                             wh = wa + offset;
-                        } else if (sensorType == 1 || sensorType == 5) {
+                        }
+                        else if (sensorType == 1 || sensorType == 5) {
                             // SL500/ SL1500, wa already divided by 1000.
                             var wa_mrl = wa; //wa/10;
                             //wh = wa_mrl - invert;
                             wh = Number(newmsg.wp) + offset;
                             wh = wh.toFixed(5);
-                        } else if (sensorType == 3) {
+                        }
+                        else if (sensorType == 3) {
                             // TODO: delete, feet instead of meter.
                             if (sid == 'WPD13') {
                                 newmsg.wr = newmsg.wr * 0.3048
@@ -193,21 +196,24 @@ function transformFlow(event, context, callback) {
                         }
 
                         // Remove spike, if wh changes by large number within small period.
+                        // Skip spike logic if in maintenance mode
                         // TODO: For this case, set wh to prev value.
-                        if (wh != undefined && wh_0 != undefined) {
-                            var wh_diff = Math.abs(wh - wh_0);
-                            if (ts_diff < 2 * 60 * 1000 && wh_diff > 0.5) {
-                                console.log(sid + " Spike for wh, set to prev value, wh=" + wh + " ->wh_0=" + wh_0);
-                                wh = wh_0;
+                        if (newmsg.md !== "maintenance") {
+                            if (wh != undefined && wh_0 != undefined) {
+                                var wh_diff = Math.abs(wh - wh_0);
+                                if (ts_diff < 2 * 60 * 1000 && wh_diff > 0.5) {
+                                    console.log(sid + " Spike for wh, set to prev value, wh=" + wh + " ->wh_0=" + wh_0);
+                                    wh = wh_0;
+                                }
                             }
-                        }
+                        } // maintenance
 
                         //
                         newmsg.wh = wh;
 
                         // If fl is defined,
                         // TODO: handle wa undefined.
-                        if (typeof (fl) !== 'undefined') {
+                        if (typeof(fl) !== 'undefined') {
                             // Modify fl as required.
                             //if (sensorType != 2) {
                             if (sensorType == 1) {
@@ -254,7 +260,8 @@ function transformFlow(event, context, callback) {
                                 newmsg.fl = 0;
                                 console.log("Updated msg=", newmsg);
                                 addToDDBexit(tablename, newmsg, callback);
-                            } else {
+                            }
+                            else {
                                 //
                                 //var ct = devState.ct === undefined ? "generic" : devState.ct;
                                 if (devState.ct === undefined || devState.ct === "generic") {
@@ -292,26 +299,26 @@ function transformFlow(event, context, callback) {
                                     else if (wh <= (h1 + h2 + h3)) {
                                         wh_rel = wh - (h2 + h3);
                                         var b1_cur = b1 * wh_rel / h1;
-                                        wArea = (b3 + w3) * h3
-                                            + (b2 + w2) * h2
-                                            + (b1_cur + w1) * wh_rel;
+                                        wArea = (b3 + w3) * h3 +
+                                            (b2 + w2) * h2 +
+                                            (b1_cur + w1) * wh_rel;
                                     }
                                     else if (wh <= (h1 + h2 + h3 + h4)) {
                                         wh_rel = wh - (h1 + h2 + h3);
                                         var b4_cur = b4 * wh_rel / h4;
-                                        wArea = (b3 + w3) * h3
-                                            + (b2 + w2) * h2
-                                            + (b3 + w3) * h3
-                                            + (b4_cur + w4) * wh_rel;
+                                        wArea = (b3 + w3) * h3 +
+                                            (b2 + w2) * h2 +
+                                            (b3 + w3) * h3 +
+                                            (b4_cur + w4) * wh_rel;
                                     }
                                     else if (wh <= (h1 + h2 + h3 + h4 + h5)) {
                                         wh_rel = wh - (h1 + h2 + h3 + h4);
                                         var b5_cur = b5 * wh_rel / h5;
-                                        wArea = (b3 + w3) * h3
-                                            + (b2 + w2) * h2
-                                            + (b3 + w3) * h3
-                                            + (b4 + w4) * h4
-                                            + (b5_cur + w5) * wh_rel;
+                                        wArea = (b3 + w3) * h3 +
+                                            (b2 + w2) * h2 +
+                                            (b3 + w3) * h3 +
+                                            (b4 + w4) * h4 +
+                                            (b5_cur + w5) * wh_rel;
                                     }
                                     //var cArea = b3 * h3 + w3 * h3 + b2 * h2 + w2 * h2 + b1 * h1 + w1 * h1 + area_delta;
                                     newmsg.fl = vl * wArea;
@@ -351,7 +358,7 @@ function addToDDBexit(tablename, msg, callback) {
         Item: msg
     };
 
-    dynDoc.put(params, function (err, data) {
+    dynDoc.put(params, function(err, data) {
         if (err) {
             var logMsg = "Error writing to DDB."
             console.log(logMsg);
