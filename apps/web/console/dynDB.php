@@ -35,7 +35,7 @@ function _getdata_dyndb($reqtype, $filter)
         //$type = $filter->attr;
         $params = [
             'TableName' => $tableName,
-            'ProjectionExpression' => 'sid, #ts, ss, bl, md',
+            'ProjectionExpression' => 'sid, #ts, ss, bl, wh, ra, rd, md',
             'KeyConditionExpression' =>
                 'sid = :o_id',
             'ScanIndexForward' => false,
@@ -80,9 +80,11 @@ function _getdata_dyndb($reqtype, $filter)
     if ($reqtype == 'trc') {
         $sid = $filter->sid;
         // Bug: https://forums.aws.amazon.com/thread.jspa?messageID=752661&#752661
-        $start_time = (string)$filter->start;
-        $end_time = (string)$filter->end;
-        $wl = '89';
+        //$start_time = (string)$filter->start;
+        //$end_time = (string)$filter->end;
+        $start_time = $filter->start;
+        $end_time = $filter->end;
+        //$wl = '89';
 
 /*
         $wl_1 = $marshaler->marshalJson('
@@ -93,7 +95,7 @@ function _getdata_dyndb($reqtype, $filter)
 */
         $params = [
             'TableName' => $tableName,
-            'ProjectionExpression' => '#ts, wa, ss, bl',
+            'ProjectionExpression' => '#ts, ts_r, wa, ss, wh, ra, rd, bl',
             'KeyConditionExpression' =>
                 'sid = :o_id and #ts between :begin and :end',
             'ScanIndexForward' => true,

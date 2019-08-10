@@ -15,6 +15,7 @@ function updateTable(list, type) {
     "order": [[ 1, "asc" ]],
     "columns": [
             { "data": "sid" },
+            { "data": "loc" },
             { "data": "value" },
             { "data": "value2" }
         ]
