@@ -9,11 +9,18 @@ $type =  $_GET['type'];
             $filter = new stdClass;
 
             //$filter->sid = 'CWS001'; 
+            $filter->tbl = 'pubc3fl-ddb'; 
+            if($type === 'ts_r') {
+		// If the device time is outside range, that entry will not go into -ddb.
+                $filter->tbl = 'pubc3fl-raw'; 
+	    }
             $filter->sid = $sid; 
             //$filter->attr = $type; 
             $filter->end = round(microtime(true) *1000);
+	    //$filter->end = strtotime('31-05-2019') * 1000;
             //$filter->start = $filter->end - (30*3600*24*1000);
             $filter->start = $filter->end - (15*3600*24*1000);
+            //$filter->start = strtotime('01-05-2019') * 1000;
             //print_r($filter);
             $result = _getdata_dyndb($reqtype, $filter);
             foreach ($result as $row) {
@@ -28,14 +35,16 @@ $type =  $_GET['type'];
                     $val = $row['bl'];
                 } elseif ($type === 'ss') {
                     $val = $row['ss'];
-                } elseif ($type === 'ra') {
+		} elseif ($type === 'ra') {
+		    //print_r($row['ra']);
                     $val = isset($row['ra']) ? $row['ra'] : 0;
                 } elseif ($type === 'ts_r') {
                     // 1999-12-31 19:20:00
                     $dt_tsr = isset($row['ts_r']) ? $row['ts_r'] : "1970-01-01 00:00:00";
                     $val = floatval(strtotime($dt_tsr));
                 }
-                if($val != null) {
+                if($val !== null) {
+		    //echo "ok </br>";
                     $data[] = (object)array('date'=>$ts, 'value'=>$val);
                     //$timestamps[] = $ts;
                 }

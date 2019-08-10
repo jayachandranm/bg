@@ -21,7 +21,7 @@ function _getdata_dyndb($reqtype, $filter)
     }
 
     $marshaler = new Marshaler();
-    $tableName = 'pubc3fl-ddb';
+    $tableName = isset($filter->tbl) ? $filter->tbl : 'pubc3fl-ddb';
     //global $dynamodb, $marshaler, $tableName;
     //$sid_list = $filter[sidList];
     //$sid_list = $filter->sidList;
