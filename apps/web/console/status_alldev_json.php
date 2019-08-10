@@ -34,7 +34,7 @@
       $string = file_get_contents($list_file);
       $json_a = json_decode($string, true);
       $json_list1 = $json_a['dev_state'];
-      $sid_list1 = array_keys($json_list);
+      $sid_list1 = array_keys($json_list1);
       /*
       foreach($json_a->entries as $entry) {
 	 $sid_list += array_keys(get_object_vars($entry));
@@ -44,7 +44,7 @@
       $string = file_get_contents($list_file);
       $json_a = json_decode($string, true);
       $json_list2 = $json_a['dev_state'];
-      $sid_list2 = array_keys($json_list);
+      $sid_list2 = array_keys($json_list2);
       /*
       foreach($json_a->entries as $entry) {
 	 $sid_list += array_keys(get_object_vars($entry));

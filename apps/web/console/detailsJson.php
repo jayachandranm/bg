@@ -33,7 +33,7 @@ $type =  $_GET['type'];
                 } elseif ($type === 'ts_r') {
                     // 1999-12-31 19:20:00
                     $dt_tsr = isset($row['ts_r']) ? $row['ts_r'] : "1970-01-01 00:00:00";
-                    $val = float(strtotime($dt_tsr));
+                    $val = floatval(strtotime($dt_tsr));
                 }
                 if($val != null) {
                     $data[] = (object)array('date'=>$ts, 'value'=>$val);

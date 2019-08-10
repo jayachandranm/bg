@@ -80,10 +80,11 @@ function _getdata_dyndb($reqtype, $filter)
     if ($reqtype == 'trc') {
         $sid = $filter->sid;
         // Bug: https://forums.aws.amazon.com/thread.jspa?messageID=752661&#752661
-        //$start_time = (string)$filter->start;
-        //$end_time = (string)$filter->end;
-        $start_time = $filter->start;
-        $end_time = $filter->end;
+        $start_time = (string)$filter->start;
+        $end_time = (string)$filter->end;
+	// SerializationException","Message":"NUMBER_VALUE cannot be converted to String
+        //$start_time = $filter->start;
+        //$end_time = $filter->end;
         //$wl = '89';
 
 /*
