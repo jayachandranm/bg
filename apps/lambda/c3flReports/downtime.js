@@ -129,8 +129,8 @@ function compareSN(sn1, sn2) {
   if(dev_state_file === "flow_stations.json") {
     letter2NumPos = 1;
   }
-  snum1 = Number(sn1.slice(letter2NumPos));
-  snum2 = Number(sn2.slice(letter2NumPos));
+  var snum1 = Number(sn1.slice(letter2NumPos));
+  var snum2 = Number(sn2.slice(letter2NumPos));
   return (snum1 > snum2);
 }
 
@@ -460,7 +460,7 @@ function addHeader(downList) {
   down_record.dur_txt = "Durarion (hrs+mins)";
 
   //
-  data_err_started = false;
+  var data_err_started = false;
   //
   down_record.total_days = 'Duration (days)';
   down_record.total_hrs = 'Duration (hrs)';
