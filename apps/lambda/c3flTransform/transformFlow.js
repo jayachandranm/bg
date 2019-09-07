@@ -7,7 +7,7 @@ var AWS = require("aws-sdk");
 var utils = require('./utils');
 var config = require('./config.json');
 //var dateFormat = require('dateformat');
-//var moment = require('moment');
+var moment = require('moment');
 
 var iotdata = new AWS.IotData({ endpoint: config.endpointAddress, region: 'ap-southeast-1' });
 
@@ -189,10 +189,26 @@ function transformFlow(event, context, callback) {
                             wh = wh.toFixed(5);
                             console.log(sid + " Radar, wh=", wh);
                         }
-                        else {
+                        else if (sensorType == 4) {
                             // Rain sensor.
-                            //console.log("Other type, wh=", wh);
                             wh = undefined;
+                            // Update daily rainfall (rd) at server side.
+                            let rd_0 =  Number(record_0.rd);
+                            newmsg.rd = rd_0 + newmsg.ra; 
+                            
+                            let last_hr = moment(ts_0).utcOffset('+0800').hours();
+                            let curr_hr = moment(ts).utcOffset('+0800').hours();
+                            console.log(sid + "TIme-HH: ", last_hr, curr_hr);
+                            if(last_hr == 23 && curr_hr == 0) {
+                                // Just past midnight, reset rd.
+                                newmsg.rd = 0;
+                            }
+                            
+                        }
+                        else {
+                            let logMsg  = "Undefined type, skip record";
+                            console.log(logMsg);
+                            callback(logMsg);
                         }
 
                         // Remove spike, if wh changes by large number within small period.
@@ -231,7 +247,14 @@ function transformFlow(event, context, callback) {
                                 // TODO: temp
                                 //newmsg.bl = rg_bl;
                                 console.log("Updated msg=", newmsg);
-                                addToDDBexit(tablename, newmsg, callback);
+                                // TODO: temp, 
+                                // Skip those messages with wt = 0, to avoid the wrong records after restart,
+                                if(newmsg.wt != undefined && newmsg.wt > 0) { 
+                                    addToDDBexit(tablename, newmsg, callback);
+                                } 
+                                else {
+                                    console.log(sid + "SL-500, wt <= 0, skip this record.")
+                                }
                                 //context.success();
                                 //callback(null, logMsg);
                             }
@@ -250,7 +273,12 @@ function transformFlow(event, context, callback) {
                                 // TODO: temp
                                 //newmsg.bl = rg_bl;
                                 console.log("Updated msg=", newmsg);
-                                addToDDBexit(tablename, newmsg, callback);
+                                if(newmsg.wt != undefined && newmsg.wt > 0) { 
+                                    addToDDBexit(tablename, newmsg, callback);
+                                } 
+                                else {
+                                    console.log(sid + "SL-1500, wt <= 0, skip this record.")
+                                }
                                 //context.success();
                                 //callback(null, logMsg);
                             }
