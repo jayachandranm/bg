@@ -122,6 +122,7 @@ exports.handler = function (event, context) {
   });
 } // handler
 
+// To order by Station Name.
 function compareSN(sn1, sn2) {
   var letter2NumPos = 2;
   // If flow station, eg F23, only one letter before number.
@@ -129,8 +130,8 @@ function compareSN(sn1, sn2) {
   if(dev_state_file === "flow_stations.json") {
     letter2NumPos = 1;
   }
-  snum1 = Number(sn1.slice(letter2NumPos));
-  snum2 = Number(sn2.slice(letter2NumPos));
+  var snum1 = Number(sn1.slice(letter2NumPos));
+  var snum2 = Number(sn2.slice(letter2NumPos));
   return (snum1 > snum2);
 }
 
@@ -144,12 +145,29 @@ const processStations = function (dev_state_arr, start_t, end_t, callback) {
   function nextStation() {
     //const x = data[i++];
     const dev_state = dev_state_arr[count];
+    //console.log("dev_state value", dev_state.value);
     if (!dev_state) {
       return callback(null, downList);
     }
     const sid = dev_state.key;
     count += 1;
     console.log("Processing, ", sid);
+
+    // Update start time for the station based on commissioning date.
+    var comms_date = dev_state.value.comms_dt;
+    //console.log("comms_date", comms_date);
+
+    var comms_dt_str = comms_date + " 0:00 +0800";
+    // Take D+1 wrt commissioning date.
+    var comms_dt = moment(comms_dt_str, 'DD-MM-YYYY HH:mm Z').add(1, 'days');
+    var comms_utime = comms_dt.valueOf();
+    //console.log("Comms_utime, month_st: ", sid, comms_utime, start_t);
+
+    //var start_t = start_month_t;
+    if (comms_utime > start_t) {
+      console.log("Comms_utime, month_st: ", sid, comms_utime, start_t);
+      start_t = comms_utime;
+    }
 
     var params = {
       TableName: table_name,
@@ -244,6 +262,18 @@ const processSids = function (sids, start_t, end_t, callback) {
 const findDownEntries = function (sid, params, downList, callback) {
   var devState;
 
+  // TODO: Check this one level before.
+  let start_t = params.ExpressionAttributeValues[':rkey_l'];
+  let end_t = params.ExpressionAttributeValues[':rkey_h'];
+  //console.log("param_keys", sid, start_t, end_t);
+  
+  if(start_t > end_t) {
+    // Nothing to process, return the empty downList.
+    console.log("Not_available, ", sid, start_t, end_t);
+    callback(null, downList);
+    return;
+  }
+
   var loc_id = sid;
   if (dev_state_by_sids) {
     loc_id = dev_state_by_sids[sid].sn;
@@ -261,7 +291,7 @@ const findDownEntries = function (sid, params, downList, callback) {
       //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
       //console.log('2. Shadow: ');
       devState = jsonPayload.state.reported;
-
+      
       dynDoc.query(params, function (err, data) {
         if (err) {
           console.log(err, err.stack);
@@ -305,7 +335,7 @@ const findDownEntries = function (sid, params, downList, callback) {
               down_record.loc = loc;
               down_record.st = dt_start;
               down_record.et = dt_end;
-              down_record.remarks = "Network delay";
+              down_record.remarks = "Data gap";
               // In minutes
               var dur_secs = (record.ts - last_ts) / 1000;
               var dur_days = (dur_secs / 86400).toFixed(2);
@@ -460,7 +490,7 @@ function addHeader(downList) {
   down_record.dur_txt = "Durarion (hrs+mins)";
 
   //
-  data_err_started = false;
+  var data_err_started = false;
   //
   down_record.total_days = 'Duration (days)';
   down_record.total_hrs = 'Duration (hrs)';
