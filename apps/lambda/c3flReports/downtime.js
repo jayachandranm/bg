@@ -8,8 +8,8 @@ var moment = require('moment');
 //var os = require('os');
 //var archiver = require('archiver');
 //var sids_json = require('./station-B-ids.json');
-//var config = require('./config_flow.json');
-var config = require('./config_rain.json');
+var config = require('./config_flow.json');
+//var config = require('./config_rain.json');
 //var config = require('./config_rlevel.json');
 
 var iotdata = new aws.IotData({ endpoint: config.endpointAddress, region: 'ap-southeast-1' });
@@ -153,6 +153,10 @@ const processStations = function (dev_state_arr, start_t, end_t, callback) {
     count += 1;
     console.log("Processing, ", sid);
 
+    // Reinitialize adjusted start time for each station.
+    //var start_t = start_month_t;
+    var start_t_adj = start_t;
+
     // Update start time for the station based on commissioning date.
     var comms_date = dev_state.value.comms_dt;
     //console.log("comms_date", comms_date);
@@ -163,10 +167,9 @@ const processStations = function (dev_state_arr, start_t, end_t, callback) {
     var comms_utime = comms_dt.valueOf();
     //console.log("Comms_utime, month_st: ", sid, comms_utime, start_t);
 
-    //var start_t = start_month_t;
     if (comms_utime > start_t) {
       console.log("Comms_utime, month_st: ", sid, comms_utime, start_t);
-      start_t = comms_utime;
+      start_t_adj = comms_utime;
     }
 
     var params = {
@@ -175,7 +178,7 @@ const processStations = function (dev_state_arr, start_t, end_t, callback) {
       KeyConditionExpression: 'sid = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
       ExpressionAttributeValues: {
         ':hkey': sid,
-        ':rkey_l': start_t,
+        ':rkey_l': start_t_adj,
         ':rkey_h': end_t
       },
       ExpressionAttributeNames: {
@@ -302,6 +305,45 @@ const findDownEntries = function (sid, params, downList, callback) {
           var last_bl = -1;
           var data_err_started = false;
           var data_err_st = -1;
+
+          // If no records found, the station is down for the whole duration.
+          if(data.Items.length == 0) {
+            var down_record = {}
+            var dt_end = moment(end_t).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+            var dt_start = moment(start_t).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+            //down_record.sid = sid;
+            down_record.sid = loc_id;
+            var loc = devState.location;
+            down_record.loc = loc;
+            down_record.st = dt_start;
+            down_record.et = dt_end;
+            down_record.remarks = "Data gap";
+            // In minutes
+            var dur_secs = (end_t - start_t) / 1000;
+            var dur_days = (dur_secs / 86400).toFixed(2);
+            down_record.dur_days = dur_days;
+            var dur_hrs = (dur_secs / 3600).toFixed(2);
+            down_record.dur_hrs = dur_hrs;
+            //
+            var dur_trunc_hrs = Math.trunc(dur_hrs);
+            var dur_mts = Math.round(dur_secs / 60);
+            //
+            total_down_mts += dur_mts;
+            console.log("1. Total down time, incr: ", total_down_mts)
+            //
+            var bal_mts = dur_mts - (dur_trunc_hrs * 60);
+            down_record.dur_trunc_hrs = dur_trunc_hrs;
+            down_record.dur_mts = bal_mts;
+            down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';
+            //
+            down_record.total_days = '';
+            down_record.total_hrs = '';
+            down_record.total_tr_hrs = '';
+            down_record.total_mts = '';
+            down_record.total_txt = '';
+            //
+            downList.push(down_record);
+          }
 
           for (var idx = 0; idx < data.Items.length; idx++) {
             var record = data.Items[idx];
