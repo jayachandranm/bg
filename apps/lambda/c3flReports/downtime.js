@@ -38,9 +38,6 @@ exports.handler = function (event, context) {
   //
   // moment().local();
   //var ts = dateFormat(new Date(), "mmddyyyy-HHMMss");
-  //var currMonthStart = moment().utcOffset('+0800').startOf('month');
-  //var monthStart = moment(currMonthStart).subtract(1, 'months');
-  //var currMonthStart = moment().utcOffset('+0800').startOf('month').subtract(1, 'months');
   //var currMonthStart = moment().utcOffset('+0800').startOf('month').subtract(3, 'months').add(10, 'days');
   var monthStart = moment().utcOffset('+0800').startOf('month').subtract(rel_month, 'months');
   var monthEnd = moment(monthStart).endOf('month');
@@ -213,55 +210,6 @@ const processStations = function (dev_state_arr, start_t, end_t, callback) {
   */
 }
 
-/*
-const processSids = function (sids, start_t, end_t, callback) {
-  let count = 0;
-  let downList = [];
-
-  // loop function
-  function nextSid() {
-    //const x = data[i++];
-    const sid = sids[count];
-    count += 1;
-    console.log("Processing, ", sid);
-    if (!sid) {
-      return callback(null, downList);
-    }
-
-    var params = {
-      TableName: table_name,
-      //IndexName: 'Index',
-      KeyConditionExpression: 'sid = :hkey and #ts BETWEEN :rkey_l AND :rkey_h',
-      ExpressionAttributeValues: {
-        ':hkey': sid,
-        ':rkey_l': start_t,
-        ':rkey_h': end_t
-      },
-      ExpressionAttributeNames: {
-        '#ts': 'ts',
-      },
-      ScanIndexForward: true,
-    };
-
-    total_down_mts = 0;
-    return findDownEntries(sid, params, downList, (err, data) => {
-      //sum += data;
-      if (err) {
-        context.fail(err);
-        console.log("Error while processing down Entries.", err);
-      }
-      else {
-        // TODO: append to downList?
-        downList = data;
-      }
-      nextSid();
-    });
-  }
-  // starts looping
-  nextSid();
-}
-*/
-
 const findDownEntries = function (sid, params, downList, callback) {
   var devState;
 
@@ -294,6 +242,8 @@ const findDownEntries = function (sid, params, downList, callback) {
       //console.log('Shadow: ' + JSON.stringify(jsonPayload, null, 2));
       //console.log('2. Shadow: ');
       devState = jsonPayload.state.reported;
+      // Add the location id (eg F11) to the devState object.
+      devState.loc_id = loc_id;
       
       dynDoc.query(params, function (err, data) {
         if (err) {
@@ -308,41 +258,7 @@ const findDownEntries = function (sid, params, downList, callback) {
 
           // If no records found, the station is down for the whole duration.
           if(data.Items.length == 0) {
-            var down_record = {}
-            var dt_end = moment(end_t).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-            var dt_start = moment(start_t).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-            //down_record.sid = sid;
-            down_record.sid = loc_id;
-            var loc = devState.location;
-            down_record.loc = loc;
-            down_record.st = dt_start;
-            down_record.et = dt_end;
-            down_record.remarks = "Data gap";
-            // In minutes
-            var dur_secs = (end_t - start_t) / 1000;
-            var dur_days = (dur_secs / 86400).toFixed(2);
-            down_record.dur_days = dur_days;
-            var dur_hrs = (dur_secs / 3600).toFixed(2);
-            down_record.dur_hrs = dur_hrs;
-            //
-            var dur_trunc_hrs = Math.trunc(dur_hrs);
-            var dur_mts = Math.round(dur_secs / 60);
-            //
-            total_down_mts += dur_mts;
-            console.log("1. Total down time, incr: ", total_down_mts)
-            //
-            var bal_mts = dur_mts - (dur_trunc_hrs * 60);
-            down_record.dur_trunc_hrs = dur_trunc_hrs;
-            down_record.dur_mts = bal_mts;
-            down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';
-            //
-            down_record.total_days = '';
-            down_record.total_hrs = '';
-            down_record.total_tr_hrs = '';
-            down_record.total_mts = '';
-            down_record.total_txt = '';
-            //
-            downList.push(down_record);
+            addDownRecord(downList, devState, start_t, end_t, 0, "gap");
           }
 
           for (var idx = 0; idx < data.Items.length; idx++) {
@@ -368,41 +284,14 @@ const findDownEntries = function (sid, params, downList, callback) {
 
             // If no records for more than max_period, add to the list.
             if (last_ts > 0 && Math.abs(record.ts - last_ts) > max_period * 1000) {
-              var down_record = {}
-              var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-              var dt_start = moment(last_ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-              //down_record.sid = sid;
-              down_record.sid = loc_id;
-              var loc = devState.location;
-              down_record.loc = loc;
-              down_record.st = dt_start;
-              down_record.et = dt_end;
-              down_record.remarks = "Data gap";
-              // In minutes
-              var dur_secs = (record.ts - last_ts) / 1000;
-              var dur_days = (dur_secs / 86400).toFixed(2);
-              down_record.dur_days = dur_days;
-              var dur_hrs = (dur_secs / 3600).toFixed(2);
-              down_record.dur_hrs = dur_hrs;
-              //
-              var dur_trunc_hrs = Math.trunc(dur_hrs);
-              var dur_mts = Math.round(dur_secs / 60);
-              //
-              total_down_mts += dur_mts;
-              console.log("1. Total down time, incr: ", total_down_mts)
-              //
-              var bal_mts = dur_mts - (dur_trunc_hrs * 60);
-              down_record.dur_trunc_hrs = dur_trunc_hrs;
-              down_record.dur_mts = bal_mts;
-              down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';
-              //
-              down_record.total_days = '';
-              down_record.total_hrs = '';
-              down_record.total_tr_hrs = '';
-              down_record.total_mts = '';
-              down_record.total_txt = '';
-              //
-              downList.push(down_record);
+              // If there was ongoing invalid records, end that event.
+              // The end time of previous event will be start time of data gap.
+              // TODO: End any ongoing event, not valid when there is data gap.
+              if(data_err_started) {
+                addDownRecord(downList, devState, data_err_st, last_ts, max_period, "invalid");
+                data_err_started = false;
+              }
+              addDownRecord(downList, devState, last_ts, record.ts, 0, "gap");
             }
             // If very low bl, data error. Just changed from normal to very low, start of error.
             if ((!data_err_started) && (record.bl <= 8)) {
@@ -412,49 +301,8 @@ const findDownEntries = function (sid, params, downList, callback) {
             }
             // 
             if (data_err_started && (record.bl > 8)) {
-              var down_record = {}
-              var dt_end = moment(record.ts).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-              var dt_start = moment(data_err_st).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
-              //down_record.sid = sid;
-              down_record.sid = loc_id;
-              var loc = devState.location;
-              down_record.loc = loc;
-              down_record.st = dt_start;
-              down_record.et = dt_end;
-              down_record.remarks = "Invalid data";
-              //
-              var dur_secs = (record.ts - last_ts) / 1000;
-              var dur_mts = Math.round(dur_secs / 60);
-              //
-              if (dur_secs > max_period) {
-                total_down_mts += dur_mts;
-                console.log("2. Total down time, incr: ", total_down_mts)
-                //
-                //down_record.du_mts = dur_mts;
-                var dur_days = (dur_secs / 86400).toFixed(2);
-                down_record.dur_days = dur_days;
-                var dur_hrs = (dur_secs / 3600).toFixed(2);
-                down_record.dur_hrs = dur_hrs;
-
-                var dur_trunc_hrs = Math.trunc(dur_hrs);
-                var dur_mts = Math.round(dur_secs / 60);
-                //
-                var bal_mts = dur_mts - (dur_trunc_hrs * 60);
-                down_record.dur_trunc_hrs = dur_trunc_hrs;
-                down_record.dur_mts = bal_mts;
-                down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';
-
-                //
-                data_err_started = false;
-                //
-                down_record.total_days = '';
-                down_record.total_hrs = '';
-                down_record.total_tr_hrs = '';
-                down_record.total_mts = '';
-                down_record.total_txt = '';
-                //
-                downList.push(down_record);
-              }
+              addDownRecord(downList, devState, data_err_st, record.ts, max_period, "invalid");
+              data_err_started = false;
             }
 
             last_ts = record.ts;
@@ -475,7 +323,7 @@ const findDownEntries = function (sid, params, downList, callback) {
               var down_record = {}
 
               down_record.sid = loc_id;
-              down_record.loc = loc;
+              down_record.loc = '';
               down_record.st = '';
               down_record.et = '';
               down_record.remarks = "Cumulative";
@@ -512,6 +360,55 @@ const findDownEntries = function (sid, params, downList, callback) {
     }
   }); // getThingShadow
   // TODO: Will the function wait for callbacks before return?
+}
+
+function addDownRecord(downList, devState, ts_err_st, ts_record, max_period, errType) {
+  var down_record = {}
+  var dt_end = moment(ts_record).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+  var dt_start = moment(ts_err_st).utcOffset('+0800').format("YYYY-MM-DD HH:mm");
+  //down_record.sid = sid;
+  down_record.sid = devState.loc_id;
+  down_record.loc = devState.location;
+  down_record.st = dt_start;
+  down_record.et = dt_end;
+  if(errType == "invalid") {
+    down_record.remarks = "Invalid data";
+  }
+  else if(errType == "gap") {
+    down_record.remarks = "Data gap";
+  }
+  //
+  var dur_secs = (ts_record - ts_err_st) / 1000;
+  var dur_mts = Math.round(dur_secs / 60);
+  //
+  if (dur_secs > max_period) {
+    total_down_mts += dur_mts;
+    console.log("2. Total down time, incr: ", total_down_mts)
+    //
+    //down_record.du_mts = dur_mts;
+    var dur_days = (dur_secs / 86400).toFixed(2);
+    down_record.dur_days = dur_days;
+    var dur_hrs = (dur_secs / 3600).toFixed(2);
+    down_record.dur_hrs = dur_hrs;
+
+    var dur_trunc_hrs = Math.trunc(dur_hrs);
+    var dur_mts = Math.round(dur_secs / 60);
+    //
+    var bal_mts = dur_mts - (dur_trunc_hrs * 60);
+    down_record.dur_trunc_hrs = dur_trunc_hrs;
+    down_record.dur_mts = bal_mts;
+    down_record.dur_txt = dur_trunc_hrs.toString() + 'h ' + bal_mts.toString() + 'min';
+
+    //
+    down_record.total_days = '';
+    down_record.total_hrs = '';
+    down_record.total_tr_hrs = '';
+    down_record.total_mts = '';
+    down_record.total_txt = '';
+    //
+    downList.push(down_record);
+  }
+  return downList;
 }
 
 function addHeader(downList) {
